@@ -5,7 +5,7 @@
  * ScrollTrigger 1.0.0
  * https://sunshine-themes.com/scrollTrigger
  *
- * @license Copyright 2008-2020, GreenSock. All rights reserved.
+ * @license Copyright 2022, Sunshine. All rights reserved.
  * Subject to the terms at https://sunshine-themes.com/scrollTrigger/standard-license or for
  * members, the agreement issued with that membership.
  * @author: Sherif magdy, https://sunshine-themes.com
@@ -710,19 +710,25 @@ class ScrollTrigger {
                 setProp(guide, guidePositionRef, position);
                 //Create the text element
                 const createText = () => {
-                    let bottom = isVirtical ? '5px' : '25px';
-                    let right = isVirtical ? '25px' : '5px';
+                    let virticalAlignment = {
+                        dir: isVirtical ? (enter ? 'bottom' : 'top') : 'bottom',
+                        value: isVirtical ? '5px' : '25px',
+                    };
+                    let horizontalAlignment = {
+                        dir: isVirtical ? 'right' : enter ? 'right' : 'left',
+                        value: isVirtical ? (triggerGuide ? '0px' : !this.#root ? '25px' : '0px') : '5px',
+                    };
 
                     const textElement = document.createElement('span');
                     textElement.innerText = text;
                     guide.appendChild(textElement);
 
-                    triggerGuide && setProp(textElement, 'width', '100%');
                     setProp(textElement, 'position', 'absolute');
                     setProp(textElement, 'color', color);
                     setProp(textElement, 'fontSize', '16px');
-                    setProp(textElement, 'bottom', bottom);
-                    setProp(textElement, 'right', right);
+                    setProp(textElement, 'fontWeight', 'bold');
+                    setProp(textElement, virticalAlignment.dir, virticalAlignment.value);
+                    setProp(textElement, horizontalAlignment.dir, horizontalAlignment.value);
                 };
                 createText();
                 //Add guide to the stored guides
@@ -764,18 +770,18 @@ class ScrollTrigger {
                         ? enter
                             ? {
                                   x: rBoundsNoMargins.right - guideBounds.left,
-                                  y: targetBounds.bottom + 7 - guideBounds.bottom,
+                                  y: targetBounds.bottom - guideBounds.bottom,
                               }
                             : {
-                                  x: rBoundsNoMargins.right - 7 - guideBounds.left,
+                                  x: rBoundsNoMargins.right - guideBounds.left,
                                   y: targetBounds.top - guideBounds.top,
                               }
                         : enter
                         ? {
-                              x: targetBounds.right + 7 - guideBounds.right,
+                              x: targetBounds.right - guideBounds.right,
                               y: rBoundsNoMargins.bottom - guideBounds.top,
                           }
-                        : { x: targetBounds.left - 7 - guideBounds.left, y: rBoundsNoMargins.bottom - guideBounds.top };
+                        : { x: targetBounds.left - guideBounds.left, y: rBoundsNoMargins.bottom - guideBounds.top };
 
                     const diffs = isTrigger ? triggerDiffs : rootDiffs;
 
@@ -863,9 +869,7 @@ class ScrollTrigger {
                 backgroundColor: leave.root.backgroundColor,
             });
             //Create Triggers Guides
-            console.log(this.triggers);
             this.triggers.forEach((trigger) => {
-                console.log('trigger :', trigger);
                 createGuide({
                     triggerGuide: true,
                     trigger,
