@@ -37,7 +37,7 @@ class ScrollTrigger {
         this.#rootData = {};
         this.#guides = [];
         //
-        this.#onScrollFuns = { triggers: new WeakMap(), guides: new WeakMap(), custom: null };
+        this.#onScrollFuns = { guides: new WeakMap(), custom: null };
         //
         this.#setHelpers();
         this.#setStates();
@@ -51,36 +51,20 @@ class ScrollTrigger {
     }
 
     #addScrollListener() {
-        !!this.#onScrollHandler && removeEventListener('scroll', this.#onScrollHandler, false);
+        const scroller = this.#helpers.getScroller();
+        !!this.#onScrollHandler && scroller.removeEventListener('scroll', this.#onScrollHandler, false);
 
         this.#onScrollHandler = (event) => {
-            //Invoke all onScroll Functions
-            for (const funKey in this.#onScrollFuns) {
-                switch (funKey) {
-                    case 'guides':
-                    case 'triggers':
-                        {
-                            const weakMap = this.#onScrollFuns[funKey];
-                            const invokeFuns = (storedElements, isTriggers = true) => {
-                                storedElements.forEach(
-                                    (element) =>
-                                        weakMap.has(element) && weakMap.get(element)(isTriggers ? element : event)
-                                );
-                            };
-                            invokeFuns(this.triggers);
-                            invokeFuns(this.#guides, false);
-                        }
-                        break;
-                    case 'custom':
-                        this.#onScrollFuns[funKey] = !this.#root && this.onScroll;
-                        if (this.#helpers.isFunction(this.#onScrollFuns[funKey]))
-                            this.#onScrollFuns[funKey](event, this);
-                        break;
-                }
-            }
+            //Invoke all onScroll triggers Functions
+            this.triggers.forEach((trigger) => {
+                const onScrollFun = this.#helpers.getTriggerStates(trigger)?.onScroll;
+                this.#helpers.isFunction(onScrollFun) && onScrollFun(trigger);
+            });
+            //Invoke custom function
+            this.#helpers.isFunction(this.onScroll) && this.onScroll(event, this);
         };
 
-        addEventListener('scroll', this.#onScrollHandler, false);
+        scroller.addEventListener('scroll', this.#onScrollHandler, false);
     }
     #addResizeListener() {
         !!this.#onResizeHandler && removeEventListener('resize', this.#onResizeHandler, false);
@@ -129,7 +113,6 @@ class ScrollTrigger {
 
         //Add onScroll custom handler
         this.onScroll = this.#options.onScroll;
-        !!this.#root && this.#helpers.isFunction(this.onScroll) && this.#root.addEventListener('scroll', this.onScroll);
 
         //Create trigger defaults
         this.#triggerDefaults = {
@@ -163,12 +146,13 @@ class ScrollTrigger {
             const rootToTarget = rootLength / triggerBounds[length];
             //////
             const { enter, leave, onEnter, onLeave, onLeaveBack } = this.#helpers.getTriggerData(trigger);
-            const { hasEnteredFromOneSides, isOnScrollFunRunning } = this.#helpers.getTriggerStates(trigger);
+            const { hasEnteredFromOneSides, onScroll } = this.#helpers.getTriggerStates(trigger);
             ///////
             const isTriggerLarger = triggerBounds[length] >= rootLength;
             const isTSPLarger = enter > rootToTarget;
             const isTEPLarger = 1 - leave > rootToTarget;
             const initOnScrollFun = isTriggerLarger && (isTSPLarger || isTEPLarger);
+            const isOnScrollFunRunning = !!onScroll;
             /////////////
             /////At init & Intersecting cases
             //////////
@@ -229,18 +213,21 @@ class ScrollTrigger {
                                     });
                                     break;
                             }
-                            if (initOnScrollFun) {
-                                this.#helpers.addOnScrollTriggerFun(trigger, (trigger) =>
-                                    this.#helpers.onScrollTriggerHandler(trigger)
-                                );
-                            }
+
+                            if (initOnScrollFun)
+                                this.#helpers.setTriggerStates(trigger, {
+                                    onScroll: this.#helpers.toggleActions,
+                                });
+
                             break;
                     }
                     break;
                 case !isIntersecting:
-                    if (isOnScrollFunRunning) {
-                        this.#helpers.removeOnScrollTriggerFun(trigger);
-                    }
+                    if (isOnScrollFunRunning)
+                        this.#helpers.setTriggerStates(trigger, {
+                            onScroll: null,
+                        });
+
                     switch (true) {
                         case hasEnteredFromOneSides && triggerBounds[refOpposite] < this.rootBounds[ref]:
                             this.#helpers.onTriggerLeave(trigger, {
@@ -257,13 +244,13 @@ class ScrollTrigger {
                     }
                     break;
                 case isIntersecting && !isOnScrollFunRunning:
-                    this.#helpers.toggleActions(trigger, triggerBounds, this.rootBounds);
+                    this.#helpers.toggleActions(trigger);
 
-                    if (initOnScrollFun) {
-                        this.#helpers.addOnScrollTriggerFun(trigger, (trigger) =>
-                            this.#helpers.onScrollTriggerHandler(trigger)
-                        );
-                    }
+                    initOnScrollFun &&
+                        this.#helpers.setTriggerStates(trigger, {
+                            onScroll: this.#helpers.toggleActions,
+                        });
+
                     break;
             }
         }
@@ -272,8 +259,6 @@ class ScrollTrigger {
     };
 
     #createInstance() {
-        this.#addScrollListener();
-        this.#addResizeListener();
         //Creates observer threshold
         this.#helpers.setThreshold();
 
@@ -288,6 +273,10 @@ class ScrollTrigger {
         this.#root = this.observer.root;
         this.rootBounds = this.#helpers.getRootRect(this.observer.rootMargin);
         this.#isRootViewport = this.#helpers.isRootViewport(this.#root);
+
+        //Init Event listener
+        this.#addScrollListener();
+        this.#addResizeListener();
     }
 
     add(trigger = {}, options = {}) {
@@ -304,6 +293,7 @@ class ScrollTrigger {
             hasLeft: true,
             hasLeftBack: true,
             hasFirstEntered: false,
+            onScroll: null,
         };
         const triggerParams = { ...this.#triggerDefaults, ...options, states: { ...triggerStates } };
         //
@@ -390,6 +380,7 @@ class ScrollTrigger {
         this.#helpers.isRootViewport = (root) => !root;
         this.#helpers.isDoc = (node) => node && node.nodeType === 9;
         this.#helpers.getBoundsProp = (element, prop) => element && element.getBoundingClientRect()[prop];
+        this.#helpers.getScroller = () => (!!this.#root ? this.#root : window);
         this.#helpers.isScrollable = (element, dir = null) =>
             dir
                 ? 'y' === dir
@@ -644,23 +635,11 @@ class ScrollTrigger {
         };
         this.#helpers.getTriggerStates = (trigger) => {
             const triggerStates = this.#helpers.getTriggerData(trigger, 'states');
-
-            const hasEntered = triggerStates['hasEntered'];
-            const hasEnteredBack = triggerStates['hasEnteredBack'];
-            const hasLeft = triggerStates['hasLeft'];
-            const hasLeftBack = triggerStates['hasLeftBack'];
-            const hasFirstEntered = triggerStates['hasFirstEntered'];
-            const hasEnteredFromOneSides = hasEntered || hasEnteredBack;
-            const isOnScrollFunRunning = this.#helpers.hasOnScrollTriggerFun(trigger);
+            const hasEnteredFromOneSides = triggerStates.hasEntered || triggerStates.hasEnteredBack;
 
             return {
-                hasEntered,
-                hasEnteredBack,
+                ...triggerStates,
                 hasEnteredFromOneSides,
-                hasLeft,
-                hasLeftBack,
-                isOnScrollFunRunning,
-                hasFirstEntered,
             };
         };
         this.#helpers.setTriggerStates = (trigger, value = {}) => {
@@ -669,11 +648,6 @@ class ScrollTrigger {
 
             this.#helpers.setTriggerData(trigger, null, { states: triggerStates });
         };
-        ///////////////////
-        ////////
-        this.#helpers.hasOnScrollTriggerFun = (trigger) => this.#onScrollFuns.triggers.has(trigger);
-        this.#helpers.addOnScrollTriggerFun = (trigger, fun) => this.#onScrollFuns.triggers.set(trigger, fun);
-        this.#helpers.removeOnScrollTriggerFun = (trigger) => this.#onScrollFuns.triggers.delete(trigger);
         ///////////////
         ////////
         this.#helpers.onTriggerEnter = (trigger, data) => {
@@ -711,9 +685,9 @@ class ScrollTrigger {
             once && hasFirstEntered && this.remove(trigger);
         };
 
-        this.#helpers.toggleActions = (trigger, triggerBounds = null, rootBounds = null) => {
-            triggerBounds = triggerBounds || trigger.getBoundingClientRect();
-            this.rootBounds = rootBounds || this.#helpers.getRootRect(this.observer.rootMargin);
+        this.#helpers.toggleActions = (trigger) => {
+            const triggerBounds = trigger.getBoundingClientRect();
+            this.rootBounds = this.#helpers.getRootRect(this.observer.rootMargin);
 
             const { enter, leave, onEnter, onEnterBack, onLeave, onLeaveBack } = this.#helpers.getTriggerData(trigger);
             const { hasEnteredFromOneSides, hasLeft, hasLeftBack } = this.#helpers.getTriggerStates(trigger);
@@ -764,7 +738,6 @@ class ScrollTrigger {
 
             return hasCaseMet;
         };
-        this.#helpers.onScrollTriggerHandler = (trigger) => this.#helpers.toggleActions(trigger);
         //////////////////
         //// Create Guides
         //////////////////////
@@ -879,10 +852,8 @@ class ScrollTrigger {
                     this.#isRootViewport && !isVirtical && setProp(guide, 'top', '0px');
 
                     //the root is not the viewport and it is an element
-                    if (!this.#isRootViewport) {
-                        positionGuide(false);
-                        this.#onScrollFuns.guides.set(guide, (event) => positionGuide(false));
-                    }
+                    if (!this.#isRootViewport) positionGuide(false);
+
                     return;
                 }
                 //Trigger guide
@@ -890,9 +861,8 @@ class ScrollTrigger {
                 //RePosition the guide on every parent Scroll
                 this.#helpers.getParents(trigger).forEach((parent) => {
                     if (!this.#helpers.isScrollable(parent)) return;
-                    parent === document.body
-                        ? this.#onScrollFuns.guides.set(guide, (event) => positionGuide())
-                        : parent.addEventListener('scroll', (event) => positionGuide(), false);
+
+                    parent.addEventListener('scroll', (event) => positionGuide(), false);
                 });
             };
             //Guides Parameters
