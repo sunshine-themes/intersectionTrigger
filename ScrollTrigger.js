@@ -22,7 +22,6 @@ class ScrollTrigger {
     #helpers;
     #positions;
     #root;
-    #observerCallback;
     #isRootViewport;
     #guides;
     #onResizeHandler;
@@ -30,10 +29,12 @@ class ScrollTrigger {
     #rootMargin;
     #threshold;
     #triggerDefaults;
+    #rootData;
     constructor(options) {
         this.#userOptions = options;
         this.triggers = [];
         this.#triggersData = new WeakMap();
+        this.#rootData = {};
         this.#guides = [];
         //
         this.#onScrollFuns = { triggers: new WeakMap(), guides: new WeakMap(), custom: null };
@@ -47,7 +48,6 @@ class ScrollTrigger {
         this.#states = {};
 
         this.#states.hasInit = false;
-        // this.#states.hasGuidesEventsInit = false;
     }
 
     #addScrollListener() {
@@ -72,8 +72,9 @@ class ScrollTrigger {
                         }
                         break;
                     case 'custom':
-                        this.#onScrollFuns[funKey] = this.onScroll;
-                        if (this.#helpers.isFunction(this.onScroll)) this.onScroll(event, this);
+                        this.#onScrollFuns[funKey] = !this.#root && this.onScroll;
+                        if (this.#helpers.isFunction(this.#onScrollFuns[funKey]))
+                            this.#onScrollFuns[funKey](event, this);
                         break;
                 }
             }
@@ -106,16 +107,14 @@ class ScrollTrigger {
             leave: '100% 0%',
             name: '',
             scroller: null,
+            onScroll: null,
             guides: false,
             axis: 'y',
-            onScroll: null,
         };
 
         this.#helpers.validateOptions(this.#userOptions);
         this.#options = this.#helpers.mergeOptions(this.#defaultOptions, this.#userOptions);
 
-        //Add onScroll custom handler
-        this.onScroll = this.#options.onScroll;
         //Scroll Axis
         this.axis = this.#helpers.isString(this.#options.axis)
             ? this.#options.axis
@@ -125,8 +124,12 @@ class ScrollTrigger {
             ? this.#options.name
             : this.#helpers.throwError('name parameter must be a string.');
 
-        this.#root = this.#options.scroller ? this.#helpers.parseQuery(this.#options.scroller, 'root') : null;
+        this.#root = (!!this.#options.scroller && this.#helpers.parseQuery(this.#options.scroller, 'root')) || null;
         this.#positions = this.#helpers.parsePositions(this.#options.enter, this.#options.leave);
+
+        //Add onScroll custom handler
+        this.onScroll = this.#options.onScroll;
+        !!this.#root && this.#helpers.isFunction(this.onScroll) && this.#root.addEventListener('scroll', this.onScroll);
 
         //Create trigger defaults
         this.#triggerDefaults = {
@@ -139,127 +142,6 @@ class ScrollTrigger {
             onLeaveBack: this.#options.defaults.onLeaveBack,
         };
 
-        this.#observerCallback = (entries, observer) => {
-            const { ref, refOpposite, length } = this.#helpers.dirProps();
-            for (const entry of entries) {
-                const trigger = entry.target;
-                const triggerBounds = entry.boundingClientRect;
-                const isIntersecting = entry.isIntersecting;
-                const intersectionRatio = entry.intersectionRatio;
-                ///////
-                this.rootBounds = entry.rootBounds || this.#helpers.getRootRect(observer.rootMargin);
-                const rootLength = this.rootBounds[length];
-                const rootToTarget = rootLength / triggerBounds[length];
-                //////
-                const { enter, leave, onEnter, onLeave, onLeaveBack } = this.#helpers.getTriggerData(trigger);
-                const { hasEnteredFromOneSides, isOnScrollFunRunning } = this.#helpers.getTriggerStates(trigger);
-                ///////
-                const isTriggerLarger = triggerBounds[length] >= rootLength;
-                const isTSPLarger = enter > rootToTarget;
-                const isTEPLarger = 1 - leave > rootToTarget;
-                const initOnScrollFun = isTriggerLarger && (isTSPLarger || isTEPLarger);
-                /////////////
-                /////At init & Intersecting cases
-                //////////
-                const tSPIsBtwn =
-                    triggerBounds[ref] + enter * triggerBounds[length] < this.rootBounds[refOpposite] &&
-                    triggerBounds[ref] + enter * triggerBounds[length] > this.rootBounds[ref];
-                const tEPIsBtwn =
-                    triggerBounds[ref] + leave * triggerBounds[length] < this.rootBounds[refOpposite] &&
-                    triggerBounds[ref] + leave * triggerBounds[length] > this.rootBounds[ref];
-                const tSPIsUp = triggerBounds[ref] + enter * triggerBounds[length] < this.rootBounds[ref];
-                const tEPIsDown = triggerBounds[ref] + leave * triggerBounds[length] > this.rootBounds[refOpposite];
-                const tEPIsUp =
-                    triggerBounds[ref] + leave * triggerBounds[length] < this.rootBounds[ref] &&
-                    intersectionRatio < 1 - leave;
-                /////////////////
-                //At init & is not intersecting cases
-                ////////
-                const tTIsUp = triggerBounds[ref] < this.rootBounds[ref];
-                const tBIsUp = triggerBounds[refOpposite] < this.rootBounds[ref];
-                ///////
-                switch (true) {
-                    case !this.#states.hasInit:
-                        switch (true) {
-                            case !isIntersecting && tTIsUp && tBIsUp:
-                                //Invoke onEnter Function
-                                this.#helpers.onTriggerEnter(trigger, {
-                                    enterFun: onEnter,
-                                    enterProp: 'hasEntered',
-                                    leaveProp: 'hasLeftBack',
-                                });
-                                // Then Invoking onLeave Function
-                                this.#helpers.onTriggerLeave(trigger, {
-                                    leaveFun: onLeave,
-                                    leaveProp: 'hasLeft',
-                                });
-                                break;
-                            case isIntersecting:
-                                switch (true) {
-                                    case tSPIsBtwn || tEPIsBtwn || (tSPIsUp && tEPIsDown):
-                                        //Invoke onEnter Function
-                                        this.#helpers.onTriggerEnter(trigger, {
-                                            enterFun: onEnter,
-                                            enterProp: 'hasEntered',
-                                            leaveProp: 'hasLeftBack',
-                                        });
-                                        break;
-                                    case tEPIsUp:
-                                        //Invoke onEnter Function
-                                        this.#helpers.onTriggerEnter(trigger, {
-                                            enterFun: onEnter,
-                                            enterProp: 'hasEntered',
-                                            leaveProp: 'hasLeftBack',
-                                        });
-                                        // Then Invoking onLeave Function
-                                        this.#helpers.onTriggerLeave(trigger, {
-                                            leaveFun: onLeave,
-                                            leaveProp: 'hasLeft',
-                                        });
-                                        break;
-                                }
-                                if (initOnScrollFun) {
-                                    this.#helpers.addOnScrollTriggerFun(trigger, (trigger) =>
-                                        this.#helpers.onScrollTriggerHandler(trigger)
-                                    );
-                                }
-                                break;
-                        }
-                        break;
-                    case !isIntersecting:
-                        if (isOnScrollFunRunning) {
-                            this.#helpers.removeOnScrollTriggerFun(trigger);
-                        }
-                        switch (true) {
-                            case hasEnteredFromOneSides && triggerBounds[refOpposite] < this.rootBounds[ref]:
-                                this.#helpers.onTriggerLeave(trigger, {
-                                    leaveFun: onLeave,
-                                    leaveProp: 'hasLeft',
-                                });
-                                break;
-                            case hasEnteredFromOneSides && triggerBounds[ref] > this.rootBounds[refOpposite]:
-                                this.#helpers.onTriggerLeave(trigger, {
-                                    leaveFun: onLeaveBack,
-                                    leaveProp: 'hasLeftBack',
-                                });
-                                break;
-                        }
-                        break;
-                    case isIntersecting && !isOnScrollFunRunning:
-                        this.#helpers.toggleActions(trigger, triggerBounds, this.rootBounds);
-
-                        if (initOnScrollFun) {
-                            this.#helpers.addOnScrollTriggerFun(trigger, (trigger) =>
-                                this.#helpers.onScrollTriggerHandler(trigger)
-                            );
-                        }
-                        break;
-                }
-            }
-            //Reset #states.hasInit state
-            this.#states.hasInit = true;
-        };
-
         //Creates root margin
         this.#helpers.setRootMargin();
         //Creates an IntersectionObserver
@@ -267,6 +149,127 @@ class ScrollTrigger {
 
         return this;
     }
+
+    #observerCallback = (entries, observer) => {
+        const { ref, refOpposite, length } = this.#helpers.dirProps();
+        for (const entry of entries) {
+            const trigger = entry.target;
+            const triggerBounds = entry.boundingClientRect;
+            const isIntersecting = entry.isIntersecting;
+            const intersectionRatio = entry.intersectionRatio;
+            ///////
+            this.rootBounds = entry.rootBounds || this.#helpers.getRootRect(observer.rootMargin);
+            const rootLength = this.rootBounds[length];
+            const rootToTarget = rootLength / triggerBounds[length];
+            //////
+            const { enter, leave, onEnter, onLeave, onLeaveBack } = this.#helpers.getTriggerData(trigger);
+            const { hasEnteredFromOneSides, isOnScrollFunRunning } = this.#helpers.getTriggerStates(trigger);
+            ///////
+            const isTriggerLarger = triggerBounds[length] >= rootLength;
+            const isTSPLarger = enter > rootToTarget;
+            const isTEPLarger = 1 - leave > rootToTarget;
+            const initOnScrollFun = isTriggerLarger && (isTSPLarger || isTEPLarger);
+            /////////////
+            /////At init & Intersecting cases
+            //////////
+            const tSPIsBtwn =
+                triggerBounds[ref] + enter * triggerBounds[length] < this.rootBounds[refOpposite] &&
+                triggerBounds[ref] + enter * triggerBounds[length] > this.rootBounds[ref];
+            const tEPIsBtwn =
+                triggerBounds[ref] + leave * triggerBounds[length] < this.rootBounds[refOpposite] &&
+                triggerBounds[ref] + leave * triggerBounds[length] > this.rootBounds[ref];
+            const tSPIsUp = triggerBounds[ref] + enter * triggerBounds[length] < this.rootBounds[ref];
+            const tEPIsDown = triggerBounds[ref] + leave * triggerBounds[length] > this.rootBounds[refOpposite];
+            const tEPIsUp =
+                triggerBounds[ref] + leave * triggerBounds[length] < this.rootBounds[ref] &&
+                intersectionRatio < 1 - leave;
+            /////////////////
+            //At init & is not intersecting cases
+            ////////
+            const tTIsUp = triggerBounds[ref] < this.rootBounds[ref];
+            const tBIsUp = triggerBounds[refOpposite] < this.rootBounds[ref];
+            ///////
+            switch (true) {
+                case !this.#states.hasInit:
+                    switch (true) {
+                        case !isIntersecting && tTIsUp && tBIsUp:
+                            //Invoke onEnter Function
+                            this.#helpers.onTriggerEnter(trigger, {
+                                enterFun: onEnter,
+                                enterProp: 'hasEntered',
+                                leaveProp: 'hasLeftBack',
+                            });
+                            // Then Invoking onLeave Function
+                            this.#helpers.onTriggerLeave(trigger, {
+                                leaveFun: onLeave,
+                                leaveProp: 'hasLeft',
+                            });
+                            break;
+                        case isIntersecting:
+                            switch (true) {
+                                case tSPIsBtwn || tEPIsBtwn || (tSPIsUp && tEPIsDown):
+                                    //Invoke onEnter Function
+                                    this.#helpers.onTriggerEnter(trigger, {
+                                        enterFun: onEnter,
+                                        enterProp: 'hasEntered',
+                                        leaveProp: 'hasLeftBack',
+                                    });
+                                    break;
+                                case tEPIsUp:
+                                    //Invoke onEnter Function
+                                    this.#helpers.onTriggerEnter(trigger, {
+                                        enterFun: onEnter,
+                                        enterProp: 'hasEntered',
+                                        leaveProp: 'hasLeftBack',
+                                    });
+                                    // Then Invoking onLeave Function
+                                    this.#helpers.onTriggerLeave(trigger, {
+                                        leaveFun: onLeave,
+                                        leaveProp: 'hasLeft',
+                                    });
+                                    break;
+                            }
+                            if (initOnScrollFun) {
+                                this.#helpers.addOnScrollTriggerFun(trigger, (trigger) =>
+                                    this.#helpers.onScrollTriggerHandler(trigger)
+                                );
+                            }
+                            break;
+                    }
+                    break;
+                case !isIntersecting:
+                    if (isOnScrollFunRunning) {
+                        this.#helpers.removeOnScrollTriggerFun(trigger);
+                    }
+                    switch (true) {
+                        case hasEnteredFromOneSides && triggerBounds[refOpposite] < this.rootBounds[ref]:
+                            this.#helpers.onTriggerLeave(trigger, {
+                                leaveFun: onLeave,
+                                leaveProp: 'hasLeft',
+                            });
+                            break;
+                        case hasEnteredFromOneSides && triggerBounds[ref] > this.rootBounds[refOpposite]:
+                            this.#helpers.onTriggerLeave(trigger, {
+                                leaveFun: onLeaveBack,
+                                leaveProp: 'hasLeftBack',
+                            });
+                            break;
+                    }
+                    break;
+                case isIntersecting && !isOnScrollFunRunning:
+                    this.#helpers.toggleActions(trigger, triggerBounds, this.rootBounds);
+
+                    if (initOnScrollFun) {
+                        this.#helpers.addOnScrollTriggerFun(trigger, (trigger) =>
+                            this.#helpers.onScrollTriggerHandler(trigger)
+                        );
+                    }
+                    break;
+            }
+        }
+        //Reset #states.hasInit state
+        this.#states.hasInit = true;
+    };
 
     #createInstance() {
         this.#addScrollListener();
@@ -302,7 +305,7 @@ class ScrollTrigger {
             hasLeftBack: true,
             hasFirstEntered: false,
         };
-        const triggerOptions = { ...this.#triggerDefaults, ...options, states: { ...triggerStates } };
+        const triggerParams = { ...this.#triggerDefaults, ...options, states: { ...triggerStates } };
         //
         this.triggers = [...this.triggers, ...toAddTriggers];
         this.triggers = [...new Set(this.triggers)]; //to remove any duplicates
@@ -316,14 +319,14 @@ class ScrollTrigger {
             //Disconnect the IntersctionObserver
             this.#disconnect();
             //1- set trigger data
-            toAddTriggers.forEach((trigger) => this.#helpers.setTriggerData(trigger, triggerOptions));
+            toAddTriggers.forEach((trigger) => this.#helpers.setTriggerData(trigger, triggerParams));
             //2- recreate the observer
             this.#createInstance();
             //3- reobserve the triggers
             this.triggers.forEach((trigger) => this.observer.observe(trigger));
         } else {
             toAddTriggers.forEach((trigger) => {
-                this.#helpers.setTriggerData(trigger, triggerOptions);
+                this.#helpers.setTriggerData(trigger, triggerParams);
                 this.observer.observe(trigger);
             });
         }
@@ -968,12 +971,6 @@ class ScrollTrigger {
                     backgroundColor: guideParams.leave.trigger.backgroundColor,
                 });
             });
-
-            // //Add event listeners to update the guides
-            // if (!this.#states.hasGuidesEventsInit) {
-            //     this.#addResizeListener();
-            //     this.#states.hasGuidesEventsInit = true;
-            // }
         };
         this.#helpers.removeGuides = () => {
             this.#guides.forEach((guide) => guide && guide.remove());
