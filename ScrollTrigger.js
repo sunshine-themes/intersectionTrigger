@@ -17,7 +17,6 @@ class ScrollTrigger {
     #options;
     #states;
     #triggersData;
-    #onScrollFuns;
     #observerOptions;
     #helpers;
     #positions;
@@ -29,15 +28,11 @@ class ScrollTrigger {
     #rootMargin;
     #threshold;
     #triggerDefaults;
-    #rootData;
     constructor(options) {
         this.#userOptions = options;
         this.triggers = [];
         this.#triggersData = new WeakMap();
-        this.#rootData = {};
         this.#guides = [];
-        //
-        this.#onScrollFuns = { guides: new WeakMap(), custom: null };
         //
         this.#setHelpers();
         this.#setStates();
@@ -153,9 +148,8 @@ class ScrollTrigger {
             const isTEPLarger = 1 - leave > rootToTarget;
             const initOnScrollFun = isTriggerLarger && (isTSPLarger || isTEPLarger);
             const isOnScrollFunRunning = !!onScroll;
-            /////////////
-            /////At init & Intersecting cases
-            //////////
+
+            //At init & Intersecting cases
             const tSPIsBtwn =
                 triggerBounds[ref] + enter * triggerBounds[length] < this.rootBounds[refOpposite] &&
                 triggerBounds[ref] + enter * triggerBounds[length] > this.rootBounds[ref];
@@ -167,12 +161,11 @@ class ScrollTrigger {
             const tEPIsUp =
                 triggerBounds[ref] + leave * triggerBounds[length] < this.rootBounds[ref] &&
                 intersectionRatio < 1 - leave;
-            /////////////////
+
             //At init & is not intersecting cases
-            ////////
             const tTIsUp = triggerBounds[ref] < this.rootBounds[ref];
             const tBIsUp = triggerBounds[refOpposite] < this.rootBounds[ref];
-            ///////
+
             switch (true) {
                 case !this.#states.hasInit:
                     switch (true) {
@@ -500,9 +493,8 @@ class ScrollTrigger {
 
             return output;
         };
-        ///////
+
         // Positions parsing
-        //////
         this.#helpers.validatePosition = (name, pos) => {
             this.#helpers.isFunction(pos) && (pos = pos(this));
             if (!this.#helpers.isString(pos)) this.#helpers.throwError(`${name} parameter must be a string.`);
@@ -597,9 +589,8 @@ class ScrollTrigger {
 
             return parsedPositions;
         };
-        ////////////
+
         //Trigger Data actions
-        ////////////////
         this.#helpers.deleteTriggerData = (trigger) => {
             //Reset data of a trigger
             this.#triggersData.delete(trigger);
@@ -648,8 +639,7 @@ class ScrollTrigger {
 
             this.#helpers.setTriggerData(trigger, null, { states: triggerStates });
         };
-        ///////////////
-        ////////
+        //
         this.#helpers.onTriggerEnter = (trigger, data) => {
             //Get Stored trigger data
             const { hasFirstEntered } = this.#helpers.getTriggerStates(trigger);
@@ -738,9 +728,8 @@ class ScrollTrigger {
 
             return hasCaseMet;
         };
-        //////////////////
-        //// Create Guides
-        //////////////////////
+
+        //Create Guides
         this.#helpers.createGuides = () => {
             const guideParam = this.#options.guides;
             if (this.#helpers.isBoolean(guideParam) && !guideParam) return;
@@ -780,6 +769,9 @@ class ScrollTrigger {
                     setProp(textElement, 'color', color);
                     setProp(textElement, 'fontSize', '16px');
                     setProp(textElement, 'fontWeight', 'bold');
+                    setProp(textElement, 'backgroundColor', backgroundColor);
+                    setProp(textElement, 'padding', '5px');
+                    setProp(textElement, 'width', 'max-content');
                     setProp(textElement, virticalAlignment.dir, virticalAlignment.value);
                     setProp(textElement, horizontalAlignment.dir, horizontalAlignment.value);
                 };
@@ -994,9 +986,8 @@ class ScrollTrigger {
                 }
             }
         };
-        /////////////
+
         //  upcoming code is based on IntersectionObserver calculations of the root bounds
-        ////////////
         this.#helpers.parseString = (string) => {
             const parsedString = string.split(/\s+/).map((margin) => {
                 const parts = /^(-?\d*\.?\d+)(px|%)$/.exec(margin);
