@@ -845,7 +845,6 @@ class ScrollTrigger {
 
                     //the root is not the viewport and it is an element
                     if (!this.#isRootViewport) positionGuide(false);
-
                     return;
                 }
                 //Trigger guide
