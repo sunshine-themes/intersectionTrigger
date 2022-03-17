@@ -403,8 +403,8 @@ class ScrollTrigger {
             }
             return parents;
         };
-        this.#helpers.boundsMinusScrollbar = (element, bounds) => {
-            bounds = bounds ?? element.getBoundingClientRect();
+        this.#helpers.boundsMinusScrollbar = (element) => {
+            const bounds = element.getBoundingClientRect();
 
             const { top, bottom, right, left, height, width, x, y } = bounds;
             return {
@@ -606,7 +606,7 @@ class ScrollTrigger {
         this.#helpers.getTriggerData = (trigger, prop = null) => {
             if (prop) {
                 //Get data property of a trigger
-                return (this.#helpers.hasTriggerData(trigger, prop) && this.#triggersData.get(trigger)[prop]) ?? {};
+                return this.#helpers.hasTriggerData(trigger, prop) ? this.#triggersData.get(trigger)[prop] : {};
             }
             //Get data of a trigger
             return (this.#helpers.hasTriggerData(trigger) && this.#triggersData.get(trigger)) || {};
