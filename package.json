@@ -1,16 +1,17 @@
 {
-  "name": "scrolltrigger-io",
+  "name": "intersectiontrigger-io",
   "version": "1.0.0",
-  "description": "ScrollTrigger is a robust JavaScript toolset that turns developers into animation superheroes. Build high-performance animations that work in **every** major browser. Animate CSS, SVG, canvas, React, Vue, WebGL, colors, strings, motion paths, generic objects...anything JavaScript can touch! The ScrollTrigger plugin lets you create jaw-dropping scroll-based animations with minimal code. No other library delivers such advanced sequencing, reliability, and tight control while solving real-world problems on millions of sites. ScrollTrigger works around countless browser inconsistencies; your animations **just work**. At its core, ScrollTrigger is a high-speed property manipulator, updating values over time with extreme accuracy. It's up to 20x faster than jQuery! Seehttps://sunshine-themes.com for what makes ScrollTrigger so special.",
+  "description": "IntersectionTrigger is a robust JavaScript toolset that turns developers into animation superheroes. Build high-performance animations that work in **every** major browser. Animate CSS, SVG, canvas, React, Vue, WebGL, colors, strings, motion paths, generic objects...anything JavaScript can touch! The IntersectionTrigger plugin lets you create jaw-dropping scroll-based animations with minimal code. No other library delivers such advanced sequencing, reliability, and tight control while solving real-world problems on millions of sites. IntersectionTrigger works around countless browser inconsistencies; your animations **just work**. At its core, IntersectionTrigger is a high-speed property manipulator, updating values over time with extreme accuracy. It's up to 20x faster than jQuery! Seehttps://sunshine-themes.com for what makes IntersectionTrigger so special.",
   "homepage": "https://sunshine-themes.com",
-  "module": "esm/index.js",
-  "main": "dist/scrollTrigger.js",
-  "filename": "scrollTrigger.min.js",
-  "sideEffects": false,
+  "module": "lib/IntersectionTrigger.esm.js",
+  "main": "lib/IntersectionTrigger.esm.js",
+  "files": [
+    "lib"
+  ],
   "keywords": [
     "Scroll",
     "trigger",
-    "ScrollTrigger",
+    "IntersectionTrigger",
     "JavaScript",
     "animation",
     "animejs",
@@ -23,12 +24,23 @@
       "web": "https://sunshine-themes.com"
     }
   ],
+  "scripts": {
+    "build": "node esbuild.js",
+    "dev": "node esbuild.js -w"
+  },
   "license": "Standard 'no charge' license: https://sunshine-themes.com/standard-license. Why Sunshine doesn't employ an MIT license: https://sunshine-themes.com/why-license/",
   "bugs": {
     "url": "https://sunshine-themes.com/forums/"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/sherif-magdy/ScrollTrigger"
+    "url": "https://github.com/sherif-magdy/IntersectionTrigger"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.18.2",
+    "core-js": "^3.22.8",
+    "esbuild": "^0.14.43",
+    "esbuild-plugin-babel": "^0.2.3",
+    "estrella": "^1.4.1"
   }
 }

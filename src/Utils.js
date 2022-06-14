@@ -1,29 +1,29 @@
 export default class Utils {
-  constructor(scrollTrigger) {
-    this._st = scrollTrigger;
-    this._helpers = this._st._helpers;
+  constructor(intersectionTrigger) {
+    this._it = intersectionTrigger;
+    this._helpers = this._it._helpers;
     this.setUtils();
     return this;
   }
   setUtils() {
     this.setRootMargin = () => {
       const extendMargin = this._helpers.getScrollValue(
-        this._helpers.is.rootViewport(this._st._root) ? document.body : this._st._root,
+        this._helpers.is.rootViewport(this._it._root) ? document.body : this._it._root,
         this._helpers.is.virtical() ? 'x' : 'y'
       );
       return this._helpers.is.virtical()
-        ? `${this._st._positions.rootEndPosition.strValue} ${extendMargin}px ${this._st._positions.rootStartPosition.strValue} ${extendMargin}px`
-        : `${extendMargin}px ${this._st._positions.rootStartPosition.strValue} ${extendMargin}px ${this._st._positions.rootEndPosition.strValue}`;
+        ? `${this._it._positions.rootEndPosition.strValue} ${extendMargin}px ${this._it._positions.rootStartPosition.strValue} ${extendMargin}px`
+        : `${extendMargin}px ${this._it._positions.rootStartPosition.strValue} ${extendMargin}px ${this._it._positions.rootEndPosition.strValue}`;
     };
     this.setThreshold = () => {
       let threshold = [
         0,
-        this._st._triggerParams.enter,
-        this._st._triggerParams.leave,
-        this._helpers.roundFloat(1 - this._st._triggerParams.leave, 2),
+        this._it._triggerParams.enter,
+        this._it._triggerParams.leave,
+        this._helpers.roundFloat(1 - this._it._triggerParams.leave, 2),
         1,
       ];
-      this._st.triggers.forEach((trigger) => {
+      this._it.triggers.forEach((trigger) => {
         const { enter, leave } = this.getTriggerData(trigger);
         threshold.push(enter, leave, this._helpers.roundFloat(1 - leave, 2));
       });
@@ -39,7 +39,7 @@ export default class Utils {
           ? document.querySelector(query)
           : this._helpers.is.element(query)
           ? query
-          : this._helpers.throwError('scroller parameter must be a valid selector or an element');
+          : this._helpers.throwError('root parameter must be a valid selector or an element');
         return output;
       }
       switch (true) {
@@ -88,7 +88,7 @@ export default class Utils {
       }
       //Root Positions
       const { length, innerLength } = this._helpers.dirProps();
-      const rootLength = this._st._root ? this._helpers.getBoundsProp(this._st._root, length) : innerLength;
+      const rootLength = this._it._root ? this._helpers.getBoundsProp(this._it._root, length) : innerLength;
       switch (true) {
         case isPercentage && isEnter:
           position.value = this._helpers.roundFloat(value / 100 - 1, 2);
@@ -159,10 +159,10 @@ export default class Utils {
     //Trigger Data actions
     this.deleteTriggerData = (trigger) => {
       //Reset data of a trigger
-      this._st._triggersData.delete(trigger);
+      this._it._triggersData.delete(trigger);
     };
     this.hasTriggerData = (trigger, prop = null) => {
-      const hasData = this._st._triggersData.has(trigger);
+      const hasData = this._it._triggersData.has(trigger);
       if (prop) {
         return hasData && prop in this.getTriggerData(trigger);
       }
@@ -172,10 +172,10 @@ export default class Utils {
     this.getTriggerData = (trigger, prop = null) => {
       if (prop) {
         //Get data property of a trigger
-        return this.hasTriggerData(trigger, prop) ? this._st._triggersData.get(trigger)[prop] : {};
+        return this.hasTriggerData(trigger, prop) ? this._it._triggersData.get(trigger)[prop] : {};
       }
       //Get data of a trigger
-      return (this.hasTriggerData(trigger) && this._st._triggersData.get(trigger)) || {};
+      return (this.hasTriggerData(trigger) && this._it._triggersData.get(trigger)) || {};
     };
     this.setTriggerData = (trigger, value, props = null) => {
       if (props) {
@@ -183,12 +183,12 @@ export default class Utils {
         const storedValue = this.getTriggerData(trigger);
 
         if (this._helpers.is.object(storedValue)) {
-          this._st._triggersData.set(trigger, { ...storedValue, ...props });
+          this._it._triggersData.set(trigger, { ...storedValue, ...props });
         }
         return;
       }
       //Set data of a trigger
-      this._st._triggersData.set(trigger, value);
+      this._it._triggersData.set(trigger, value);
     };
     this.getTriggerStates = (trigger) => {
       const triggerStates = this.getTriggerData(trigger, 'states');
@@ -238,13 +238,13 @@ export default class Utils {
         hasEnteredBack: false,
       });
       //Remove the instance if once is true
-      once && hasFirstEntered && this._st.remove(trigger);
+      once && hasFirstEntered && this._it.remove(trigger);
     };
 
     this.toggleActions = (trigger) => {
       const tB = trigger.getBoundingClientRect(); //trigger Bounds
-      this._st.rootBounds = this.getRootRect(this._st.observer.rootMargin);
-      const rB = this._st.rootBounds; //root Bounds
+      this._it.rootBounds = this.getRootRect(this._it.observer.rootMargin);
+      const rB = this._it.rootBounds; //root Bounds
 
       const { enter, leave, onEnter, onEnterBack, onLeave, onLeaveBack } = this.getTriggerData(trigger);
       const { hasEnteredFromOneSide, hasLeft, hasLeftBack } = this.getTriggerStates(trigger);
@@ -371,11 +371,11 @@ export default class Utils {
     };
     this.getRootRect = (rootMargins) => {
       let rootRect;
-      if (this._st._root && !this._helpers.is.doc(this._st._root)) {
-        rootRect = this._helpers.boundsMinusScrollbar(this._st._root);
+      if (this._it._root && !this._helpers.is.doc(this._it._root)) {
+        rootRect = this._helpers.boundsMinusScrollbar(this._it._root);
         return this.expandRectByRootMargin(rootRect, rootMargins);
       }
-      const doc = this._helpers.is.doc(this._st._root) ? this._st._root : document;
+      const doc = this._helpers.is.doc(this._it._root) ? this._it._root : document;
       const html = doc.documentElement;
       const body = doc.body;
       rootRect = {

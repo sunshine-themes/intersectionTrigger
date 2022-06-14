@@ -1,6 +1,6 @@
 export default class Helpers {
-  constructor(scrollTrigger) {
-    this._st = scrollTrigger;
+  constructor(intersectionTrigger) {
+    this._it = intersectionTrigger;
     this.setHelpers();
     return this;
   }
@@ -24,11 +24,11 @@ export default class Helpers {
             ? element.scrollHeight > element.clientHeight
             : element.scrollWidth > element.clientWidth
           : element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth,
-      virtical: () => 'y' === this._st.axis,
-      horizontal: () => 'x' === this._st.axis,
+      virtical: () => 'y' === this._it.axis,
+      horizontal: () => 'x' === this._it.axis,
     };
     this.getBoundsProp = (element, prop) => element && element.getBoundingClientRect()[prop];
-    this.getScroller = () => (!!this._st._root ? this._st._root : window);
+    this.getRoot = () => (!!this._it._root ? this._it._root : window);
     this.getScrollValue = (element, dir) => ('y' === dir ? element.scrollHeight : element.scrollWidth);
     this.dirProps = () =>
       this.is.virtical()

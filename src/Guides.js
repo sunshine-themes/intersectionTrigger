@@ -1,16 +1,28 @@
 import { guideDefaultParams } from './constants';
 
-export default class Guides {
-  constructor(params) {
+class Guides {
+  constructor(params = {}) {
     this.params = params;
     this._guides = [];
     return this;
   }
 
-  _registerScrollTrigger(scrollTrigger) {
-    this._st = scrollTrigger;
-    this._helpers = this._st._helpers;
-    this._utils = this._st._utils;
+  _registerIntersectionTrigger(intersectionTrigger) {
+    this._it = intersectionTrigger;
+    this._helpers = this._it._helpers;
+    this._utils = this._it._utils;
+
+    this._addResizeListener();
+  }
+
+  _addResizeListener() {
+    !!this._onResizeHandler && removeEventListener('resize', this._onResizeHandler, false);
+
+    this._onResizeHandler = () => {
+      //Refreash guides
+      this.refresh();
+    };
+    addEventListener('resize', this._onResizeHandler, false);
   }
 
   createGuides() {
@@ -38,7 +50,7 @@ export default class Guides {
         };
         let horizontalAlignment = {
           dir: isVirtical ? 'right' : enter ? 'right' : 'left',
-          value: isVirtical ? (triggerGuide ? '0px' : !this._st._root ? '25px' : '0px') : '5px',
+          value: isVirtical ? (triggerGuide ? '0px' : !this._it._root ? '25px' : '0px') : '5px',
         };
 
         const textElement = document.createElement('span');
@@ -76,10 +88,10 @@ export default class Guides {
 
         const targetBounds = isTrigger
           ? this._helpers.boundsMinusScrollbar(trigger)
-          : this._helpers.getRootRect(this._st.observer.rootMargin);
+          : this._utils.getRootRect(this._it.observer.rootMargin);
         //Root Bounds without Margins
-        const rBoundsNoMargins = this._st._root
-          ? this._helpers.boundsMinusScrollbar(this._st._root)
+        const rBoundsNoMargins = this._it._root
+          ? this._helpers.boundsMinusScrollbar(this._it._root)
           : this._helpers.boundsMinusScrollbar(document.body);
 
         const triggerDiffs = isVirtical
@@ -115,12 +127,12 @@ export default class Guides {
 
       //Root Guide
       if (!triggerGuide) {
-        setProp(guide, isVirtical ? 'width' : 'height', this._st._isRootViewport ? (isVirtical ? '100vw' : '100vh') : '100px');
-        setProp(guide, 'position', this._st._isRootViewport ? 'fixed' : 'absolute');
-        this._st._isRootViewport && !isVirtical && setProp(guide, 'top', '0px');
+        setProp(guide, isVirtical ? 'width' : 'height', this._it._isRootViewport ? (isVirtical ? '100vw' : '100vh') : '100px');
+        setProp(guide, 'position', this._it._isRootViewport ? 'fixed' : 'absolute');
+        this._it._isRootViewport && !isVirtical && setProp(guide, 'top', '0px');
 
         //the root is not the viewport and it is an element
-        if (!this._st._isRootViewport) positionGuide(false);
+        if (!this._it._isRootViewport) positionGuide(false);
         return;
       }
       //Trigger guide
@@ -143,12 +155,12 @@ export default class Guides {
     //Guides Parameters
     const guideParams = parseGuidesParams(this.params);
     //Create Root Guides
-    const guideTextPrefix = this._st.name;
+    const guideTextPrefix = this._it.name;
 
     createGuide({
       triggerGuide: false,
       enter: true,
-      position: this._st._positions.rootStartPosition.guide,
+      position: this._it._positions.rootStartPosition.guide,
       text: `${guideTextPrefix} ${guideParams.enter.root.text}`,
       color: guideParams.enter.root.color,
       backgroundColor: guideParams.enter.root.backgroundColor,
@@ -156,14 +168,14 @@ export default class Guides {
     createGuide({
       triggerGuide: false,
       enter: false,
-      position: this._st._positions.rootEndPosition.guide,
+      position: this._it._positions.rootEndPosition.guide,
       text: `${guideTextPrefix} ${guideParams.leave.root.text}`,
       color: guideParams.leave.root.color,
       backgroundColor: guideParams.leave.root.backgroundColor,
     });
     //Create Triggers Guides
-    this._st.triggers.forEach((trigger) => {
-      const { enter, leave } = this._helpers.getTriggerData(trigger);
+    this._it.triggers.forEach((trigger) => {
+      const { enter, leave } = this._utils.getTriggerData(trigger);
       createGuide({
         triggerGuide: true,
         trigger,
@@ -188,4 +200,21 @@ export default class Guides {
     this._guides.forEach((guide) => guide && guide.remove());
     this._guides = [];
   };
+
+  refresh = () => {
+    this.removeGuides();
+    this.createGuides();
+  };
+  kill = () => {
+    this.removeGuides();
+
+    this._it = null;
+    this._helpers = null;
+    this._utils = null;
+
+    removeEventListener('resize', this._onResizeHandler, false);
+  };
 }
+
+export { Guides as default };
+// export { Guides };

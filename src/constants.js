@@ -9,11 +9,10 @@ const defaultInsOptions = {
   },
   enter: '0% 100%',
   leave: '100% 0%',
-  name: '',
-  scroller: null,
-  onScroll: null,
   axis: 'y',
-  // guides: false,
+  name: '',
+  root: null,
+  onScroll: null,
 };
 
 const triggerStates = {
