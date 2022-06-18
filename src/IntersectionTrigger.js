@@ -1,5 +1,3 @@
-/* eslint-disable no-fallthrough */
-
 import { defaultInsOptions, triggerStates } from './constants';
 import Helpers from './Helpers';
 import Utils from './Utils';
@@ -27,7 +25,7 @@ class IntersectionTrigger {
 
   _setStates() {
     this._states = {};
-    this._states.hasInit = false;
+    this._states.oCbFirstInvoke = true; //has observer callback invoked once
   }
 
   _addScrollListener() {
@@ -35,13 +33,16 @@ class IntersectionTrigger {
     !!this._onScrollHandler && root.removeEventListener('scroll', this._onScrollHandler, false);
 
     this._onScrollHandler = (event) => {
-      //Invoke all onScroll triggers Functions
-      this.triggers.forEach((trigger) => {
-        const onScrollFun = this._utils.getTriggerStates(trigger)?.onScroll;
-        this._helpers.is.function(onScrollFun) && onScrollFun(trigger);
-      });
-      //Invoke custom function
-      this._helpers.is.function(this.onScroll) && this.onScroll(event, this);
+      const rAFCallback = () => {
+        //Invoke all onScroll triggers Functions
+        this.triggers.forEach((trigger) => {
+          const onScrollFun = this._utils.getTriggerStates(trigger)?.onScroll;
+          onScrollFun && onScrollFun(trigger);
+        });
+        //Invoke custom function
+        this.onScroll(event, this);
+      };
+      requestAnimationFrame(rAFCallback);
     };
 
     root.addEventListener('scroll', this._onScrollHandler, false);
@@ -70,74 +71,52 @@ class IntersectionTrigger {
   _observerCallback = (entries, observer) => {
     const { ref, refOpposite, length } = this._helpers.dirProps();
     for (const entry of entries) {
-      const trigger = entry.target;
-      const tB = entry.boundingClientRect; //trigger Bounds
-      const isIntersecting = entry.isIntersecting;
-      const intersectionRatio = entry.intersectionRatio;
+      const trigger = entry.target,
+        tB = entry.boundingClientRect, //trigger Bounds
+        isIntersecting = entry.isIntersecting,
+        intersectionRatio = entry.intersectionRatio;
       ///////
       this.rootBounds = entry.rootBounds || this._utils.getRootRect(observer.rootMargin);
-      const rB = this.rootBounds; //root Bounds;
-      const rootLength = rB[length];
-      const rootToTarget = rootLength / tB[length];
+      const rB = this.rootBounds, //root Bounds;
+        rootLength = rB[length],
+        rootToTarget = rootLength / tB[length];
       //////
       const { enter, leave, onEnter, onLeave, onLeaveBack } = this._utils.getTriggerData(trigger);
       const { hasEnteredFromOneSide, onScroll } = this._utils.getTriggerStates(trigger);
       ///////
-      const isTriggerLarger = tB[length] >= rootLength;
-      const isTSPLarger = enter > rootToTarget;
-      const isTEPLarger = 1 - leave > rootToTarget;
-      const initOnScrollFun = isTriggerLarger && (isTSPLarger || isTEPLarger);
-      const isOnScrollFunRunning = !!onScroll;
+      const isTriggerLarger = tB[length] >= rootLength,
+        isTSPLarger = enter > rootToTarget,
+        isTEPLarger = 1 - leave > rootToTarget,
+        initOnScrollFun = isTriggerLarger && (isTSPLarger || isTEPLarger),
+        isOnScrollFunRunning = !!onScroll;
+      //cases
+      const tSPIsBtwn = tB[ref] + enter * tB[length] < rB[refOpposite] && tB[ref] + enter * tB[length] > rB[ref], // trigger start position is in between the root start and end positions.
+        tEPIsBtwn = tB[ref] + leave * tB[length] < rB[refOpposite] && tB[ref] + leave * tB[length] > rB[ref], // trigger end position is in between the root start and end positions.
+        tSPIsUp = tB[ref] + enter * tB[length] < rB[ref], // trigger start position is above* the root start position.
+        tEPIsDown = tB[ref] + leave * tB[length] > rB[refOpposite], // trigger end position is below* the root end position.
+        tEPIsUp = tB[ref] + leave * tB[length] < rB[ref] && intersectionRatio < 1 - leave, // trigger end position is above the root start position.
+        tRefIsUp = tB[ref] < rB[ref], // trigger (top|left)** position is above the root start position.
+        tRefOppIsUp = tB[refOpposite] < rB[ref]; // trigger (bottom|right)** position is above the root start position.
 
-      //At init & Intersecting cases
-      const tSPIsBtwn = tB[ref] + enter * tB[length] < rB[refOpposite] && tB[ref] + enter * tB[length] > rB[ref];
-      const tEPIsBtwn = tB[ref] + leave * tB[length] < rB[refOpposite] && tB[ref] + leave * tB[length] > rB[ref];
-      const tSPIsUp = tB[ref] + enter * tB[length] < rB[ref];
-      const tEPIsDown = tB[ref] + leave * tB[length] > rB[refOpposite];
-      const tEPIsUp = tB[ref] + leave * tB[length] < rB[ref] && intersectionRatio < 1 - leave;
-
-      //At init & is not intersecting cases
-      const tTIsUp = tB[ref] < rB[ref];
-      const tBIsUp = tB[refOpposite] < rB[ref];
+      // * while taking the root bounds (top|left) as a reference (datum line).
+      //** depending on the axis (x|y) of the instance
 
       switch (true) {
-        case !this._states.hasInit:
+        case this._states.oCbFirstInvoke:
           switch (true) {
-            case !isIntersecting && tTIsUp && tBIsUp:
-              //Invoke onEnter Function
-              this._utils.onTriggerEnter(trigger, {
-                enterFun: onEnter,
-                enterProp: 'hasEntered',
-                leaveProp: 'hasLeftBack',
-              });
-              // Then Invoking onLeave Function
-              this._utils.onTriggerLeave(trigger, {
-                leaveFun: onLeave,
-                leaveProp: 'hasLeft',
-              });
+            case !isIntersecting && tRefIsUp && tRefOppIsUp:
+              this._utils.onTriggerEnter(trigger);
+              this._utils.onTriggerLeave(trigger);
               break;
             case isIntersecting:
               switch (true) {
                 case tSPIsBtwn || tEPIsBtwn || (tSPIsUp && tEPIsDown):
                   //Invoke onEnter Function
-                  this._utils.onTriggerEnter(trigger, {
-                    enterFun: onEnter,
-                    enterProp: 'hasEntered',
-                    leaveProp: 'hasLeftBack',
-                  });
+                  this._utils.onTriggerEnter(trigger);
                   break;
                 case tEPIsUp:
-                  //Invoke onEnter Function
-                  this._utils.onTriggerEnter(trigger, {
-                    enterFun: onEnter,
-                    enterProp: 'hasEntered',
-                    leaveProp: 'hasLeftBack',
-                  });
-                  // Then Invoking onLeave Function
-                  this._utils.onTriggerLeave(trigger, {
-                    leaveFun: onLeave,
-                    leaveProp: 'hasLeft',
-                  });
+                  this._utils.onTriggerEnter(trigger);
+                  this._utils.onTriggerLeave(trigger);
                   break;
               }
 
@@ -157,16 +136,10 @@ class IntersectionTrigger {
 
           switch (true) {
             case hasEnteredFromOneSide && tB[refOpposite] < rB[ref]:
-              this._utils.onTriggerLeave(trigger, {
-                leaveFun: onLeave,
-                leaveProp: 'hasLeft',
-              });
+              this._utils.onTriggerLeave(trigger);
               break;
             case hasEnteredFromOneSide && tB[ref] > rB[refOpposite]:
-              this._utils.onTriggerLeave(trigger, {
-                leaveFun: onLeaveBack,
-                leaveProp: 'hasLeftBack',
-              });
+              this._utils.onTriggerLeave(trigger, 'onLeaveBack');
               break;
           }
           break;
@@ -181,8 +154,8 @@ class IntersectionTrigger {
           break;
       }
     }
-    //Reset hasInit state
-    this._states.hasInit = true;
+    //Reset oCbFirstInvoke state
+    this._states.oCbFirstInvoke = false;
   };
 
   _setInstance() {
@@ -201,7 +174,7 @@ class IntersectionTrigger {
       ? this._options.name
       : this._helpers.throwError('name parameter must be a string.');
 
-    this._root = (!!this._options.root && this._utils.parseQuery(this._options.root, 'root')) || null;
+    this._root = (!!this._options.root && this._utils.customParseQuery(this._options.root, 'root')) || null;
     this._positions = this._utils.parsePositions(this._options.enter, this._options.leave);
 
     //Add onScroll custom handler
@@ -209,13 +182,14 @@ class IntersectionTrigger {
 
     //Create trigger defaults
     this._triggerParams = {
-      once: this._options.defaults.once,
       enter: this._positions.triggerEnterPosition.value,
       leave: this._positions.triggerLeavePosition.value,
+      once: this._options.defaults.once,
       onEnter: this._options.defaults.onEnter,
       onLeave: this._options.defaults.onLeave,
       onEnterBack: this._options.defaults.onEnterBack,
       onLeaveBack: this._options.defaults.onLeaveBack,
+      toggleClass: this._options.defaults.toggleClass,
     };
 
     //Create root margin
@@ -227,24 +201,29 @@ class IntersectionTrigger {
   }
 
   add(trigger = {}, options = {}) {
-    const toAddTriggers = this._utils.parseQuery(trigger);
+    const toAddTriggers = this._utils.customParseQuery(trigger);
 
     this._utils.validateOptions(options);
 
     'enter' in options && (options.enter = this._utils.setPositionData(options.enter).value);
     'leave' in options && (options.leave = this._utils.setPositionData(options.leave).value);
 
-    const triggerParams = { ...this._triggerParams, ...options, states: { ...triggerStates } };
-    //
+    const triggerParams = {
+      ...this._triggerParams,
+      ...options,
+      states: { ...triggerStates },
+    };
+    triggerParams.classNamesData = this._utils.parseClassNames(triggerParams.toggleClass);
+    //Add new Triggers
     this.triggers = [...this.triggers, ...toAddTriggers];
     this.triggers = [...new Set(this.triggers)]; //to remove any duplicates
     //
-    let shouldReCreateObserver = false;
+    let mustRecreateObserver = false;
     [options.enter, options.leave].forEach(
-      (position) => !this._threshold.some((value) => position === value) && (shouldReCreateObserver = true)
+      (position) => !this._threshold.some((value) => position === value) && (mustRecreateObserver = true)
     );
 
-    if (shouldReCreateObserver) {
+    if (mustRecreateObserver) {
       //Disconnect the IntersctionObserver
       this._disconnect();
       //1- set trigger data
@@ -267,7 +246,7 @@ class IntersectionTrigger {
   }
 
   remove(trigger = {}) {
-    let toRemoveTriggers = this._utils.parseQuery(trigger);
+    let toRemoveTriggers = this._utils.customParseQuery(trigger);
     toRemoveTriggers.forEach((trigger) => {
       this._utils.deleteTriggerData(trigger);
       this.observer.unobserve(trigger);

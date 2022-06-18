@@ -1,18 +1,20 @@
+const fn = () => {};
 const defaultInsOptions = {
   //Defaults for every trigger
   defaults: {
     once: false,
-    onEnter: null,
-    onLeave: null,
-    onEnterBack: null,
-    onLeaveBack: null,
+    onEnter: fn,
+    onLeave: fn,
+    onEnterBack: fn,
+    onLeaveBack: fn,
+    toggleClass: null,
   },
   enter: '0% 100%',
   leave: '100% 0%',
   axis: 'y',
   name: '',
   root: null,
-  onScroll: null,
+  onScroll: fn,
 };
 
 const triggerStates = {
@@ -20,7 +22,7 @@ const triggerStates = {
   hasEnteredBack: false,
   hasLeft: true,
   hasLeftBack: true,
-  hasFirstEntered: false,
+  hasEnteredOnce: false,
   onScroll: null,
 };
 
@@ -51,4 +53,6 @@ const guideDefaultParams = {
   },
 };
 
-export { defaultInsOptions, triggerStates, guideDefaultParams };
+const classDefaultToggleActions = 'add remove add remove';
+
+export { defaultInsOptions, triggerStates, guideDefaultParams, classDefaultToggleActions };

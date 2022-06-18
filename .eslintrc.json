@@ -1,19 +1,14 @@
 {
   "env": {
     "browser": true,
-    "node": true,
-    "commonjs": true,
-    "amd": true,
-    "es2020": true
+    "es2022": true
   },
   "extends": ["eslint:recommended", "plugin:import/errors", "plugin:import/warnings"],
   "parser": "@babel/eslint-parser",
   "parserOptions": {
-    "ecmaFeatures": {
-      "jsx": true
-    },
-    "ecmaVersion": 11,
-    "sourceType": "module"
+    "ecmaVersion": "latest",
+    "sourceType": "module",
+    "requireConfigFile": false
   },
   "plugins": ["@babel/eslint-plugin", "import"],
   "rules": {
@@ -22,10 +17,11 @@
     "new-cap": "error",
     "no-invalid-this": "error",
     "no-unused-expressions": "off",
-    "react/prop-types": "warn",
+    "react/prop-types": "off",
     "import/no-unresolved": "off",
     "import/namespace": "warn",
-    "import/named": "warn"
+    "import/named": "warn",
+    "no-prototype-builtins": "warn"
   },
   "globals": {},
   "overrides": []

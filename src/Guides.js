@@ -217,4 +217,3 @@ class Guides {
 }
 
 export { Guides as default };
-// export { Guides };

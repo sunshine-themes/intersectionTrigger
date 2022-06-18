@@ -1,3 +1,5 @@
+import { classDefaultToggleActions } from './constants';
+
 export default class Utils {
   constructor(intersectionTrigger) {
     this._it = intersectionTrigger;
@@ -30,7 +32,19 @@ export default class Utils {
 
       return [...new Set(threshold)]; //to remove duplicates
     };
-    this.parseQuery = (query, type = 'trigger') => {
+    this.parseQuery = (q, errLog) => {
+      switch (true) {
+        case this._helpers.is.string(q):
+          return [...document.querySelectorAll(q)];
+        case this._helpers.is.array(q):
+          return q;
+        case this._helpers.is.element(q):
+          return [q];
+        default:
+          this._helpers.throwError(`${errLog} parameter must be a valid selector, an element or array of elements`);
+      }
+    };
+    this.customParseQuery = (query, type = 'trigger') => {
       const isTrigger = 'trigger' === type;
       let output = isTrigger ? [] : {};
 
@@ -42,22 +56,7 @@ export default class Utils {
           : this._helpers.throwError('root parameter must be a valid selector or an element');
         return output;
       }
-      switch (true) {
-        case this._helpers.is.string(query):
-          output = [...document.querySelectorAll(query)];
-          break;
-        case this._helpers.is.array(query):
-          output = query;
-          break;
-        case this._helpers.is.element(query):
-          output = [query];
-          break;
-        default:
-          this._helpers.throwError('trigger parameter must be a valid selector, an element or array of elements');
-          break;
-      }
-
-      return output;
+      return this.parseQuery(query, 'trigger');
     };
 
     // Positions parsing
@@ -206,14 +205,23 @@ export default class Utils {
       this.setTriggerData(trigger, null, { states: triggerStates });
     };
     //
-    this.onTriggerEnter = (trigger, data) => {
+    this.onTriggerEnter = (trigger, event = 'Enter') => {
       //Get Stored trigger data
-      const { hasFirstEntered } = this.getTriggerStates(trigger);
+      const { hasEnteredOnce } = this.getTriggerStates(trigger);
+      const { onEnter, onEnterBack, classNamesData } = this.getTriggerData(trigger);
+      //
+      const isEnterEvent = 'Enter' === event;
+      const data = {
+        callback: isEnterEvent ? onEnter : onEnterBack,
+        enterProp: isEnterEvent ? 'hasEntered' : 'hasEnteredBack',
+        leaveProp: isEnterEvent ? 'hasLeftBack' : 'hasLeft',
+        eventIndex: isEnterEvent ? 0 : 2,
+      };
+      //Invoke Enter Functions
+      data.callback(trigger, this);
+      this.toggleClass(trigger, classNamesData, data.eventIndex);
 
-      //Invoke Enter Function
-      this._helpers.is.function(data.enterFun) && data.enterFun(trigger, this);
-
-      const triggerProps = hasFirstEntered
+      const triggerProps = hasEnteredOnce
         ? {
             [data.enterProp]: true,
             [data.leaveProp]: false,
@@ -222,15 +230,24 @@ export default class Utils {
 
       //Reset trigger data props
       this.setTriggerStates(trigger, triggerProps);
-      //Reset hasFirstEntered state
-      if (!hasFirstEntered) this.setTriggerStates(trigger, { hasFirstEntered: true });
+      //Reset hasEnteredOnce state
+      if (!hasEnteredOnce) this.setTriggerStates(trigger, { hasEnteredOnce: true });
     };
-    this.onTriggerLeave = (trigger, data) => {
+    this.onTriggerLeave = (trigger, event = 'Leave') => {
       //Get Stored trigger data
       const { once } = this.getTriggerData(trigger);
-      const { hasFirstEntered } = this.getTriggerStates(trigger);
-      //Invoke leave function
-      this._helpers.is.function(data.leaveFun) && data.leaveFun(trigger, this);
+      const { hasEnteredOnce } = this.getTriggerStates(trigger);
+      const { onLeave, onLeaveBack, classNamesData } = this.getTriggerData(trigger);
+      //
+      const isLeaveEvent = 'Leave' === event;
+      const data = {
+        callback: isLeaveEvent ? onLeave : onLeaveBack,
+        leaveProp: isLeaveEvent ? 'hasLeft' : 'hasLeftBack',
+        eventIndex: isLeaveEvent ? 1 : 3,
+      };
+      //Invoke leave functions
+      data.callback(trigger, this);
+      this.toggleClass(trigger, classNamesData, data.eventIndex);
       //Reset trigger data props
       this.setTriggerStates(trigger, {
         [data.leaveProp]: true,
@@ -238,7 +255,44 @@ export default class Utils {
         hasEnteredBack: false,
       });
       //Remove the instance if once is true
-      once && hasFirstEntered && this._it.remove(trigger);
+      once && hasEnteredOnce && this._it.remove(trigger);
+    };
+
+    this.toggleClass = (trigger, classNamesData, eventIndex) => {
+      for (const { targets, toggleActions, classNames } of classNamesData) {
+        if ('none' === toggleActions[eventIndex]) continue;
+        classNames.forEach((className) =>
+          targets.forEach((target) =>
+            target === 'trigger'
+              ? trigger.classList[toggleActions[eventIndex]](className)
+              : target.classList[toggleActions[eventIndex]](className)
+          )
+        );
+      }
+    };
+
+    this.parseClassNames = (params) => {
+      let classNamesData = [];
+      const splitStr = (st) => st.split(/\s+/);
+
+      if (this._helpers.is.string(params)) {
+        classNamesData.push({
+          targets: ['trigger'],
+          classNames: splitStr(params),
+          toggleActions: splitStr(classDefaultToggleActions),
+        });
+        return classNamesData;
+      }
+
+      if (this._helpers.is.array(params)) {
+        classNamesData = params.map((obj) => ({
+          targets: this.parseQuery(obj.targets, 'targets'),
+          classNames: splitStr(obj.classNames),
+          toggleActions: splitStr(obj.toggleActions),
+        }));
+      }
+
+      return classNamesData;
     };
 
     this.toggleActions = (trigger) => {
@@ -246,7 +300,7 @@ export default class Utils {
       this._it.rootBounds = this.getRootRect(this._it.observer.rootMargin);
       const rB = this._it.rootBounds; //root Bounds
 
-      const { enter, leave, onEnter, onEnterBack, onLeave, onLeaveBack } = this.getTriggerData(trigger);
+      const { enter, leave } = this.getTriggerData(trigger);
       const { hasEnteredFromOneSide, hasLeft, hasLeftBack } = this.getTriggerStates(trigger);
       const { ref, refOpposite, length } = this._helpers.dirProps();
       let hasCaseMet = true;
@@ -254,33 +308,19 @@ export default class Utils {
       switch (true) {
         case hasLeftBack && tB[ref] + enter * tB[length] <= rB[refOpposite] && tB[ref] + enter * tB[length] > rB[ref]:
           //Enter case
-          this.onTriggerEnter(trigger, {
-            enterFun: onEnter,
-            enterProp: 'hasEntered',
-            leaveProp: 'hasLeftBack',
-          });
+          this.onTriggerEnter(trigger);
           break;
         case hasEnteredFromOneSide && tB[ref] + leave * tB[length] <= rB[ref]:
           //Leave case
-          this.onTriggerLeave(trigger, {
-            leaveFun: onLeave,
-            leaveProp: 'hasLeft',
-          });
+          this.onTriggerLeave(trigger);
           break;
         case hasLeft && tB[ref] + leave * tB[length] >= rB[ref] && tB[ref] + leave * tB[length] < rB[refOpposite]:
           //EnterBack case
-          this.onTriggerEnter(trigger, {
-            enterFun: onEnterBack,
-            enterProp: 'hasEnteredBack',
-            leaveProp: 'hasLeft',
-          });
+          this.onTriggerEnter(trigger, 'EnterBack');
           break;
         case hasEnteredFromOneSide && tB[ref] + enter * tB[length] >= rB[refOpposite]:
           //LeaveBack case
-          this.onTriggerLeave(trigger, {
-            leaveFun: onLeaveBack,
-            leaveProp: 'hasLeftBack',
-          });
+          this.onTriggerLeave(trigger, 'hasLeftBack');
           break;
         default:
           hasCaseMet = false;
@@ -308,10 +348,15 @@ export default class Utils {
             case 'name':
               !this._helpers.is.string(optionValue) && this._helpers.throwError('axis and name parameters must be strings.');
               break;
-            case 'guides':
-              !this._helpers.is.boolean(optionValue) &&
-                !this._helpers.is.object(optionValue) &&
-                this._helpers.throwError('guides parameter must be a boolean or object.');
+            case 'animation':
+              !this._helpers.is.anime(optionValue) &&
+                !this._helpers.is.tl(optionValue) &&
+                this._helpers.throwError('animation parameter must be an anime instance or timeline.');
+              break;
+            case 'toggleClass':
+              !this._helpers.is.string(optionValue) &&
+                !this._helpers.is.array(optionValue) &&
+                this._helpers.throwError('toggleClass parameter must be a string or an Array.');
               break;
             case 'onEnter':
             case 'onEnterBack':

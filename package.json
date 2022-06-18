@@ -37,10 +37,14 @@
     "url": "https://github.com/sherif-magdy/IntersectionTrigger"
   },
   "devDependencies": {
+    "@babel/eslint-parser": "^7.18.2",
+    "@babel/eslint-plugin": "^7.17.7",
     "@babel/preset-env": "^7.18.2",
     "core-js": "^3.22.8",
     "esbuild": "^0.14.43",
     "esbuild-plugin-babel": "^0.2.3",
+    "eslint": "^8.17.0",
+    "eslint-plugin-import": "^2.26.0",
     "estrella": "^1.4.1"
   }
 }

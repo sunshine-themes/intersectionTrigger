@@ -7,17 +7,17 @@ export default class Helpers {
 
   setHelpers() {
     this.is = {
-      function: (value) => 'function' === typeof value,
-      string: (value) => 'string' === typeof value,
-      boolean: (value) => 'boolean' === typeof value,
-      object: (value) => value && 'object' === typeof value && !(value instanceof Array),
+      function: (a) => 'function' === typeof a,
+      string: (a) => 'string' === typeof a,
+      boolean: (a) => 'boolean' === typeof a,
+      object: (a) => a && 'object' === typeof a && !(a instanceof Array),
       inObject: (obj, prop) => this.is.object(obj) && prop in obj,
-      percent: (value) => value && value.includes('%'),
-      pixel: (value) => value && value.includes('px'),
-      array: (value) => value instanceof Array,
-      element: (value) => value instanceof HTMLElement || value instanceof Element,
-      rootViewport: (root) => !root,
-      doc: (node) => node && node.nodeType === 9,
+      percent: (a) => a && a.includes('%'),
+      pixel: (a) => a && a.includes('px'),
+      array: (a) => a instanceof Array,
+      element: (a) => a instanceof HTMLElement || a instanceof Element,
+      rootViewport: (a) => !a,
+      doc: (a) => a && a.nodeType === 9,
       scrollable: (element, dir = null) =>
         dir
           ? 'y' === dir
@@ -26,9 +26,11 @@ export default class Helpers {
           : element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth,
       virtical: () => 'y' === this._it.axis,
       horizontal: () => 'x' === this._it.axis,
+      anime: (a) => this.is.object(a) && a.hasOwnProperty('animatables') && !a.hasOwnProperty('add'),
+      tl: (a) => this.is.object(a) && a.hasOwnProperty('add') && this.is.function(a.add),
     };
     this.getBoundsProp = (element, prop) => element && element.getBoundingClientRect()[prop];
-    this.getRoot = () => (!!this._it._root ? this._it._root : window);
+    this.getRoot = () => this._it._root ?? window;
     this.getScrollValue = (element, dir) => ('y' === dir ? element.scrollHeight : element.scrollWidth);
     this.dirProps = () =>
       this.is.virtical()
