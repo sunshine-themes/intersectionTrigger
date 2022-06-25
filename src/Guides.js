@@ -1,4 +1,5 @@
 import { guideDefaultParams } from './constants';
+import { boundsMinusScrollbar, getParents, is, mergeOptions } from './helpers';
 
 class Guides {
   constructor(params = {}) {
@@ -9,7 +10,6 @@ class Guides {
 
   _registerIntersectionTrigger(intersectionTrigger) {
     this._it = intersectionTrigger;
-    this._helpers = this._it._helpers;
     this._utils = this._it._utils;
 
     this._addResizeListener();
@@ -26,7 +26,7 @@ class Guides {
   }
 
   createGuides() {
-    const isVirtical = this._helpers.is.virtical();
+    const isVirtical = this._utils.isVirtical();
     const createGuide = (options) => {
       const { triggerGuide, trigger, enter, position, text, color, backgroundColor } = options;
       const setProp = (el, prop, value) => (el.style[prop] = value);
@@ -86,13 +86,9 @@ class Guides {
       const positionGuide = (isTrigger = true) => {
         const guideBounds = guide.getBoundingClientRect();
 
-        const targetBounds = isTrigger
-          ? this._helpers.boundsMinusScrollbar(trigger)
-          : this._utils.getRootRect(this._it.observer.rootMargin);
+        const targetBounds = isTrigger ? boundsMinusScrollbar(trigger) : this._utils.getRootRect(this._it.observer.rootMargin);
         //Root Bounds without Margins
-        const rBoundsNoMargins = this._it._root
-          ? this._helpers.boundsMinusScrollbar(this._it._root)
-          : this._helpers.boundsMinusScrollbar(document.body);
+        const rBoundsNoMargins = this._it._root ? boundsMinusScrollbar(this._it._root) : boundsMinusScrollbar(document.body);
 
         const triggerDiffs = isVirtical
           ? {
@@ -138,8 +134,8 @@ class Guides {
       //Trigger guide
       positionGuide();
       //RePosition the guide on every parent Scroll
-      this._helpers.getParents(trigger).forEach((parent) => {
-        if (!this._helpers.is.scrollable(parent)) return;
+      getParents(trigger).forEach((parent) => {
+        if (!is.scrollable(parent)) return;
 
         parent.addEventListener('scroll', (event) => positionGuide(), false);
       });
@@ -147,8 +143,8 @@ class Guides {
     //Guides Parameters
     const parseGuidesParams = (params) => {
       let guideParams = guideDefaultParams;
-      if (this._helpers.is.object(params)) {
-        guideParams = this._helpers.mergeOptions(guideParams, params);
+      if (is.object(params)) {
+        guideParams = mergeOptions(guideParams, params);
       }
       return guideParams;
     };
@@ -160,7 +156,7 @@ class Guides {
     createGuide({
       triggerGuide: false,
       enter: true,
-      position: this._it._positions.rootStartPosition.guide,
+      position: this._it._positions.rootEnterPosition.guide,
       text: `${guideTextPrefix} ${guideParams.enter.root.text}`,
       color: guideParams.enter.root.color,
       backgroundColor: guideParams.enter.root.backgroundColor,
@@ -168,7 +164,7 @@ class Guides {
     createGuide({
       triggerGuide: false,
       enter: false,
-      position: this._it._positions.rootEndPosition.guide,
+      position: this._it._positions.rootLeavePosition.guide,
       text: `${guideTextPrefix} ${guideParams.leave.root.text}`,
       color: guideParams.leave.root.color,
       backgroundColor: guideParams.leave.root.backgroundColor,
@@ -209,7 +205,6 @@ class Guides {
     this.removeGuides();
 
     this._it = null;
-    this._helpers = null;
     this._utils = null;
 
     removeEventListener('resize', this._onResizeHandler, false);

@@ -1,4 +1,7 @@
 const fn = () => {};
+const classDefaultToggleActions = ['add', 'remove', 'add', 'remove'];
+const animationDefaultToggleActions = ['play', 'finish', 'reverse', 'finish'];
+
 const defaultInsOptions = {
   //Defaults for every trigger
   defaults: {
@@ -8,6 +11,7 @@ const defaultInsOptions = {
     onEnterBack: fn,
     onLeaveBack: fn,
     toggleClass: null,
+    animation: null,
   },
   enter: '0% 100%',
   leave: '100% 0%',
@@ -53,6 +57,17 @@ const guideDefaultParams = {
   },
 };
 
-const classDefaultToggleActions = 'add remove add remove';
+const defaultToggleClassParams = {
+  targets: null,
+  toggleActions: classDefaultToggleActions,
+  classNames: null,
+};
 
-export { defaultInsOptions, triggerStates, guideDefaultParams, classDefaultToggleActions };
+const defaultAnimationParams = {
+  instance: null,
+  toggleActions: animationDefaultToggleActions,
+  control: false,
+  
+};
+
+export { defaultInsOptions, triggerStates, guideDefaultParams, defaultAnimationParams, defaultToggleClassParams };

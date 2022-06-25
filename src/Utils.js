@@ -1,47 +1,51 @@
-import { classDefaultToggleActions } from './constants';
+import { defaultAnimationParams, defaultToggleClassParams } from './constants';
+import { boundsMinusScrollbar, getBoundsProp, getScrollValue, is, mergeOptions, roundFloat, splitStr, throwError } from './helpers';
 
 export default class Utils {
   constructor(intersectionTrigger) {
     this._it = intersectionTrigger;
-    this._helpers = this._it._helpers;
     this.setUtils();
     return this;
   }
   setUtils() {
+    this.isVirtical = () => 'y' === this._it.axis;
+    this.isRootViewport = () => !this._it._root;
+    this.getRoot = () => this._it._root ?? window;
+    this.dirProps = () =>
+      this.isVirtical()
+        ? { ref: 'top', length: 'height', refOpposite: 'bottom', innerLength: innerHeight }
+        : { ref: 'left', length: 'width', refOpposite: 'right', innerLength: innerWidth };
     this.setRootMargin = () => {
-      const extendMargin = this._helpers.getScrollValue(
-        this._helpers.is.rootViewport(this._it._root) ? document.body : this._it._root,
-        this._helpers.is.virtical() ? 'x' : 'y'
-      );
-      return this._helpers.is.virtical()
-        ? `${this._it._positions.rootEndPosition.strValue} ${extendMargin}px ${this._it._positions.rootStartPosition.strValue} ${extendMargin}px`
-        : `${extendMargin}px ${this._it._positions.rootStartPosition.strValue} ${extendMargin}px ${this._it._positions.rootEndPosition.strValue}`;
+      const extendMargin = getScrollValue(this.isRootViewport() ? document.body : this._it._root, this.isVirtical() ? 'x' : 'y');
+      return this.isVirtical()
+        ? `${this._it._positions.rootLeavePosition.strValue} ${extendMargin}px ${this._it._positions.rootEnterPosition.strValue} ${extendMargin}px`
+        : `${extendMargin}px ${this._it._positions.rootEnterPosition.strValue} ${extendMargin}px ${this._it._positions.rootLeavePosition.strValue}`;
     };
     this.setThreshold = () => {
       let threshold = [
         0,
         this._it._triggerParams.enter,
         this._it._triggerParams.leave,
-        this._helpers.roundFloat(1 - this._it._triggerParams.leave, 2),
+        roundFloat(1 - this._it._triggerParams.leave, 2),
         1,
       ];
       this._it.triggers.forEach((trigger) => {
         const { enter, leave } = this.getTriggerData(trigger);
-        threshold.push(enter, leave, this._helpers.roundFloat(1 - leave, 2));
+        threshold.push(enter, leave, roundFloat(1 - leave, 2));
       });
 
       return [...new Set(threshold)]; //to remove duplicates
     };
     this.parseQuery = (q, errLog) => {
       switch (true) {
-        case this._helpers.is.string(q):
+        case is.string(q):
           return [...document.querySelectorAll(q)];
-        case this._helpers.is.array(q):
+        case is.array(q):
           return q;
-        case this._helpers.is.element(q):
+        case is.element(q):
           return [q];
         default:
-          this._helpers.throwError(`${errLog} parameter must be a valid selector, an element or array of elements`);
+          throwError(`${errLog} parameter must be a valid selector, an element or array of elements`);
       }
     };
     this.customParseQuery = (query, type = 'trigger') => {
@@ -49,11 +53,11 @@ export default class Utils {
       let output = isTrigger ? [] : {};
 
       if (!isTrigger) {
-        output = this._helpers.is.string(query)
+        output = is.string(query)
           ? document.querySelector(query)
-          : this._helpers.is.element(query)
+          : is.element(query)
           ? query
-          : this._helpers.throwError('root parameter must be a valid selector or an element');
+          : throwError('root parameter must be a valid selector or an element');
         return output;
       }
       return this.parseQuery(query, 'trigger');
@@ -61,21 +65,21 @@ export default class Utils {
 
     // Positions parsing
     this.validatePosition = (name, pos) => {
-      this._helpers.is.function(pos) && (pos = pos(this));
-      if (!this._helpers.is.string(pos)) this._helpers.throwError(`${name} parameter must be a string.`);
+      is.function(pos) && (pos = pos(this));
+      if (!is.string(pos)) throwError(`${name} parameter must be a string.`);
       return pos;
     };
     this.setPositionData = (offset, isTrigger = true, isEnter = true) => {
       offset = this.validatePosition(isEnter ? 'enter' : 'leave', offset);
 
       let value = offset.trim();
-      const isPercentage = this._helpers.is.percent(value);
-      const isPixel = this._helpers.is.pixel(value);
+      const isPercentage = is.percent(value);
+      const isPixel = is.pixel(value);
 
       let position = {};
 
       value = isPercentage ? value.replace('%', '') : isPixel ? value.replace('px', '') : value;
-      value = this._helpers.roundFloat(value);
+      value = roundFloat(value);
 
       position.type = isPercentage ? 'percent' : 'pixel';
 
@@ -86,11 +90,11 @@ export default class Utils {
         return position;
       }
       //Root Positions
-      const { length, innerLength } = this._helpers.dirProps();
-      const rootLength = this._it._root ? this._helpers.getBoundsProp(this._it._root, length) : innerLength;
+      const { length, innerLength } = this.dirProps();
+      const rootLength = this._it._root ? getBoundsProp(this._it._root, length) : innerLength;
       switch (true) {
         case isPercentage && isEnter:
-          position.value = this._helpers.roundFloat(value / 100 - 1, 2);
+          position.value = roundFloat(value / 100 - 1, 2);
           position.strValue = `${position.value * 100}%`;
           break;
         case isPercentage && !isEnter:
@@ -98,7 +102,7 @@ export default class Utils {
           position.strValue = `${position.value * 100}%`;
           break;
         case isPixel && isEnter:
-          position.value = this._helpers.roundFloat(value - rootLength, 2);
+          position.value = roundFloat(value - rootLength, 2);
           position.strValue = `${position.value}px`;
           break;
         case isPixel && !isEnter:
@@ -115,44 +119,16 @@ export default class Utils {
       enter = this.validatePosition('enter', enter);
       leave = this.validatePosition('leave', leave);
 
-      let triggerEnterPosition = {},
-        triggerLeavePosition = {},
-        rootStartPosition = {},
-        rootEndPosition = {};
-
       const enterPositions = enter.trim().split(/\s+/g, 2);
       const leavePositions = leave.trim().split(/\s+/g, 2);
       const positions = [...enterPositions, ...leavePositions];
 
-      positions.forEach((offset, i) => {
-        switch (i) {
-          case 0:
-            //Element enter Point
-            triggerEnterPosition = this.setPositionData(offset);
-            break;
-          case 1:
-            //Root enter Point
-            rootStartPosition = this.setPositionData(offset, false);
-            break;
-          case 2:
-            //Element leave Point
-            triggerLeavePosition = this.setPositionData(offset);
-            break;
-          case 3:
-            //Root End Point
-            rootEndPosition = this.setPositionData(offset, false, false);
-            break;
-        }
-      });
-
-      const parsedPositions = {
-        triggerLeavePosition,
-        triggerEnterPosition,
-        rootEndPosition,
-        rootStartPosition,
+      return {
+        triggerEnterPosition: this.setPositionData(positions[0]),
+        rootEnterPosition: this.setPositionData(positions[1], false),
+        triggerLeavePosition: this.setPositionData(positions[2]),
+        rootLeavePosition: this.setPositionData(positions[3], false, false),
       };
-
-      return parsedPositions;
     };
 
     //Trigger Data actions
@@ -181,7 +157,7 @@ export default class Utils {
         //Set data property of a trigger
         const storedValue = this.getTriggerData(trigger);
 
-        if (this._helpers.is.object(storedValue)) {
+        if (is.object(storedValue)) {
           this._it._triggersData.set(trigger, { ...storedValue, ...props });
         }
         return;
@@ -208,7 +184,7 @@ export default class Utils {
     this.onTriggerEnter = (trigger, event = 'Enter') => {
       //Get Stored trigger data
       const { hasEnteredOnce } = this.getTriggerStates(trigger);
-      const { onEnter, onEnterBack, classNamesData } = this.getTriggerData(trigger);
+      const { onEnter, onEnterBack, toggleClass, animation } = this.getTriggerData(trigger);
       //
       const isEnterEvent = 'Enter' === event;
       const data = {
@@ -219,7 +195,8 @@ export default class Utils {
       };
       //Invoke Enter Functions
       data.callback(trigger, this);
-      this.toggleClass(trigger, classNamesData, data.eventIndex);
+      toggleClass && this.toggleClass(trigger, toggleClass, data.eventIndex);
+      animation && this.animate(trigger, animation, data.eventIndex);
 
       const triggerProps = hasEnteredOnce
         ? {
@@ -237,7 +214,7 @@ export default class Utils {
       //Get Stored trigger data
       const { once } = this.getTriggerData(trigger);
       const { hasEnteredOnce } = this.getTriggerStates(trigger);
-      const { onLeave, onLeaveBack, classNamesData } = this.getTriggerData(trigger);
+      const { onLeave, onLeaveBack, toggleClass, animation } = this.getTriggerData(trigger);
       //
       const isLeaveEvent = 'Leave' === event;
       const data = {
@@ -247,7 +224,8 @@ export default class Utils {
       };
       //Invoke leave functions
       data.callback(trigger, this);
-      this.toggleClass(trigger, classNamesData, data.eventIndex);
+      toggleClass && this.toggleClass(trigger, toggleClass, data.eventIndex);
+      animation && this.animate(trigger, animation, data.eventIndex);
       //Reset trigger data props
       this.setTriggerStates(trigger, {
         [data.leaveProp]: true,
@@ -258,8 +236,52 @@ export default class Utils {
       once && hasEnteredOnce && this._it.remove(trigger);
     };
 
-    this.toggleClass = (trigger, classNamesData, eventIndex) => {
-      for (const { targets, toggleActions, classNames } of classNamesData) {
+    this.animate = (trigger, animation, eventIndex) => {
+      const { instance, toggleActions, control } = animation;
+      if (!instance) return;
+
+      if (control) {
+        switch (eventIndex) {
+          case 0:
+            break;
+        }
+
+        return;
+      }
+
+      const action = toggleActions[eventIndex];
+      if ('none' === action) return;
+
+      switch (action) {
+        case 'play':
+          instance.reversed && instance.reverse();
+          1 > instance.progress && instance[action]();
+          break;
+        case 'restart':
+        case 'reset':
+          instance.reversed && instance.reverse();
+          instance[action]();
+          break;
+        case 'pause':
+          break;
+        case 'finish':
+          instance.pause();
+          instance.seek(instance.reversed ? 0 : instance.duration);
+          break;
+        case 'reverse':
+          if (instance.reversed) break;
+          instance[action]();
+          instance.paused && instance.play();
+          break;
+        case 'kill':
+          is.inObject(instance, 'kill') && instance.kill();
+          this.setTriggerData(trigger, null, { animation: { ...defaultAnimationParams } });
+          break;
+      }
+    };
+
+    this.toggleClass = (trigger, toggleClass, eventIndex) => {
+      for (const { targets, toggleActions, classNames } of toggleClass) {
         if ('none' === toggleActions[eventIndex]) continue;
         classNames.forEach((className) =>
           targets.forEach((target) =>
@@ -271,28 +293,55 @@ export default class Utils {
       }
     };
 
-    this.parseClassNames = (params) => {
-      let classNamesData = [];
-      const splitStr = (st) => st.split(/\s+/);
+    this.parseToggleClass = (params) => {
+      let toggleClass = [];
 
-      if (this._helpers.is.string(params)) {
-        classNamesData.push({
+      if (is.string(params)) {
+        const mergedParams = mergeOptions(defaultToggleClassParams, {
           targets: ['trigger'],
           classNames: splitStr(params),
-          toggleActions: splitStr(classDefaultToggleActions),
         });
-        return classNamesData;
+        toggleClass.push([mergedParams]);
+        return toggleClass;
       }
 
-      if (this._helpers.is.array(params)) {
-        classNamesData = params.map((obj) => ({
-          targets: this.parseQuery(obj.targets, 'targets'),
-          classNames: splitStr(obj.classNames),
-          toggleActions: splitStr(obj.toggleActions),
-        }));
+      if (is.array(params)) {
+        toggleClass = params.map((obj) => {
+          const mergedParams = mergeOptions(defaultToggleClassParams, obj);
+          const { targets, classNames, toggleActions } = mergedParams;
+
+          targets && (mergedParams.targets = this.parseQuery(targets, 'targets'));
+          classNames && (mergedParams.classNames = splitStr(classNames));
+          is.string(toggleActions) && (mergedParams.toggleActions = splitStr(toggleActions));
+          return mergedParams;
+        });
       }
 
-      return classNamesData;
+      return toggleClass;
+    };
+
+    this.parseAnimation = (params) => {
+      let animation = {};
+
+      switch (true) {
+        case is.animeInstance(params):
+          animation = mergeOptions(defaultAnimationParams, {
+            instance: params,
+          });
+          break;
+        case is.object(params):
+          {
+            const mergedParams = mergeOptions(defaultAnimationParams, params);
+            const { toggleActions } = mergedParams;
+            is.string(toggleActions) && (mergedParams.toggleActions = splitStr(toggleActions));
+            animation = mergedParams;
+          }
+          break;
+      }
+
+      is.inObject(animation, 'instance') && animation.instance.reset();
+
+      return animation;
     };
 
     this.toggleActions = (trigger) => {
@@ -302,7 +351,7 @@ export default class Utils {
 
       const { enter, leave } = this.getTriggerData(trigger);
       const { hasEnteredFromOneSide, hasLeft, hasLeftBack } = this.getTriggerStates(trigger);
-      const { ref, refOpposite, length } = this._helpers.dirProps();
+      const { ref, refOpposite, length } = this.dirProps();
       let hasCaseMet = true;
 
       switch (true) {
@@ -328,56 +377,6 @@ export default class Utils {
       }
 
       return hasCaseMet;
-    };
-
-    /**
-     * Valide user options
-     *
-     *  @param {object} options
-     *  @return {void}
-     */
-    this.validateOptions = (options) => {
-      for (const optionName in options) {
-        const optionValue = options[optionName];
-        const validateOption = (optionName, optionValue) => {
-          switch (optionName) {
-            case 'once':
-              !this._helpers.is.boolean(optionValue) && this._helpers.throwError('once parameter must be a boolean.');
-              break;
-            case 'axis':
-            case 'name':
-              !this._helpers.is.string(optionValue) && this._helpers.throwError('axis and name parameters must be strings.');
-              break;
-            case 'animation':
-              !this._helpers.is.anime(optionValue) &&
-                !this._helpers.is.tl(optionValue) &&
-                this._helpers.throwError('animation parameter must be an anime instance or timeline.');
-              break;
-            case 'toggleClass':
-              !this._helpers.is.string(optionValue) &&
-                !this._helpers.is.array(optionValue) &&
-                this._helpers.throwError('toggleClass parameter must be a string or an Array.');
-              break;
-            case 'onEnter':
-            case 'onEnterBack':
-            case 'onLeave':
-            case 'onLeaveBack':
-            case 'onScroll':
-              !this._helpers.is.function(optionValue) &&
-                this._helpers.throwError('onEnter, onLeave, onEnterBack, onLeaveBack and onScroll parameters must be functions.');
-              break;
-          }
-        };
-        if (!this._helpers.is.object(optionValue)) {
-          validateOption(optionName, optionValue);
-          continue;
-        }
-
-        for (const nestedOptionName in optionValue) {
-          const nestedOptionValue = optionValue[nestedOptionName];
-          validateOption(nestedOptionName, nestedOptionValue);
-        }
-      }
     };
 
     //  upcoming code is based on IntersectionObserver calculations of the root bounds
@@ -416,11 +415,11 @@ export default class Utils {
     };
     this.getRootRect = (rootMargins) => {
       let rootRect;
-      if (this._it._root && !this._helpers.is.doc(this._it._root)) {
-        rootRect = this._helpers.boundsMinusScrollbar(this._it._root);
+      if (this._it._root && !is.doc(this._it._root)) {
+        rootRect = boundsMinusScrollbar(this._it._root);
         return this.expandRectByRootMargin(rootRect, rootMargins);
       }
-      const doc = this._helpers.is.doc(this._it._root) ? this._it._root : document;
+      const doc = is.doc(this._it._root) ? this._it._root : document;
       const html = doc.documentElement;
       const body = doc.body;
       rootRect = {

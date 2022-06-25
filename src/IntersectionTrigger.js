@@ -1,6 +1,6 @@
 import { defaultInsOptions, triggerStates } from './constants';
-import Helpers from './Helpers';
 import Utils from './Utils';
+import { mergeOptions, is, throwError } from './helpers';
 
 const instances = [];
 let instanceID = 0;
@@ -12,7 +12,6 @@ class IntersectionTrigger {
     this._triggersData = new WeakMap();
     this._guidesInstance = null;
     //
-    this._helpers = new Helpers(this);
     this._utils = new Utils(this);
     //
     this.id = instanceID;
@@ -29,21 +28,20 @@ class IntersectionTrigger {
   }
 
   _addScrollListener() {
-    const root = this._helpers.getRoot();
+    const root = this._utils.getRoot();
     !!this._onScrollHandler && root.removeEventListener('scroll', this._onScrollHandler, false);
 
-    this._onScrollHandler = (event) => {
-      const rAFCallback = () => {
-        //Invoke all onScroll triggers Functions
-        this.triggers.forEach((trigger) => {
-          const onScrollFun = this._utils.getTriggerStates(trigger)?.onScroll;
-          onScrollFun && onScrollFun(trigger);
-        });
-        //Invoke custom function
-        this.onScroll(event, this);
-      };
-      requestAnimationFrame(rAFCallback);
+    const rAFCallback = (event) => {
+      //Invoke all onScroll triggers Function
+      this.triggers.forEach((trigger) => {
+        const onScrollFun = this._utils.getTriggerStates(trigger)?.onScroll;
+        onScrollFun && onScrollFun(trigger);
+      });
+      //Invoke custom function
+      this.onScroll(event, this);
     };
+
+    this._onScrollHandler = (event) => requestAnimationFrame(() => rAFCallback(event));
 
     root.addEventListener('scroll', this._onScrollHandler, false);
   }
@@ -62,14 +60,14 @@ class IntersectionTrigger {
 
     this._root = this.observer.root;
     this.rootBounds = this._utils.getRootRect(this.observer.rootMargin);
-    this._isRootViewport = this._helpers.is.rootViewport(this._root);
+    this._isRootViewport = this._utils.isRootViewport();
 
     //Init Event listener
     this._addScrollListener();
   }
 
   _observerCallback = (entries, observer) => {
-    const { ref, refOpposite, length } = this._helpers.dirProps();
+    const { ref, refOpposite, length } = this._utils.dirProps();
     for (const entry of entries) {
       const trigger = entry.target,
         tB = entry.boundingClientRect, //trigger Bounds
@@ -81,7 +79,7 @@ class IntersectionTrigger {
         rootLength = rB[length],
         rootToTarget = rootLength / tB[length];
       //////
-      const { enter, leave, onEnter, onLeave, onLeaveBack } = this._utils.getTriggerData(trigger);
+      const { enter, leave } = this._utils.getTriggerData(trigger);
       const { hasEnteredFromOneSide, onScroll } = this._utils.getTriggerStates(trigger);
       ///////
       const isTriggerLarger = tB[length] >= rootLength,
@@ -111,7 +109,6 @@ class IntersectionTrigger {
             case isIntersecting:
               switch (true) {
                 case tSPIsBtwn || tEPIsBtwn || (tSPIsUp && tEPIsDown):
-                  //Invoke onEnter Function
                   this._utils.onTriggerEnter(trigger);
                   break;
                 case tEPIsUp:
@@ -119,12 +116,10 @@ class IntersectionTrigger {
                   this._utils.onTriggerLeave(trigger);
                   break;
               }
-
               if (initOnScrollFun)
                 this._utils.setTriggerStates(trigger, {
                   onScroll: this._utils.toggleActions,
                 });
-
               break;
           }
           break;
@@ -161,18 +156,12 @@ class IntersectionTrigger {
   _setInstance() {
     //Default Options for instance
     this._defaultOptions = defaultInsOptions;
-
-    this._utils.validateOptions(this._userOptions);
-    this._options = this._helpers.mergeOptions(this._defaultOptions, this._userOptions);
+    this._options = mergeOptions(this._defaultOptions, this._userOptions);
 
     //Scroll Axis
-    this.axis = this._helpers.is.string(this._options.axis)
-      ? this._options.axis
-      : this._helpers.throwError('axis parameter must be a string.');
+    this.axis = is.string(this._options.axis) ? this._options.axis : throwError('axis parameter must be a string.');
     //Name of IntersectionTrigger instance
-    this.name = this._helpers.is.string(this._options.name)
-      ? this._options.name
-      : this._helpers.throwError('name parameter must be a string.');
+    this.name = is.string(this._options.name) ? this._options.name : throwError('name parameter must be a string.');
 
     this._root = (!!this._options.root && this._utils.customParseQuery(this._options.root, 'root')) || null;
     this._positions = this._utils.parsePositions(this._options.enter, this._options.leave);
@@ -181,15 +170,17 @@ class IntersectionTrigger {
     this.onScroll = this._options.onScroll;
 
     //Create trigger defaults
+    const { once, onEnter, onLeave, onEnterBack, onLeaveBack, toggleClass, animation } = this._options.defaults;
     this._triggerParams = {
       enter: this._positions.triggerEnterPosition.value,
       leave: this._positions.triggerLeavePosition.value,
-      once: this._options.defaults.once,
-      onEnter: this._options.defaults.onEnter,
-      onLeave: this._options.defaults.onLeave,
-      onEnterBack: this._options.defaults.onEnterBack,
-      onLeaveBack: this._options.defaults.onLeaveBack,
-      toggleClass: this._options.defaults.toggleClass,
+      once,
+      onEnter,
+      onLeave,
+      onEnterBack,
+      onLeaveBack,
+      toggleClass,
+      animation,
     };
 
     //Create root margin
@@ -203,17 +194,15 @@ class IntersectionTrigger {
   add(trigger = {}, options = {}) {
     const toAddTriggers = this._utils.customParseQuery(trigger);
 
-    this._utils.validateOptions(options);
-
     'enter' in options && (options.enter = this._utils.setPositionData(options.enter).value);
     'leave' in options && (options.leave = this._utils.setPositionData(options.leave).value);
 
     const triggerParams = {
-      ...this._triggerParams,
-      ...options,
+      ...mergeOptions(this._triggerParams, options),
       states: { ...triggerStates },
     };
-    triggerParams.classNamesData = this._utils.parseClassNames(triggerParams.toggleClass);
+    triggerParams.toggleClass && (triggerParams.toggleClass = this._utils.parseToggleClass(triggerParams.toggleClass));
+    triggerParams.animation && (triggerParams.animation = this._utils.parseAnimation(triggerParams.animation));
     //Add new Triggers
     this.triggers = [...this.triggers, ...toAddTriggers];
     this.triggers = [...new Set(this.triggers)]; //to remove any duplicates
@@ -286,7 +275,7 @@ class IntersectionTrigger {
   }
 
   addGuides(guidesIns) {
-    if (!this._helpers.is.inObject(guidesIns, '_registerIntersectionTrigger')) this._helpers.throwError('Invalid Guides Instance.');
+    if (!is.inObject(guidesIns, '_registerIntersectionTrigger')) throwError('Invalid Guides Instance.');
 
     guidesIns._registerIntersectionTrigger(this);
     guidesIns.refresh();
@@ -299,8 +288,15 @@ class IntersectionTrigger {
     this._guidesInstance = null;
     return this;
   }
+
+  update() {
+    //Refreash guides
+    this._guidesInstance && this._guidesInstance.refresh();
+  }
 }
 
-IntersectionTrigger.instances = instances;
+IntersectionTrigger.getInstances = () => instances;
+IntersectionTrigger.getInstanceById = (id) => instances.find((ins) => ins.id === id);
+IntersectionTrigger.update = () => instances.forEach((ins) => ins.update());
 
 export { IntersectionTrigger as default };
