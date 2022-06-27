@@ -65,7 +65,7 @@ export default class Utils {
 
     // Positions parsing
     this.validatePosition = (name, pos) => {
-      is.function(pos) && (pos = pos(this));
+      is.function(pos) && (pos = pos(this._it));
       if (!is.string(pos)) throwError(`${name} parameter must be a string.`);
       return pos;
     };
@@ -165,10 +165,14 @@ export default class Utils {
       //Set data of a trigger
       this._it._triggersData.set(trigger, value);
     };
-    this.getTriggerStates = (trigger) => {
+    this.getTriggerStates = (trigger, prop = null) => {
       const triggerStates = this.getTriggerData(trigger, 'states');
       const hasEnteredFromOneSide = triggerStates.hasEntered || triggerStates.hasEnteredBack;
 
+      if (prop) {
+        //Get a property of a trigger states
+        return triggerStates[prop];
+      }
       return {
         ...triggerStates,
         hasEnteredFromOneSide,
@@ -179,6 +183,22 @@ export default class Utils {
       const triggerStates = triggerData && { ...triggerData.states, ...value };
 
       this.setTriggerData(trigger, null, { states: triggerStates });
+    };
+    this.setTriggerScrollStates = (trigger, prop, value = null) => {
+      const triggerScrollStates = this.getTriggerStates(trigger, 'onScroll');
+      triggerScrollStates[prop] = value;
+
+      this.setTriggerStates(trigger, { onscroll: { ...triggerScrollStates } });
+
+      //Update
+      if (value) {
+        if (0 === this._it._states.runningScrollCbs) this._it.addScrollListener(this._it._onScrollHandler);
+        this._it._states.runningScrollCbs++;
+        return;
+      }
+
+      if (0 < this._it._states.runningScrollCbs) this._it._states.runningScrollCbs--;
+      if (0 === this._it._states.runningScrollCbs) this._it.removeScrollListener(this._it._onScrollHandler);
     };
     //
     this.onTriggerEnter = (trigger, event = 'Enter') => {
@@ -241,8 +261,40 @@ export default class Utils {
       if (!instance) return;
 
       if (control) {
+        const { animate } = this.getTriggerStates(trigger, 'onScroll');
+        const { enter, leave } = this.getTriggerData(trigger);
+        const { ref, refOpposite, length } = this.dirProps();
+        const tB = trigger.getBoundingClientRect(); //trigger Bounds
+        const tIL = tB[length] - (enter * tB[length] + (1 - leave) * tB[length]); //trigger Intersection length
+        const duration = instance.duration;
+
+        const animateHandler = (trigger) => {
+          const tB = trigger.getBoundingClientRect(); //trigger Bounds
+          this._it.rootBounds = this.getRootRect(this._it.observer.rootMargin);
+          const rB = this._it.rootBounds; //root Bounds
+
+          const diff = rB[refOpposite] - (tB[ref] + enter * tB[length]);
+          if (diff > 0) {
+            const currentTime = (duration * diff) / (tIL + rB[length]);
+            if (is.num(control)) {
+              setTimeout(() => instance.seek(currentTime), control * 1000);
+              return;
+            }
+            instance.seek(currentTime);
+          }
+        };
+
         switch (eventIndex) {
           case 0:
+          case 2:
+            this._it._states.oCbFirstInvoke && animateHandler(trigger); //to update the animation if the root intersects trigger at begining
+
+            if (animate) break;
+            this.setTriggerScrollStates(trigger, 'animate', animateHandler);
+            break;
+          case 1:
+          case 3:
+            this.setTriggerScrollStates(trigger, 'animate', null);
             break;
         }
 
@@ -278,6 +330,30 @@ export default class Utils {
           this.setTriggerData(trigger, null, { animation: { ...defaultAnimationParams } });
           break;
       }
+    };
+
+    this.parseAnimation = (params) => {
+      let animation = {};
+
+      switch (true) {
+        case is.animeInstance(params):
+          animation = mergeOptions(defaultAnimationParams, {
+            instance: params,
+          });
+          break;
+        case is.object(params):
+          {
+            const mergedParams = mergeOptions(defaultAnimationParams, params);
+            const { toggleActions } = mergedParams;
+            is.string(toggleActions) && (mergedParams.toggleActions = splitStr(toggleActions));
+            animation = mergedParams;
+          }
+          break;
+      }
+
+      is.inObject(animation, 'instance') && animation.instance.reset();
+
+      return animation;
     };
 
     this.toggleClass = (trigger, toggleClass, eventIndex) => {
@@ -318,30 +394,6 @@ export default class Utils {
       }
 
       return toggleClass;
-    };
-
-    this.parseAnimation = (params) => {
-      let animation = {};
-
-      switch (true) {
-        case is.animeInstance(params):
-          animation = mergeOptions(defaultAnimationParams, {
-            instance: params,
-          });
-          break;
-        case is.object(params):
-          {
-            const mergedParams = mergeOptions(defaultAnimationParams, params);
-            const { toggleActions } = mergedParams;
-            is.string(toggleActions) && (mergedParams.toggleActions = splitStr(toggleActions));
-            animation = mergedParams;
-          }
-          break;
-      }
-
-      is.inObject(animation, 'instance') && animation.instance.reset();
-
-      return animation;
     };
 
     this.toggleActions = (trigger) => {

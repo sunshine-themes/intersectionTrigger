@@ -27,7 +27,7 @@ const triggerStates = {
   hasLeft: true,
   hasLeftBack: true,
   hasEnteredOnce: false,
-  onScroll: null,
+  onScroll: { backup: null, animate: null },
 };
 
 const guideDefaultParams = {
@@ -67,7 +67,6 @@ const defaultAnimationParams = {
   instance: null,
   toggleActions: animationDefaultToggleActions,
   control: false,
-  
 };
 
 export { defaultInsOptions, triggerStates, guideDefaultParams, defaultAnimationParams, defaultToggleClassParams };

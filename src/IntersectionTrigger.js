@@ -24,26 +24,26 @@ class IntersectionTrigger {
 
   _setStates() {
     this._states = {};
-    this._states.oCbFirstInvoke = true; //has observer callback invoked once
+    this._states.oCbFirstInvoke = true; //observer callback first invoke
+    this._states.runningScrollCbs = 0;
   }
 
-  _addScrollListener() {
-    const root = this._utils.getRoot();
-    !!this._onScrollHandler && root.removeEventListener('scroll', this._onScrollHandler, false);
+  _rAFCallback = (time) => {
+    //Invoke all onScroll triggers Functions
+    this.triggers.forEach((trigger) => {
+      const onScrollFuns = this._utils.getTriggerStates(trigger, 'onScroll');
+      for (const key in onScrollFuns) {
+        onScrollFuns[key] && onScrollFuns[key](trigger, time);
+      }
+    });
+  };
+  _onScrollHandler = () => requestAnimationFrame(this._rAFCallback);
 
-    const rAFCallback = (event) => {
-      //Invoke all onScroll triggers Function
-      this.triggers.forEach((trigger) => {
-        const onScrollFun = this._utils.getTriggerStates(trigger)?.onScroll;
-        onScrollFun && onScrollFun(trigger);
-      });
-      //Invoke custom function
-      this.onScroll(event, this);
-    };
-
-    this._onScrollHandler = (event) => requestAnimationFrame(() => rAFCallback(event));
-
-    root.addEventListener('scroll', this._onScrollHandler, false);
+  addScrollListener(handler) {
+    this._utils.getRoot().addEventListener('scroll', handler, false);
+  }
+  removeScrollListener(handler) {
+    this._utils.getRoot().removeEventListener('scroll', handler, false);
   }
 
   _createInstance() {
@@ -61,9 +61,6 @@ class IntersectionTrigger {
     this._root = this.observer.root;
     this.rootBounds = this._utils.getRootRect(this.observer.rootMargin);
     this._isRootViewport = this._utils.isRootViewport();
-
-    //Init Event listener
-    this._addScrollListener();
   }
 
   _observerCallback = (entries, observer) => {
@@ -80,13 +77,16 @@ class IntersectionTrigger {
         rootToTarget = rootLength / tB[length];
       //////
       const { enter, leave } = this._utils.getTriggerData(trigger);
-      const { hasEnteredFromOneSide, onScroll } = this._utils.getTriggerStates(trigger);
+      const {
+        hasEnteredFromOneSide,
+        onScroll: { backup },
+      } = this._utils.getTriggerStates(trigger);
       ///////
       const isTriggerLarger = tB[length] >= rootLength,
         isTSPLarger = enter > rootToTarget,
         isTEPLarger = 1 - leave > rootToTarget,
-        initOnScrollFun = isTriggerLarger && (isTSPLarger || isTEPLarger),
-        isOnScrollFunRunning = !!onScroll;
+        initBackupFun = isTriggerLarger && (isTSPLarger || isTEPLarger),
+        isBackupFunRunning = !!backup;
       //cases
       const tSPIsBtwn = tB[ref] + enter * tB[length] < rB[refOpposite] && tB[ref] + enter * tB[length] > rB[ref], // trigger start position is in between the root start and end positions.
         tEPIsBtwn = tB[ref] + leave * tB[length] < rB[refOpposite] && tB[ref] + leave * tB[length] > rB[ref], // trigger end position is in between the root start and end positions.
@@ -116,18 +116,12 @@ class IntersectionTrigger {
                   this._utils.onTriggerLeave(trigger);
                   break;
               }
-              if (initOnScrollFun)
-                this._utils.setTriggerStates(trigger, {
-                  onScroll: this._utils.toggleActions,
-                });
+              if (initBackupFun) this._utils.setTriggerScrollStates(trigger, 'backup', this._utils.toggleActions);
               break;
           }
           break;
         case !isIntersecting:
-          if (isOnScrollFunRunning)
-            this._utils.setTriggerStates(trigger, {
-              onScroll: null,
-            });
+          if (isBackupFunRunning) this._utils.setTriggerScrollStates(trigger, 'backup', null);
 
           switch (true) {
             case hasEnteredFromOneSide && tB[refOpposite] < rB[ref]:
@@ -138,14 +132,10 @@ class IntersectionTrigger {
               break;
           }
           break;
-        case isIntersecting && !isOnScrollFunRunning:
+        case isIntersecting && !isBackupFunRunning:
           this._utils.toggleActions(trigger);
 
-          initOnScrollFun &&
-            this._utils.setTriggerStates(trigger, {
-              onScroll: this._utils.toggleActions,
-            });
-
+          initBackupFun && this._utils.setTriggerScrollStates(trigger, 'backup', this._utils.toggleActions);
           break;
       }
     }
@@ -167,7 +157,7 @@ class IntersectionTrigger {
     this._positions = this._utils.parsePositions(this._options.enter, this._options.leave);
 
     //Add onScroll custom handler
-    this.onScroll = this._options.onScroll;
+    this.customScrollHandler = this._options.onScroll;
 
     //Create trigger defaults
     const { once, onEnter, onLeave, onEnterBack, onLeaveBack, toggleClass, animation } = this._options.defaults;
@@ -187,6 +177,8 @@ class IntersectionTrigger {
     this._rootMargin = this._utils.setRootMargin();
     //Create an IntersectionObserver
     this._createInstance();
+    //Init custom Event listener
+    this.customScrollHandler && this.addScrollListener(this.customScrollHandler);
 
     return this;
   }
@@ -204,8 +196,7 @@ class IntersectionTrigger {
     triggerParams.toggleClass && (triggerParams.toggleClass = this._utils.parseToggleClass(triggerParams.toggleClass));
     triggerParams.animation && (triggerParams.animation = this._utils.parseAnimation(triggerParams.animation));
     //Add new Triggers
-    this.triggers = [...this.triggers, ...toAddTriggers];
-    this.triggers = [...new Set(this.triggers)]; //to remove any duplicates
+    this.triggers = [...new Set([...this.triggers, ...toAddTriggers])]; //new Set to remove any duplicates
     //
     let mustRecreateObserver = false;
     [options.enter, options.leave].forEach(
@@ -261,14 +252,10 @@ class IntersectionTrigger {
   }
 
   kill() {
-    //Disconnect the IntersctionObserver
-    this._disconnect();
-    //Remove event listeners
-    removeEventListener('scroll', this._onScrollHandler, false);
-    //Remove all triggers
-    this.triggers = [];
-    //Remove all guides from DOM
-    this.removeGuides();
+    this._disconnect(); //Disconnect the IntersctionObserver
+    this.removeScrollListener(this.customScrollHandler); //Remove event listeners
+    this.triggers = []; //Remove all triggers
+    this.removeGuides(); //Remove all guides from DOM
     //Remove from instances
     const instanceIndex = instances.indexOf(this);
     ~instanceIndex && instances.splice(instanceIndex, 1);

@@ -4,6 +4,7 @@ const is = {
   boolean: (a) => 'boolean' === typeof a,
   object: (a) => a && 'object' === typeof a && !(a instanceof Array),
   inObject: (obj, prop) => is.object(obj) && prop in obj,
+  num: (a) => typeof a === 'number',
   percent: (a) => a && a.includes('%'),
   pixel: (a) => a && a.includes('px'),
   array: (a) => a instanceof Array,
