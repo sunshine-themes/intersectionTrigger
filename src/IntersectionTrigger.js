@@ -1,7 +1,8 @@
 import { defaultInsOptions, triggerStates } from './constants';
-import Utils from './Utils';
 import { mergeOptions, is, throwError } from './helpers';
+import Utils from './Utils';
 
+const registeredPlugins = [];
 const instances = [];
 let instanceID = 0;
 
@@ -33,7 +34,7 @@ class IntersectionTrigger {
     this.triggers.forEach((trigger) => {
       const onScrollFuns = this._utils.getTriggerStates(trigger, 'onScroll');
       for (const key in onScrollFuns) {
-        onScrollFuns[key] && onScrollFuns[key](trigger, time);
+        onScrollFuns[key] && is.function(onScrollFuns[key]) && onScrollFuns[key](trigger, time);
       }
     });
   };
@@ -285,5 +286,7 @@ class IntersectionTrigger {
 IntersectionTrigger.getInstances = () => instances;
 IntersectionTrigger.getInstanceById = (id) => instances.find((ins) => ins.id === id);
 IntersectionTrigger.update = () => instances.forEach((ins) => ins.update());
+IntersectionTrigger.registerPlugins = (plugins = []) => registeredPlugins.push(...plugins);
+IntersectionTrigger.getRegisteredPlugins = () => registeredPlugins;
 
 export { IntersectionTrigger as default };

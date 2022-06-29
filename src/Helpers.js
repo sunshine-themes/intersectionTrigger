@@ -20,6 +20,7 @@ const is = {
   tl: (a) => is.object(a) && a.hasOwnProperty('add') && is.function(a.add),
   animeInstance: (a) => is.anime(a) || is.tl(a),
 };
+const clamp = (a, min, max) => Math.min(Math.max(a, min), max);
 const splitStr = (st) => st.split(/\s+/);
 const getBoundsProp = (element, prop) => element && element.getBoundingClientRect()[prop];
 const getScrollValue = (element, dir) => ('y' === dir ? element.scrollHeight : element.scrollWidth);
@@ -70,4 +71,4 @@ const boundsMinusScrollbar = (element) => {
   };
 };
 
-export { is, splitStr, getBoundsProp, getScrollValue, roundFloat, getParents, mergeOptions, throwError, boundsMinusScrollbar };
+export { is, splitStr, getBoundsProp, getScrollValue, roundFloat, getParents, mergeOptions, throwError, boundsMinusScrollbar, clamp };

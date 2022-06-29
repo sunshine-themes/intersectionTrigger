@@ -1,6 +1,7 @@
 const fn = () => {};
 const classDefaultToggleActions = ['add', 'remove', 'add', 'remove'];
 const animationDefaultToggleActions = ['play', 'finish', 'reverse', 'finish'];
+const snapDefaultParams = { to: null, after: 1, speed: 600, maxDistance: 500 };
 
 const defaultInsOptions = {
   //Defaults for every trigger
@@ -28,6 +29,7 @@ const triggerStates = {
   hasLeftBack: true,
   hasEnteredOnce: false,
   onScroll: { backup: null, animate: null },
+  ids: { snapTimeOutId: 0 },
 };
 
 const guideDefaultParams = {
@@ -67,6 +69,7 @@ const defaultAnimationParams = {
   instance: null,
   toggleActions: animationDefaultToggleActions,
   control: false,
+  snap: false,
 };
 
-export { defaultInsOptions, triggerStates, guideDefaultParams, defaultAnimationParams, defaultToggleClassParams };
+export { defaultInsOptions, triggerStates, guideDefaultParams, defaultAnimationParams, defaultToggleClassParams, snapDefaultParams };
