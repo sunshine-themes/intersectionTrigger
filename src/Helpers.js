@@ -71,4 +71,25 @@ const boundsMinusScrollbar = (element) => {
   };
 };
 
-export { is, splitStr, getBoundsProp, getScrollValue, roundFloat, getParents, mergeOptions, throwError, boundsMinusScrollbar, clamp };
+const parseString = (string) => {
+  const parsedString = string.split(/\s+/).map((margin) => {
+    const parts = /^(-?\d*\.?\d+)(px|%)$/.exec(margin);
+    return { value: parseFloat(parts[1]), unit: parts[2] };
+  });
+
+  return parsedString;
+};
+
+export {
+  is,
+  splitStr,
+  getBoundsProp,
+  getScrollValue,
+  roundFloat,
+  getParents,
+  mergeOptions,
+  throwError,
+  boundsMinusScrollbar,
+  clamp,
+  parseString,
+};

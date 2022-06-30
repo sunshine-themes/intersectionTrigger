@@ -1,5 +1,4 @@
-import { defaultAnimationParams, defaultToggleClassParams, snapDefaultParams } from './constants';
-import { boundsMinusScrollbar, clamp, getBoundsProp, getScrollValue, is, mergeOptions, roundFloat, splitStr, throwError } from './helpers';
+import { boundsMinusScrollbar, getBoundsProp, getScrollValue, is, parseString, roundFloat, throwError } from './helpers';
 
 export default class Utils {
   constructor(intersectionTrigger) {
@@ -216,8 +215,8 @@ export default class Utils {
       };
       //Invoke Enter Functions
       data.callback(trigger, this);
-      toggleClass && this.toggleClass(trigger, toggleClass, data.eventIndex);
-      animation && this.animate(trigger, animation, data.eventIndex);
+      toggleClass && this._it.toggleClass.toggle(trigger, toggleClass, data.eventIndex);
+      animation && this._it.animation.animate(trigger, animation, data.eventIndex);
 
       const triggerProps = hasEnteredOnce
         ? {
@@ -245,8 +244,9 @@ export default class Utils {
       };
       //Invoke leave functions
       data.callback(trigger, this);
-      toggleClass && this.toggleClass(trigger, toggleClass, data.eventIndex);
-      animation && this.animate(trigger, animation, data.eventIndex);
+      toggleClass && this._it.toggleClass.toggle(trigger, toggleClass, data.eventIndex);
+      animation && this._it.animation.animate(trigger, animation, data.eventIndex);
+
       //Reset trigger data props
       this.setTriggerStates(trigger, {
         [data.leaveProp]: true,
@@ -255,237 +255,6 @@ export default class Utils {
       });
       //Remove the instance if once is true
       once && hasEnteredOnce && this._it.remove(trigger);
-    };
-
-    this.animate = (trigger, animation, eventIndex) => {
-      const { instance, toggleActions, control, snap } = animation;
-      if (!instance) return;
-
-      if (control) {
-        const { animate } = this.getTriggerStates(trigger, 'onScroll');
-        const ids = this.getTriggerStates(trigger, 'ids');
-        const { enter, leave } = this.getTriggerData(trigger);
-        const { ref, refOpposite, length } = this.dirProps();
-        const isVir = this.isVirtical();
-        const tB = trigger.getBoundingClientRect(); //trigger Bounds
-        const tIL = tB[length] - (enter * tB[length] + (1 - leave) * tB[length]); //trigger Intersection length
-        const root = this.getRoot();
-        const duration = instance.duration;
-
-        const animateHandler = (trigger) => {
-          const tB = trigger.getBoundingClientRect(); //trigger Bounds
-          const ids = this.getTriggerStates(trigger, 'ids');
-          this._it.rootBounds = this.getRootRect(this._it.observer.rootMargin);
-          const rB = this._it.rootBounds; //root Bounds
-          const scrollLength = tIL + rB[length];
-          let currentTime = 0;
-
-          const diff = rB[refOpposite] - (tB[ref] + enter * tB[length]);
-          if (diff > 0) {
-            currentTime = (duration * diff) / scrollLength;
-            if (is.num(control)) {
-              setTimeout(() => instance.seek(currentTime), control * 1000);
-            } else {
-              instance.seek(currentTime);
-            }
-          }
-
-          //Snap
-          if (snap) {
-            const speed = (snap.speed * 17) / 1000;
-            let dis = 0;
-            const startSnaping = (snapDistance, toRef = false) => {
-              const direction = toRef ? -1 : 1;
-              if (isVir) {
-                root.scrollBy({
-                  top: speed * direction,
-                  behavior: 'instant',
-                });
-              } else {
-                root.scrollBy({
-                  left: speed * direction,
-                  behavior: 'instant',
-                });
-              }
-              dis += speed;
-              if (dis >= snapDistance) {
-                dis = 0;
-                return;
-              }
-              requestAnimationFrame(() => startSnaping(snapDistance, toRef));
-            };
-            // Clear timeout
-            clearTimeout(ids.snapTimeOutId);
-            // Set a timeout to run after scrolling stops
-            const snapTimeOutId = setTimeout(() => {
-              const directionalDiff = snap.to.map((n) => currentTime - n);
-              const diff = directionalDiff.map((n) => Math.abs(n));
-              const closest = Math.min(...diff);
-              const closestWithDirection = directionalDiff[diff.indexOf(closest)];
-              const snapDistance = (scrollLength * closest) / duration;
-
-              if (snapDistance >= snap.maxDistance || snapDistance < 10) return;
-
-              if (closestWithDirection < 0) {
-                startSnaping(snapDistance);
-                return;
-              }
-
-              startSnaping(snapDistance, true);
-            }, snap.after * 1000);
-            //Update the id of Timeout
-            this.setTriggerStates(trigger, { ids: { ...ids, snapTimeOutId } });
-          }
-        };
-
-        switch (eventIndex) {
-          case 0:
-          case 2:
-            this._it._states.oCbFirstInvoke && animateHandler(trigger); //to update the animation if the root intersects trigger at begining
-
-            if (animate) break;
-            this.setTriggerScrollStates(trigger, 'animate', animateHandler);
-            break;
-          case 1:
-          case 3:
-            // Clear snaping
-            clearTimeout(ids.snapTimeOutId);
-            this.setTriggerScrollStates(trigger, 'animate', null);
-            break;
-        }
-
-        return;
-      }
-
-      const action = toggleActions[eventIndex];
-      if ('none' === action) return;
-
-      switch (action) {
-        case 'play':
-          instance.reversed && instance.reverse();
-          1 > instance.progress && instance[action]();
-          break;
-        case 'restart':
-        case 'reset':
-          instance.reversed && instance.reverse();
-          instance[action]();
-          break;
-        case 'pause':
-          break;
-        case 'finish':
-          instance.pause();
-          instance.seek(instance.reversed ? 0 : instance.duration);
-          break;
-        case 'reverse':
-          if (instance.reversed) break;
-          instance[action]();
-          instance.paused && instance.play();
-          break;
-        case 'kill':
-          is.inObject(instance, 'kill') && instance.kill();
-          this.setTriggerData(trigger, null, { animation: { ...defaultAnimationParams } });
-          break;
-      }
-    };
-
-    this.parseAnimation = (params) => {
-      let animation = {};
-
-      switch (true) {
-        case is.animeInstance(params):
-          animation = mergeOptions(defaultAnimationParams, {
-            instance: params,
-          });
-          break;
-        case is.object(params):
-          {
-            const mergedParams = mergeOptions(defaultAnimationParams, params);
-            const { instance, toggleActions, snap } = mergedParams;
-            if (!is.animeInstance(instance)) throwError('Invalid anime instance');
-
-            const parseSnapNum = (n) => {
-              const arr = [];
-              let progress = n;
-              while (progress < 1) {
-                arr.push(clamp(progress, 0, 1));
-                progress = progress + n;
-              }
-              return arr.map((v) => Math.round(v * instance.duration));
-            };
-            const parseSnapTo = (sn) => {
-              if (is.num(sn)) return parseSnapNum(sn);
-              if (is.string(sn)) return [];
-              if (is.array(sn)) return sn;
-            };
-
-            let snapParams = {};
-            switch (true) {
-              case is.boolean(snap) && snap:
-                snapParams.to = [];
-                break;
-              case is.array(snap):
-                snapParams.to = snap;
-                break;
-              case is.num(snap):
-                snapParams.to = parseSnapNum(snap);
-                break;
-              case is.object(snap):
-                snapParams = snap;
-                snapParams.to = parseSnapTo(snapParams.to);
-                break;
-            }
-
-            mergedParams.snap = mergeOptions(snapDefaultParams, snapParams);
-            is.string(toggleActions) && (mergedParams.toggleActions = splitStr(toggleActions));
-
-            animation = mergedParams;
-          }
-          break;
-      }
-
-      is.inObject(animation, 'instance') && animation.instance.reset();
-
-      return animation;
-    };
-
-    this.toggleClass = (trigger, toggleClass, eventIndex) => {
-      for (const { targets, toggleActions, classNames } of toggleClass) {
-        if ('none' === toggleActions[eventIndex]) continue;
-        classNames.forEach((className) =>
-          targets.forEach((target) =>
-            target === 'trigger'
-              ? trigger.classList[toggleActions[eventIndex]](className)
-              : target.classList[toggleActions[eventIndex]](className)
-          )
-        );
-      }
-    };
-
-    this.parseToggleClass = (params) => {
-      let toggleClass = [];
-
-      if (is.string(params)) {
-        const mergedParams = mergeOptions(defaultToggleClassParams, {
-          targets: ['trigger'],
-          classNames: splitStr(params),
-        });
-        toggleClass.push([mergedParams]);
-        return toggleClass;
-      }
-
-      if (is.array(params)) {
-        toggleClass = params.map((obj) => {
-          const mergedParams = mergeOptions(defaultToggleClassParams, obj);
-          const { targets, classNames, toggleActions } = mergedParams;
-
-          targets && (mergedParams.targets = this.parseQuery(targets, 'targets'));
-          classNames && (mergedParams.classNames = splitStr(classNames));
-          is.string(toggleActions) && (mergedParams.toggleActions = splitStr(toggleActions));
-          return mergedParams;
-        });
-      }
-
-      return toggleClass;
     };
 
     this.toggleActions = (trigger) => {
@@ -525,17 +294,9 @@ export default class Utils {
 
     //  upcoming code is based on IntersectionObserver calculations of the root bounds. All rights reseved (https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document).
 
-    this.parseString = (string) => {
-      const parsedString = string.split(/\s+/).map((margin) => {
-        const parts = /^(-?\d*\.?\d+)(px|%)$/.exec(margin);
-        return { value: parseFloat(parts[1]), unit: parts[2] };
-      });
-
-      return parsedString;
-    };
     this.parseRootMargin = (rootMargins) => {
       var marginString = rootMargins || '0px';
-      var margins = this.parseString(marginString);
+      var margins = parseString(marginString);
       // Handles shorthand.
       margins[1] = margins[1] || margins[0];
       margins[2] = margins[2] || margins[0];

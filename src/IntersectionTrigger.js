@@ -19,8 +19,26 @@ class IntersectionTrigger {
     instanceID++;
     instances.push(this);
     //
+    this.animation = null;
+    this.toggleClass = null;
+    //
     this._setStates();
+    this._setPlugins();
     this._setInstance();
+  }
+
+  _setPlugins() {
+    const plugins = IntersectionTrigger.getRegisteredPlugins();
+    plugins.forEach((Plugin) => {
+      switch (Plugin.name) {
+        case 'Animation':
+          this.animation = new Plugin(this);
+          break;
+        case 'ToggleClass':
+          this.toggleClass = new Plugin(this);
+          break;
+      }
+    });
   }
 
   _setStates() {
@@ -194,8 +212,8 @@ class IntersectionTrigger {
       ...mergeOptions(this._triggerParams, options),
       states: { ...triggerStates },
     };
-    triggerParams.toggleClass && (triggerParams.toggleClass = this._utils.parseToggleClass(triggerParams.toggleClass));
-    triggerParams.animation && (triggerParams.animation = this._utils.parseAnimation(triggerParams.animation));
+    triggerParams.toggleClass && (triggerParams.toggleClass = this.toggleClass.parse(triggerParams.toggleClass));
+    triggerParams.animation && (triggerParams.animation = this.animation.parse(triggerParams.animation));
     //Add new Triggers
     this.triggers = [...new Set([...this.triggers, ...toAddTriggers])]; //new Set to remove any duplicates
     //
@@ -257,6 +275,8 @@ class IntersectionTrigger {
     this.removeScrollListener(this.customScrollHandler); //Remove event listeners
     this.triggers = []; //Remove all triggers
     this.removeGuides(); //Remove all guides from DOM
+    this.animation && this.animation.kill(); //Kill animation instance
+    this.toggleClasss && this.toggleClasss.kill(); //Kill toggleClasss instance
     //Remove from instances
     const instanceIndex = instances.indexOf(this);
     ~instanceIndex && instances.splice(instanceIndex, 1);
@@ -286,7 +306,7 @@ class IntersectionTrigger {
 IntersectionTrigger.getInstances = () => instances;
 IntersectionTrigger.getInstanceById = (id) => instances.find((ins) => ins.id === id);
 IntersectionTrigger.update = () => instances.forEach((ins) => ins.update());
-IntersectionTrigger.registerPlugins = (plugins = []) => registeredPlugins.push(...plugins);
+IntersectionTrigger.registerPlugins = (newPlugins = []) => registeredPlugins.push(...newPlugins);
 IntersectionTrigger.getRegisteredPlugins = () => registeredPlugins;
 
 export { IntersectionTrigger as default };

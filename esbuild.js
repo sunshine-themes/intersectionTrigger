@@ -24,13 +24,13 @@ const babelConfig = {
 };
 
 import('esbuild-plugin-babel').then(({ default: babel }) => {
-  const buildConfig = (format, target, minify, name) => {
+  const buildConfig = (format, target, minify, data) => {
     const fileNameFormat = format === 'iife' ? 'es5' : format;
     const fileNameMinify = minify ? '.min' : '';
     const plugins = target === 'es5' ? [babel(babelConfig)] : [];
-    const outfileName = `lib/${name}.${fileNameFormat}${fileNameMinify}.js`;
+    const outfileName = `lib/${data.path}.${fileNameFormat}${fileNameMinify}.js`;
     const banner = `/*
-* ${name} v${process.env.npm_package_version}
+* ${data.name} v${process.env.npm_package_version}
 * https://sunshine-themes.com/intersectionTrigger
 *
 * @license Copyright ${date.getFullYear()}, Sunshine. All rights reserved.
@@ -39,8 +39,8 @@ import('esbuild-plugin-babel').then(({ default: babel }) => {
 */
                   `;
     return {
-      globalName: `${name.toLowerCase()}`,
-      entryPoints: [`src/${name}.js`],
+      globalName: `${data.name.toLowerCase()}`,
+      entryPoints: [`src/${data.path}.js`],
       outfile: outfileName,
       format: format,
       minify: minify,
@@ -51,12 +51,17 @@ import('esbuild-plugin-babel').then(({ default: babel }) => {
     };
   };
 
-  ['IntersectionTrigger', 'Guides'].forEach((name) => {
-    build(buildConfig('iife', 'es5', false, name));
-    build(buildConfig('iife', 'es5', true, name));
-    build(buildConfig('esm', 'esnext', false, name));
-    build(buildConfig('esm', 'esnext', true, name));
-    build(buildConfig('cjs', 'esnext', false, name));
-    build(buildConfig('cjs', 'esnext', true, name));
+  [
+    { name: 'IntersectionTrigger', path: 'IntersectionTrigger' },
+    { name: 'Animation', path: 'plugins/Animation' },
+    { name: 'ToggleClass', path: 'plugins/ToggleClass' },
+    { name: 'Guides', path: 'Guides' },
+  ].forEach((obj) => {
+    build(buildConfig('iife', 'es5', false, obj));
+    build(buildConfig('iife', 'es5', true, obj));
+    build(buildConfig('esm', 'esnext', false, obj));
+    build(buildConfig('esm', 'esnext', true, obj));
+    build(buildConfig('cjs', 'esnext', false, obj));
+    build(buildConfig('cjs', 'esnext', true, obj));
   });
 });
