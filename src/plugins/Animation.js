@@ -47,24 +47,25 @@ class Animation {
 
         //Snap
         if (snap) {
-          const speed = Math.round(Math.max((snap.speed * 17) / 1000, 1));
+          const step = Math.round(Math.max((snap.speed * 17) / 1000, 1));
           let dis = 0;
           const startSnaping = (snapDistance, toRef = false) => {
             const direction = toRef ? -1 : 1;
             if (isVir) {
               root.scrollBy({
-                top: speed * direction,
+                top: step * direction,
                 behavior: 'instant',
               });
             } else {
               root.scrollBy({
-                left: speed * direction,
+                left: step * direction,
                 behavior: 'instant',
               });
             }
-            dis += speed;
+            dis += step;
             if (dis >= snapDistance) {
               dis = 0;
+              snap.onComplete(this._it);
               return;
             }
             requestAnimationFrame(() => startSnaping(snapDistance, toRef));
@@ -79,7 +80,9 @@ class Animation {
             const closestWithDirection = directionalDiff[diff.indexOf(closest)];
             const snapDistance = (scrollLength * closest) / duration;
 
-            if (snapDistance >= snap.maxDistance || snapDistance < speed) return;
+            if (snapDistance >= snap.maxDistance || snapDistance < step) return;
+
+            snap.onStart(this._it);
 
             if (closestWithDirection < 0) {
               startSnaping(snapDistance);

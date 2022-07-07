@@ -7,8 +7,8 @@ const instances = [];
 let instanceID = 0;
 
 class IntersectionTrigger {
-  constructor(options = {}) {
-    this._userOptions = options;
+  constructor(configuration = {}) {
+    this._userOptions = configuration;
     this.triggers = [];
     this._triggersData = new WeakMap();
     this._guidesInstance = null;
@@ -212,8 +212,8 @@ class IntersectionTrigger {
       ...mergeOptions(this._triggerParams, options),
       states: { ...triggerStates },
     };
-    triggerParams.toggleClass && (triggerParams.toggleClass = this.toggleClass.parse(triggerParams.toggleClass));
-    triggerParams.animation && (triggerParams.animation = this.animation.parse(triggerParams.animation));
+    this.toggleClass && triggerParams.toggleClass && (triggerParams.toggleClass = this.toggleClass.parse(triggerParams.toggleClass));
+    this.animation && triggerParams.animation && (triggerParams.animation = this.animation.parse(triggerParams.animation));
     //Add new Triggers
     this.triggers = [...new Set([...this.triggers, ...toAddTriggers])]; //new Set to remove any duplicates
     //

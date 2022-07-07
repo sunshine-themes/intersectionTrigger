@@ -215,8 +215,8 @@ export default class Utils {
       };
       //Invoke Enter Functions
       data.callback(trigger, this);
-      toggleClass && this._it.toggleClass.toggle(trigger, toggleClass, data.eventIndex);
-      animation && this._it.animation.animate(trigger, animation, data.eventIndex);
+      this._it.toggleClass && toggleClass && this._it.toggleClass.toggle(trigger, toggleClass, data.eventIndex);
+      this._it.animation && animation && this._it.animation.animate(trigger, animation, data.eventIndex);
 
       const triggerProps = hasEnteredOnce
         ? {
@@ -244,8 +244,8 @@ export default class Utils {
       };
       //Invoke leave functions
       data.callback(trigger, this);
-      toggleClass && this._it.toggleClass.toggle(trigger, toggleClass, data.eventIndex);
-      animation && this._it.animation.animate(trigger, animation, data.eventIndex);
+      this._it.toggleClass && toggleClass && this._it.toggleClass.toggle(trigger, toggleClass, data.eventIndex);
+      this._it.animation && animation && this._it.animation.animate(trigger, animation, data.eventIndex);
 
       //Reset trigger data props
       this.setTriggerStates(trigger, {

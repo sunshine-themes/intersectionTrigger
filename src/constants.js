@@ -1,11 +1,13 @@
 const fn = () => {};
 const classDefaultToggleActions = ['add', 'remove', 'add', 'remove'];
 const animationDefaultToggleActions = ['play', 'finish', 'reverse', 'finish'];
-const snapDefaultParams = { to: null, after: 1, speed: 600, maxDistance: 500 };
+const snapDefaultParams = { to: null, after: 1, speed: 100, maxDistance: 500, onStart: fn, onComplete: fn };
 
 const defaultInsOptions = {
   //Defaults for every trigger
   defaults: {
+    enter: '0%',
+    leave: '100%',
     once: false,
     onEnter: fn,
     onLeave: fn,
@@ -14,8 +16,8 @@ const defaultInsOptions = {
     toggleClass: null,
     animation: null,
   },
-  enter: '0% 100%',
-  leave: '100% 0%',
+  rootEnter: '100%',
+  rootLeave: '0%',
   axis: 'y',
   name: '',
   root: null,
