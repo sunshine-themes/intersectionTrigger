@@ -317,6 +317,9 @@ class IntersectionTrigger {
     this._createInstance();
     //reobserve the triggers
     this.triggers.forEach((trigger) => this.observer.observe(trigger));
+
+    //Update Animation instance
+    this.animation && this.animation.update();
     //Update guides
     this._guidesInstance && this._guidesInstance.update();
   }

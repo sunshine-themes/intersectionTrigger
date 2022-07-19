@@ -4,7 +4,92 @@ import { clamp, is, mergeOptions, splitStr, throwError } from '../helpers';
 class Animation {
   constructor(it) {
     this._registerIntersectionTrigger(it);
+    this.init();
     return this;
+  }
+  init() {
+    this._snap = {};
+
+    const { ref, refOpposite, length } = this._utils.dirProps();
+    const isVir = this._utils.isVirtical();
+    const root = this._utils.getRoot();
+
+    this.seek = (ins, t, control) => {
+      if (is.num(control)) {
+        setTimeout(() => ins.seek(t), control * 1000);
+        return;
+      }
+      ins.seek(t);
+    };
+
+    this.startSnaping = ({ snapDistance, currentDis, snap, step, toRef = false }) => {
+      const direction = toRef ? -1 : 1;
+      if (isVir) {
+        root.scrollBy({
+          top: step * direction,
+          behavior: 'instant',
+        });
+      } else {
+        root.scrollBy({
+          left: step * direction,
+          behavior: 'instant',
+        });
+      }
+      currentDis += step;
+      if (currentDis >= snapDistance) {
+        currentDis = 0;
+        snap.onComplete(this._it);
+        return;
+      }
+      requestAnimationFrame(() => this.startSnaping({ snapDistance, currentDis, snap, step, toRef }));
+    };
+
+    this.animateHandler = (trigger, { enter, leave, tIL, instance, duration, snap, step, control }) => {
+      const tB = trigger.getBoundingClientRect(); //trigger Bounds
+      const ids = this._utils.getTriggerStates(trigger, 'ids');
+      this._it.rootBounds = this._utils.getRootRect(this._it.observer.rootMargin);
+      const rB = this._it.rootBounds; //root Bounds
+      const scrollLength = tIL + (this._it._isREPGreater ? rB[length] : -rB[length]);
+      let currentTime = 0;
+
+      const [tEP, tLP, rEP, rLP] = this._utils.getPositions(tB, rB, { enter, leave, ref, refOpposite, length });
+      const diff = rEP - tEP;
+
+      if (diff > 0) {
+        currentTime = (duration * diff) / scrollLength;
+        this.seek(instance, currentTime, control);
+      }
+
+      //Snap
+      if (snap) {
+        let dis = 0;
+        // Clear timeout
+        clearTimeout(ids.snapTimeOutId);
+        // Set a timeout to run after scrolling stops
+        const snapTimeOutId = setTimeout(() => {
+          const directionalDiff = snap.to.map((n) => currentTime - n),
+            diff = directionalDiff.map((n) => Math.abs(n)),
+            closest = Math.min(...diff),
+            closestWithDirection = directionalDiff[diff.indexOf(closest)],
+            snapDistance = (scrollLength * closest) / duration,
+            snapData = { snapDistance, currentDis: dis, snap, step };
+
+          if (snapDistance >= snap.maxDistance || snapDistance < step) return;
+
+          snap.onStart(this._it);
+
+          if (closestWithDirection < 0) {
+            this.startSnaping(snapData);
+            return;
+          }
+
+          this.startSnaping({ ...snapData, toRef: true });
+        }, snap.after * 1000);
+
+        //Update the id of Timeout
+        this._utils.setTriggerStates(trigger, { ids: { ...ids, snapTimeOutId } });
+      }
+    };
   }
 
   _registerIntersectionTrigger(intersectionTrigger) {
@@ -20,105 +105,31 @@ class Animation {
       const { animate } = this._utils.getTriggerStates(trigger, 'onScroll');
       const ids = this._utils.getTriggerStates(trigger, 'ids');
       const { enter, leave, minPosition, maxPosition } = this._utils.getTriggerData(trigger);
-      const { ref, refOpposite, length } = this._utils.dirProps();
-      const isVir = this._utils.isVirtical();
+      const { length } = this._utils.dirProps();
       const tB = trigger.getBoundingClientRect(); //trigger Bounds
       const tIL = tB[length] - (minPosition * tB[length] + (1 - maxPosition) * tB[length]); //trigger Intersection length
-      const root = this._utils.getRoot();
       const duration = instance.duration;
-      const seek = (t) => instance.seek(t);
+      let step = 0;
 
-      const animateHandler = (trigger) => {
-        const tB = trigger.getBoundingClientRect(); //trigger Bounds
-        const ids = this._utils.getTriggerStates(trigger, 'ids');
-        this._it.rootBounds = this._utils.getRootRect(this._it.observer.rootMargin);
-        const rB = this._it.rootBounds; //root Bounds
-        const scrollLength = tIL + (this._it._isREPGreater ? rB[length] : -rB[length]);
-        let currentTime = 0;
-
-        const [tEP, tLP, rEP, rLP] = this._utils.getPositions(tB, rB, { enter, leave, ref, refOpposite, length });
-        const diff = rEP - tEP;
-
-        if (diff > 0) {
-          currentTime = (duration * diff) / scrollLength;
-          if (is.num(control)) {
-            setTimeout(() => seek(currentTime), control * 1000);
-          } else {
-            seek(currentTime);
-          }
-        }
-
-        //Snap
-        if (snap) {
-          const step = Math.round(Math.max((snap.speed * 17) / 1000, 1));
-          let dis = 0;
-          const startSnaping = (snapDistance, toRef = false) => {
-            const direction = toRef ? -1 : 1;
-            if (isVir) {
-              root.scrollBy({
-                top: step * direction,
-                behavior: 'instant',
-              });
-            } else {
-              root.scrollBy({
-                left: step * direction,
-                behavior: 'instant',
-              });
-            }
-            dis += step;
-            if (dis >= snapDistance) {
-              dis = 0;
-              snap.onComplete(this._it);
-              return;
-            }
-            requestAnimationFrame(() => startSnaping(snapDistance, toRef));
-          };
-          // Clear timeout
-          clearTimeout(ids.snapTimeOutId);
-          // Set a timeout to run after scrolling stops
-          const snapTimeOutId = setTimeout(() => {
-            const directionalDiff = snap.to.map((n) => currentTime - n),
-              diff = directionalDiff.map((n) => Math.abs(n)),
-              closest = Math.min(...diff),
-              closestWithDirection = directionalDiff[diff.indexOf(closest)],
-              snapDistance = (scrollLength * closest) / duration;
-
-            if (snapDistance >= snap.maxDistance || snapDistance < step) return;
-
-            snap.onStart(this._it);
-
-            if (closestWithDirection < 0) {
-              startSnaping(snapDistance);
-              return;
-            }
-
-            startSnaping(snapDistance, true);
-          }, snap.after * 1000);
-          //Update the id of Timeout
-          this._utils.setTriggerStates(trigger, { ids: { ...ids, snapTimeOutId } });
-        }
-      };
+      snap && (step = Math.round(Math.max((snap.speed * 17) / 1000, 1)));
+      const animateData = { enter, leave, tIL, instance, duration, snap, control, step };
 
       switch (eventIndex) {
         case 0:
         case 2:
-          this._it._states.oCbFirstInvoke && animateHandler(trigger); //to update the animation if the root intersects trigger at begining
+          this._it._states.oCbFirstInvoke && this.animateHandler(trigger, animateData); //to update the animation if the root intersects trigger at begining
 
           if (animate) break;
-          this._utils.setTriggerScrollStates(trigger, 'animate', animateHandler);
+          this._utils.setTriggerScrollStates(trigger, 'animate', () => this.animateHandler(trigger, animateData));
           break;
         case 1:
         case 3:
           // Clear snaping
           clearTimeout(ids.snapTimeOutId);
           this._utils.setTriggerScrollStates(trigger, 'animate', null);
-          //Reset the animation
-          if (1 === eventIndex) {
-            seek(duration);
-            break;
-          }
 
-          seek(0);
+          //Reset the animation
+          this.seek(instance, 1 === eventIndex ? duration : 0, control);
           break;
       }
 
@@ -230,6 +241,10 @@ class Animation {
     }
 
     this._params.snap = mergeOptions(snapDefaultParams, snapParams);
+  }
+
+  update() {
+    // this.init();
   }
 
   kill() {
