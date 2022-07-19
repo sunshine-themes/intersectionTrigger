@@ -15,13 +15,13 @@ class ToggleClass {
   toggle(trigger, toggleClass, eventIndex) {
     for (const { targets, toggleActions, classNames } of toggleClass) {
       if ('none' === toggleActions[eventIndex]) continue;
-      classNames.forEach((className) =>
-        targets.forEach((target) =>
-          target === 'trigger'
-            ? trigger.classList[toggleActions[eventIndex]](className)
-            : target.classList[toggleActions[eventIndex]](className)
-        )
-      );
+      classNames.forEach((className) => {
+        if (targets) {
+          targets.forEach((target) => target.classList[toggleActions[eventIndex]](className));
+          return;
+        }
+        trigger.classList[toggleActions[eventIndex]](className);
+      });
     }
   }
 
@@ -30,7 +30,6 @@ class ToggleClass {
 
     if (is.string(params)) {
       const mergedParams = mergeOptions(defaultToggleClassParams, {
-        targets: ['trigger'],
         classNames: splitStr(params),
       });
       toggleClass.push([mergedParams]);

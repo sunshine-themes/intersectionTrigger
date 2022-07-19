@@ -55,29 +55,15 @@ const mergeOptions = (def, custom) => {
 const throwError = (message) => {
   throw new Error(message);
 };
-const boundsMinusScrollbar = (element) => {
-  const bounds = element.getBoundingClientRect();
+const getMinMax = (n1, n2) => [n1, n2].sort((a, b) => a - b);
 
-  const { top, bottom, right, left, height, width, x, y } = bounds;
-  return {
-    top,
-    left,
-    height,
-    width,
-    x,
-    y,
-    right: right - (right - left - element.clientWidth),
-    bottom: bottom - (bottom - top - element.clientHeight),
-  };
+const parseValue = (v) => {
+  const parts = /^(-?\d*\.?\d+)(px|%)$/.exec(v);
+  return { value: parseFloat(parts[1]), unit: parts[2] };
 };
 
 const parseString = (string) => {
-  const parsedString = string.split(/\s+/).map((margin) => {
-    const parts = /^(-?\d*\.?\d+)(px|%)$/.exec(margin);
-    return { value: parseFloat(parts[1]), unit: parts[2] };
-  });
-
-  return parsedString;
+  return string.split(/\s+/).map((v) => parseValue(v));
 };
 
 export {
@@ -89,7 +75,8 @@ export {
   getParents,
   mergeOptions,
   throwError,
-  boundsMinusScrollbar,
   clamp,
+  parseValue,
   parseString,
+  getMinMax,
 };

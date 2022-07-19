@@ -19,29 +19,32 @@ class Animation {
     if (control) {
       const { animate } = this._utils.getTriggerStates(trigger, 'onScroll');
       const ids = this._utils.getTriggerStates(trigger, 'ids');
-      const { enter, leave } = this._utils.getTriggerData(trigger);
+      const { enter, leave, minPosition, maxPosition } = this._utils.getTriggerData(trigger);
       const { ref, refOpposite, length } = this._utils.dirProps();
       const isVir = this._utils.isVirtical();
       const tB = trigger.getBoundingClientRect(); //trigger Bounds
-      const tIL = tB[length] - (enter * tB[length] + (1 - leave) * tB[length]); //trigger Intersection length
+      const tIL = tB[length] - (minPosition * tB[length] + (1 - maxPosition) * tB[length]); //trigger Intersection length
       const root = this._utils.getRoot();
       const duration = instance.duration;
+      const seek = (t) => instance.seek(t);
 
       const animateHandler = (trigger) => {
         const tB = trigger.getBoundingClientRect(); //trigger Bounds
         const ids = this._utils.getTriggerStates(trigger, 'ids');
         this._it.rootBounds = this._utils.getRootRect(this._it.observer.rootMargin);
         const rB = this._it.rootBounds; //root Bounds
-        const scrollLength = tIL + rB[length];
+        const scrollLength = tIL + (this._it._isREPGreater ? rB[length] : -rB[length]);
         let currentTime = 0;
 
-        const diff = rB[refOpposite] - (tB[ref] + enter * tB[length]);
+        const [tEP, tLP, rEP, rLP] = this._utils.getPositions(tB, rB, { enter, leave, ref, refOpposite, length });
+        const diff = rEP - tEP;
+
         if (diff > 0) {
           currentTime = (duration * diff) / scrollLength;
           if (is.num(control)) {
-            setTimeout(() => instance.seek(currentTime), control * 1000);
+            setTimeout(() => seek(currentTime), control * 1000);
           } else {
-            instance.seek(currentTime);
+            seek(currentTime);
           }
         }
 
@@ -74,11 +77,11 @@ class Animation {
           clearTimeout(ids.snapTimeOutId);
           // Set a timeout to run after scrolling stops
           const snapTimeOutId = setTimeout(() => {
-            const directionalDiff = snap.to.map((n) => currentTime - n);
-            const diff = directionalDiff.map((n) => Math.abs(n));
-            const closest = Math.min(...diff);
-            const closestWithDirection = directionalDiff[diff.indexOf(closest)];
-            const snapDistance = (scrollLength * closest) / duration;
+            const directionalDiff = snap.to.map((n) => currentTime - n),
+              diff = directionalDiff.map((n) => Math.abs(n)),
+              closest = Math.min(...diff),
+              closestWithDirection = directionalDiff[diff.indexOf(closest)],
+              snapDistance = (scrollLength * closest) / duration;
 
             if (snapDistance >= snap.maxDistance || snapDistance < step) return;
 
@@ -109,6 +112,13 @@ class Animation {
           // Clear snaping
           clearTimeout(ids.snapTimeOutId);
           this._utils.setTriggerScrollStates(trigger, 'animate', null);
+          //Reset the animation
+          if (1 === eventIndex) {
+            seek(duration);
+            break;
+          }
+
+          seek(0);
           break;
       }
 
@@ -129,8 +139,9 @@ class Animation {
         instance[action]();
         break;
       case 'pause':
+        instance[action]();
         break;
-      case 'finish':
+      case 'complete':
         instance.pause();
         instance.seek(instance.reversed ? 0 : instance.duration);
         break;
@@ -157,60 +168,68 @@ class Animation {
         break;
       case is.object(params):
         {
-          const mergedParams = mergeOptions(defaultAnimationParams, params);
-          const { instance, toggleActions, snap } = mergedParams;
-          if (!is.animeInstance(instance)) throwError('Invalid anime instance');
+          this._params = mergeOptions(defaultAnimationParams, params);
+          if (!is.animeInstance(this._params.instance)) throwError('Invalid anime instance');
 
-          const parseSnapNum = (n) => {
-            const arr = [];
-            let progress = n;
-            while (progress < 1) {
-              arr.push(clamp(progress, 0, 1));
-              progress = progress + n;
-            }
-            return arr.map((v) => Math.round(v * instance.duration));
-          };
-          const parseSnapTo = (sn) => {
-            if (is.num(sn)) return parseSnapNum(sn);
-            if (is.string(sn)) return parseSnapMarks(sn);
-            if (is.array(sn)) return sn;
-          };
-          const parseSnapMarks = () => {
-            if (!is.inObject(instance, 'marks')) return;
+          const { toggleActions, snap } = this._params;
+          snap && this.parseSnap();
 
-            const marks = instance.marks;
-            const snapTo = marks.map((mark) => mark.time);
-            return snapTo;
-          };
+          is.string(toggleActions) && (this._params.toggleActions = splitStr(toggleActions));
 
-          let snapParams = {};
-          switch (true) {
-            case is.boolean(snap) && snap:
-              snapParams.to = parseSnapMarks(snap);
-              break;
-            case is.array(snap):
-              snapParams.to = snap;
-              break;
-            case is.num(snap):
-              snapParams.to = parseSnapNum(snap);
-              break;
-            case is.object(snap):
-              snapParams = snap;
-              snapParams.to = parseSnapTo(snapParams.to);
-              break;
-          }
-
-          mergedParams.snap = mergeOptions(snapDefaultParams, snapParams);
-          is.string(toggleActions) && (mergedParams.toggleActions = splitStr(toggleActions));
-
-          animation = mergedParams;
+          animation = this._params;
         }
         break;
     }
 
+    //Reset anime instance
     is.inObject(animation, 'instance') && animation.instance.reset();
 
     return animation;
+  }
+
+  parseSnap() {
+    const { instance, snap } = this._params;
+
+    const parseSnapNum = (n) => {
+      const arr = [];
+      let progress = n;
+      while (progress < 1) {
+        arr.push(clamp(progress, 0, 1));
+        progress = progress + n;
+      }
+      return arr.map((v) => Math.round(v * instance.duration));
+    };
+    const parseSnapTo = (sn) => {
+      if (is.num(sn)) return parseSnapNum(sn);
+      if (is.string(sn)) return parseSnapMarks(sn);
+      if (is.array(sn)) return sn;
+    };
+    const parseSnapMarks = () => {
+      if (!is.inObject(instance, 'marks')) return;
+
+      const marks = instance.marks;
+      const snapTo = marks.map((mark) => mark.time);
+      return snapTo;
+    };
+
+    let snapParams = {};
+    switch (true) {
+      case is.boolean(snap) && snap:
+        snapParams.to = parseSnapMarks(snap);
+        break;
+      case is.array(snap):
+        snapParams.to = snap;
+        break;
+      case is.num(snap):
+        snapParams.to = parseSnapNum(snap);
+        break;
+      case is.object(snap):
+        snapParams = snap;
+        snapParams.to = parseSnapTo(snapParams.to);
+        break;
+    }
+
+    this._params.snap = mergeOptions(snapDefaultParams, snapParams);
   }
 
   kill() {

@@ -1,6 +1,6 @@
 const fn = () => {};
 const classDefaultToggleActions = ['add', 'remove', 'add', 'remove'];
-const animationDefaultToggleActions = ['play', 'finish', 'reverse', 'finish'];
+const animationDefaultToggleActions = ['play', 'complete', 'reverse', 'complete'];
 const snapDefaultParams = { to: null, after: 1, speed: 100, maxDistance: 500, onStart: fn, onComplete: fn };
 
 const defaultInsOptions = {

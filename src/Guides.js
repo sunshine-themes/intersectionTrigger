@@ -1,5 +1,5 @@
 import { guideDefaultParams } from './constants';
-import { boundsMinusScrollbar, getParents, is, mergeOptions } from './helpers';
+import { getParents, is, mergeOptions } from './helpers.js';
 
 class Guides {
   constructor(params = {}) {
@@ -16,13 +16,11 @@ class Guides {
   }
 
   _addResizeListener() {
-    !!this._onResizeHandler && removeEventListener('resize', this._onResizeHandler, false);
-
-    this._onResizeHandler = () => {
-      //Refreash guides
-      this.refresh();
-    };
-    addEventListener('resize', this._onResizeHandler, false);
+    this._onResizeHandler = this.update; //Update guides
+    this._utils.getRoot().addEventListener('resize', this._onResizeHandler, false);
+  }
+  _removeResizeListener() {
+    this._utils.getRoot().removeEventListener('resize', this._onResizeHandler, false);
   }
 
   createGuides() {
@@ -86,35 +84,34 @@ class Guides {
       const positionGuide = (isTrigger = true) => {
         const guideBounds = guide.getBoundingClientRect();
 
-        const targetBounds = isTrigger ? boundsMinusScrollbar(trigger) : this._utils.getRootRect(this._it.observer.rootMargin);
-        //Root Bounds without Margins
-        const rBoundsNoMargins = this._it._root ? boundsMinusScrollbar(this._it._root) : boundsMinusScrollbar(document.body);
+        const tBounds = isTrigger ? trigger.getBoundingClientRect() : this._utils.getRootRect(this._it.observer.rootMargin);
+        const rBounds = (this._it._root ?? document.body).getBoundingClientRect();
 
         const triggerDiffs = isVirtical
           ? {
-              x: targetBounds.right - guideBounds.right,
-              y: targetBounds.top + position * targetBounds.height - guideBounds.top,
+              x: tBounds.right - guideBounds.right,
+              y: tBounds.top + position * tBounds.height - guideBounds.top,
             }
           : {
-              x: targetBounds.left + position * targetBounds.width - guideBounds.left,
-              y: targetBounds.top - guideBounds.top,
+              x: tBounds.left + position * tBounds.width - guideBounds.left,
+              y: tBounds.top - guideBounds.top,
             };
         const rootDiffs = isVirtical
           ? enter
             ? {
-                x: rBoundsNoMargins.right - guideBounds.left,
-                y: targetBounds.bottom - guideBounds.bottom,
+                x: rBounds.right - guideBounds.left,
+                y: tBounds.bottom - guideBounds.bottom,
               }
             : {
-                x: rBoundsNoMargins.right - guideBounds.left,
-                y: targetBounds.top - guideBounds.top,
+                x: rBounds.right - guideBounds.left,
+                y: tBounds.top - guideBounds.top,
               }
           : enter
           ? {
-              x: targetBounds.right - guideBounds.right,
-              y: rBoundsNoMargins.bottom - guideBounds.top,
+              x: tBounds.right - guideBounds.right,
+              y: rBounds.bottom - guideBounds.top,
             }
-          : { x: targetBounds.left - guideBounds.left, y: rBoundsNoMargins.bottom - guideBounds.top };
+          : { x: tBounds.left - guideBounds.left, y: rBounds.bottom - guideBounds.top };
 
         const diffs = isTrigger ? triggerDiffs : rootDiffs;
 
@@ -123,12 +120,12 @@ class Guides {
 
       //Root Guide
       if (!triggerGuide) {
-        setProp(guide, isVirtical ? 'width' : 'height', this._it._isRootViewport ? (isVirtical ? '100vw' : '100vh') : '100px');
-        setProp(guide, 'position', this._it._isRootViewport ? 'fixed' : 'absolute');
-        this._it._isRootViewport && !isVirtical && setProp(guide, 'top', '0px');
+        setProp(guide, isVirtical ? 'width' : 'height', this._it._isViewport ? (isVirtical ? '100vw' : '100vh') : '100px');
+        setProp(guide, 'position', this._it._isViewport ? 'fixed' : 'absolute');
+        this._it._isViewport && !isVirtical && setProp(guide, 'top', '0px');
 
         //the root is not the viewport and it is an element
-        if (!this._it._isRootViewport) positionGuide(false);
+        if (!this._it._isViewport) positionGuide(false);
         return;
       }
       //Trigger guide
@@ -137,7 +134,7 @@ class Guides {
       getParents(trigger).forEach((parent) => {
         if (!is.scrollable(parent)) return;
 
-        parent.addEventListener('scroll', (event) => positionGuide(), false);
+        parent.addEventListener('scroll', () => positionGuide(), false);
       });
     };
     //Guides Parameters
@@ -156,7 +153,7 @@ class Guides {
     createGuide({
       triggerGuide: false,
       enter: true,
-      position: this._it._positions.rootEnterPosition.guide,
+      position: `${this._it._positionsData.rEP.value}${this._it._positionsData.rEP.unit}`,
       text: `${guideTextPrefix} ${guideParams.enter.root.text}`,
       color: guideParams.enter.root.color,
       backgroundColor: guideParams.enter.root.backgroundColor,
@@ -164,7 +161,7 @@ class Guides {
     createGuide({
       triggerGuide: false,
       enter: false,
-      position: this._it._positions.rootLeavePosition.guide,
+      position: `${this._it._positionsData.rLP.value}${this._it._positionsData.rLP.unit}`,
       text: `${guideTextPrefix} ${guideParams.leave.root.text}`,
       color: guideParams.leave.root.color,
       backgroundColor: guideParams.leave.root.backgroundColor,
@@ -197,7 +194,7 @@ class Guides {
     this._guides = [];
   };
 
-  refresh = () => {
+  update = () => {
     this.removeGuides();
     this.createGuides();
   };
@@ -207,7 +204,7 @@ class Guides {
     this._it = null;
     this._utils = null;
 
-    removeEventListener('resize', this._onResizeHandler, false);
+    this._removeResizeListener();
   };
 }
 

@@ -1,4 +1,4 @@
-import { boundsMinusScrollbar, getBoundsProp, getScrollValue, is, parseString, roundFloat, throwError } from './helpers';
+import { getBoundsProp, getScrollValue, is, parseString, parseValue, roundFloat, throwError } from './helpers.js';
 
 export default class Utils {
   constructor(intersectionTrigger) {
@@ -9,29 +9,40 @@ export default class Utils {
   }
   setUtils() {
     this.isVirtical = () => 'y' === this._it.axis;
-    this.isRootViewport = () => !this._it._root;
+    this.isViewport = () => !this._it._root;
     this.getRoot = () => this._it._root ?? window;
     this.dirProps = () =>
       this.isVirtical()
-        ? { ref: 'top', length: 'height', refOpposite: 'bottom', innerLength: innerHeight }
-        : { ref: 'left', length: 'width', refOpposite: 'right', innerLength: innerWidth };
-    this.setRootMargin = () => {
-      const extendMargin = getScrollValue(this.isRootViewport() ? document.body : this._it._root, this.isVirtical() ? 'x' : 'y');
+        ? { ref: 'top', length: 'height', refOpposite: 'bottom', clientLength: document.documentElement.clientHeight }
+        : { ref: 'left', length: 'width', refOpposite: 'right', clientLength: document.documentElement.clientWidth };
+    this.setRootMargin = (rEP, rLP) => {
+      const { length, clientLength } = this.dirProps();
+      const rootLength = this._it._root ? getBoundsProp(this._it._root, length) : clientLength;
+      const valueToPx = (pos, total) => {
+        const { value, unit, normal } = pos;
+        if ('%' === unit) return normal * total;
+        if ('px' === unit) return value;
+      };
+      rEP.pixeled = valueToPx(rEP, rootLength);
+      rLP.pixeled = valueToPx(rLP, rootLength);
+      this._it._isREPGreater = rEP.pixeled >= rLP.pixeled;
+      //Setting root margins
+      let rootMargins = {};
+      rootMargins.fromOppRef = `${(this._it._isREPGreater ? rEP.pixeled : rLP.pixeled) - rootLength}px`;
+      rootMargins.fromRef = `${-1 * (this._it._isREPGreater ? rLP.pixeled : rEP.pixeled)}px`;
+
+      const extendMargin = getScrollValue(this.isViewport() ? document.body : this._it._root, this.isVirtical() ? 'x' : 'y');
       return this.isVirtical()
-        ? `${this._it._positions.rootLeavePosition.strValue} ${extendMargin}px ${this._it._positions.rootEnterPosition.strValue} ${extendMargin}px`
-        : `${extendMargin}px ${this._it._positions.rootEnterPosition.strValue} ${extendMargin}px ${this._it._positions.rootLeavePosition.strValue}`;
+        ? `${rootMargins.fromRef} ${extendMargin}px ${rootMargins.fromOppRef} ${extendMargin}px`
+        : `${extendMargin}px ${rootMargins.fromOppRef} ${extendMargin}px ${rootMargins.fromRef}`;
     };
     this.setThreshold = () => {
-      let threshold = [
-        0,
-        this._it._triggerParams.enter,
-        this._it._triggerParams.leave,
-        roundFloat(1 - this._it._triggerParams.leave, 2),
-        1,
-      ];
+      const { enter, leave, maxPosition } = this._it._defaultTriggerParams;
+      let threshold = [0, enter, leave, roundFloat(1 - maxPosition, 2), 1];
+
       this._it.triggers.forEach((trigger) => {
-        const { enter, leave } = this.getTriggerData(trigger);
-        threshold.push(enter, leave, roundFloat(1 - leave, 2));
+        const { enter, leave, maxPosition } = this.getTriggerData(trigger);
+        threshold.push(enter, leave, roundFloat(1 - maxPosition, 2));
       });
 
       return [...new Set(threshold)]; //to remove duplicates
@@ -64,70 +75,34 @@ export default class Utils {
     };
 
     // Positions parsing
-    this.validatePosition = (name, pos) => {
+    this.validatePosition = (pos) => {
       is.function(pos) && (pos = pos(this._it));
-      if (!is.string(pos)) throwError(`${name} parameter must be a string.`);
+      if (!is.string(pos)) throwError(`enter, leave, rootEnter and rootLeave parameters must be a string.`);
       return pos;
     };
-    this.setPositionData = (offset, isTrigger = true, isEnter = true) => {
-      offset = this.validatePosition(isEnter ? 'enter' : 'leave', offset);
+    this.setPositionData = (pos) => {
+      pos = this.validatePosition(pos);
 
-      let value = offset.trim();
-      const isPercentage = is.percent(value);
-      const isPixel = is.pixel(value);
-
-      let position = {};
-
-      value = isPercentage ? value.replace('%', '') : isPixel ? value.replace('px', '') : value;
-      value = roundFloat(value);
-
-      position.type = isPercentage ? 'percent' : 'pixel';
-
-      //Trigger Positions
-      if (isPercentage && isTrigger) {
-        position.value = value / 100;
-        position.strValue = `${value}%`;
-        return position;
-      }
-      //Root Positions
-      const { length, innerLength } = this.dirProps();
-      const rootLength = this._it._root ? getBoundsProp(this._it._root, length) : innerLength;
-      switch (true) {
-        case isPercentage && isEnter:
-          position.value = roundFloat(value / 100 - 1, 2);
-          position.strValue = `${position.value * 100}%`;
-          break;
-        case isPercentage && !isEnter:
-          position.value = -value / 100;
-          position.strValue = `${position.value * 100}%`;
-          break;
-        case isPixel && isEnter:
-          position.value = roundFloat(value - rootLength, 2);
-          position.strValue = `${position.value}px`;
-          break;
-        case isPixel && !isEnter:
-          position.value = -value;
-          position.strValue = `${-value}px`;
-          break;
-      }
-
-      position.guide = offset;
-
-      return position;
-    };
-    this.parsePositions = (enter = '', leave = '') => {
-      enter = this.validatePosition('enter', enter);
-      leave = this.validatePosition('leave', leave);
-
-      const enterPositions = enter.trim().split(/\s+/g, 2);
-      const leavePositions = leave.trim().split(/\s+/g, 2);
-      const positions = [...enterPositions, ...leavePositions];
+      const original = pos.trim();
+      const parsed = parseValue(original);
+      const roundedValue = roundFloat(parsed.value);
 
       return {
-        triggerEnterPosition: this.setPositionData(positions[0]),
-        rootEnterPosition: this.setPositionData(positions[1], false),
-        triggerLeavePosition: this.setPositionData(positions[2]),
-        rootLeavePosition: this.setPositionData(positions[3], false, false),
+        original: original,
+        unit: parsed.unit,
+        value: roundedValue,
+        normal: parsed.unit === '%' ? roundedValue / 100 : null,
+      };
+    };
+    this.parsePositions = (triggerEnter, triggerLeave, rootEnter, rootLeave) => {
+      const positionsData = [triggerEnter, rootEnter, triggerLeave, rootLeave].map((pos) =>
+        this.setPositionData(this.validatePosition(pos).trim())
+      );
+      return {
+        tEP: positionsData[0], //trigger enter position
+        rEP: positionsData[1], //root enter position
+        tLP: positionsData[2], //trigger leave position
+        rLP: positionsData[3], //root leave position
       };
     };
 
@@ -169,10 +144,8 @@ export default class Utils {
       const triggerStates = this.getTriggerData(trigger, 'states');
       const hasEnteredFromOneSide = triggerStates.hasEntered || triggerStates.hasEnteredBack;
 
-      if (prop) {
-        //Get a property of a trigger states
-        return triggerStates[prop];
-      }
+      if (prop) return triggerStates[prop]; //Get a property of a trigger states
+
       return {
         ...triggerStates,
         hasEnteredFromOneSide,
@@ -257,30 +230,42 @@ export default class Utils {
       once && hasEnteredOnce && this._it.remove(trigger);
     };
 
+    this.getPositions = (tB, rB, { enter, leave, ref, refOpposite, length }) => {
+      const isREPGreater = this._it._isREPGreater;
+      return [
+        tB[ref] + enter * tB[length], //tEP
+        tB[ref] + leave * tB[length], //tLP
+        isREPGreater ? rB[refOpposite] : rB[ref], //rEP
+        isREPGreater ? rB[ref] : rB[refOpposite], //rLP
+      ];
+    };
+
     this.toggleActions = (trigger) => {
       const tB = trigger.getBoundingClientRect(); //trigger Bounds
       this._it.rootBounds = this.getRootRect(this._it.observer.rootMargin);
       const rB = this._it.rootBounds; //root Bounds
 
+      const { hasEnteredFromOneSide, hasLeft, hasLeftBack, hasEnteredOnce } = this.getTriggerStates(trigger);
       const { enter, leave } = this.getTriggerData(trigger);
-      const { hasEnteredFromOneSide, hasLeft, hasLeftBack } = this.getTriggerStates(trigger);
       const { ref, refOpposite, length } = this.dirProps();
+      const [tEP, tLP, rEP, rLP] = this.getPositions(tB, rB, { enter, leave, ref, refOpposite, length });
       let hasCaseMet = true;
+      // console.log('in');
 
       switch (true) {
-        case hasLeftBack && tB[ref] + enter * tB[length] <= rB[refOpposite] && tB[ref] + enter * tB[length] > rB[ref]:
+        case hasLeftBack && rEP > tEP:
           //Enter case
           this.onTriggerEnter(trigger);
           break;
-        case hasEnteredFromOneSide && tB[ref] + leave * tB[length] <= rB[ref]:
+        case hasEnteredFromOneSide && rLP > tLP:
           //Leave case
           this.onTriggerLeave(trigger);
           break;
-        case hasLeft && tB[ref] + leave * tB[length] >= rB[ref] && tB[ref] + leave * tB[length] < rB[refOpposite]:
+        case hasLeft && hasEnteredOnce && rLP < tLP:
           //EnterBack case
           this.onTriggerEnter(trigger, 'EnterBack');
           break;
-        case hasEnteredFromOneSide && tB[ref] + enter * tB[length] >= rB[refOpposite]:
+        case hasEnteredFromOneSide && rEP < tEP:
           //LeaveBack case
           this.onTriggerLeave(trigger, 'hasLeftBack');
           break;
@@ -322,7 +307,7 @@ export default class Utils {
     this.getRootRect = (rootMargins) => {
       let rootRect;
       if (this._it._root && !is.doc(this._it._root)) {
-        rootRect = boundsMinusScrollbar(this._it._root);
+        rootRect = this._it._root.getBoundingClientRect();
         return this.expandRectByRootMargin(rootRect, rootMargins);
       }
       const doc = is.doc(this._it._root) ? this._it._root : document;
