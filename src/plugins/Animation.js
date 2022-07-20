@@ -14,9 +14,9 @@ class Animation {
     const isVir = this._utils.isVirtical();
     const root = this._utils.getRoot();
 
-    this.seek = (ins, t, control) => {
-      if (is.num(control)) {
-        setTimeout(() => ins.seek(t), control * 1000);
+    this.seek = (ins, t, link) => {
+      if (is.num(link)) {
+        setTimeout(() => ins.seek(t), link * 1000);
         return;
       }
       ins.seek(t);
@@ -44,7 +44,7 @@ class Animation {
       requestAnimationFrame(() => this.startSnaping({ snapDistance, currentDis, snap, step, toRef }));
     };
 
-    this.animateHandler = (trigger, { enter, leave, tIL, instance, duration, snap, step, control }) => {
+    this.animateHandler = (trigger, { enter, leave, tIL, instance, duration, snap, step, link }) => {
       const tB = trigger.getBoundingClientRect(); //trigger Bounds
       const ids = this._utils.getTriggerStates(trigger, 'ids');
       this._it.rootBounds = this._utils.getRootRect(this._it.observer.rootMargin);
@@ -57,7 +57,7 @@ class Animation {
 
       if (diff > 0) {
         currentTime = (duration * diff) / scrollLength;
-        this.seek(instance, currentTime, control);
+        this.seek(instance, currentTime, link);
       }
 
       //Snap
@@ -98,10 +98,10 @@ class Animation {
   }
 
   animate(trigger, animation, eventIndex) {
-    const { instance, toggleActions, control, snap } = animation;
+    const { instance, toggleActions, link, snap } = animation;
     if (!instance) return;
 
-    if (control) {
+    if (link) {
       const { animate } = this._utils.getTriggerStates(trigger, 'onScroll');
       const ids = this._utils.getTriggerStates(trigger, 'ids');
       const { enter, leave, minPosition, maxPosition } = this._utils.getTriggerData(trigger);
@@ -112,7 +112,7 @@ class Animation {
       let step = 0;
 
       snap && (step = Math.round(Math.max((snap.speed * 17) / 1000, 1)));
-      const animateData = { enter, leave, tIL, instance, duration, snap, control, step };
+      const animateData = { enter, leave, tIL, instance, duration, snap, link, step };
 
       switch (eventIndex) {
         case 0:
@@ -129,7 +129,7 @@ class Animation {
           this._utils.setTriggerScrollStates(trigger, 'animate', null);
 
           //Reset the animation
-          this.seek(instance, 1 === eventIndex ? duration : 0, control);
+          this.seek(instance, 1 === eventIndex ? duration : 0, link);
           break;
       }
 
@@ -183,7 +183,7 @@ class Animation {
           if (!is.animeInstance(this._params.instance)) throwError('Invalid anime instance');
 
           const { toggleActions, snap } = this._params;
-          snap && this.parseSnap();
+          snap && (this._params.snap = this.parseSnap());
 
           is.string(toggleActions) && (this._params.toggleActions = splitStr(toggleActions));
 
@@ -240,7 +240,7 @@ class Animation {
         break;
     }
 
-    this._params.snap = mergeOptions(snapDefaultParams, snapParams);
+    return mergeOptions(snapDefaultParams, snapParams);
   }
 
   update() {

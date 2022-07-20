@@ -70,7 +70,7 @@ const defaultToggleClassParams = {
 const defaultAnimationParams = {
   instance: null,
   toggleActions: animationDefaultToggleActions,
-  control: false,
+  link: false,
   snap: false,
 };
 

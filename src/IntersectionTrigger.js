@@ -23,8 +23,8 @@ class IntersectionTrigger {
     this.toggleClass = null;
     //
     this._setStates();
-    this._setPlugins();
     this._setInstance();
+    this._setPlugins();
   }
 
   _setPlugins() {

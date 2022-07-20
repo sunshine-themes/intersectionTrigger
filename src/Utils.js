@@ -250,7 +250,6 @@ export default class Utils {
       const { ref, refOpposite, length } = this.dirProps();
       const [tEP, tLP, rEP, rLP] = this.getPositions(tB, rB, { enter, leave, ref, refOpposite, length });
       let hasCaseMet = true;
-      // console.log('in');
 
       switch (true) {
         case hasLeftBack && rEP > tEP:
