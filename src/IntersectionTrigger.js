@@ -24,21 +24,12 @@ class IntersectionTrigger {
     //
     this._setStates();
     this._setInstance();
-    this._setPlugins();
   }
 
-  _setPlugins() {
+  _setPlugin(pluginName, propertyName) {
     const plugins = IntersectionTrigger.getRegisteredPlugins();
-    plugins.forEach((Plugin) => {
-      switch (Plugin.name) {
-        case 'Animation':
-          this.animation = new Plugin(this);
-          break;
-        case 'ToggleClass':
-          this.toggleClass = new Plugin(this);
-          break;
-      }
-    });
+    const Plugin = plugins.find((plg) => pluginName === plg.name);
+    Plugin && (this[propertyName] = new Plugin(this));
   }
 
   _addResizeListener() {
@@ -66,7 +57,7 @@ class IntersectionTrigger {
       }
     });
   };
-  _onScrollHandler = () => requestAnimationFrame(this._rAFCallback);
+  _onScrollHandler = () => (this._rAFID = requestAnimationFrame(this._rAFCallback));
 
   addScrollListener(handler) {
     this._utils.getRoot().addEventListener('scroll', handler, false);
@@ -99,7 +90,7 @@ class IntersectionTrigger {
       const [tEP, tLP, rEP, rLP] = this._utils.getPositions(tB, rB, { enter, leave, ref, refOpposite, length });
 
       //States
-      const initBackupFun = tB[length] >= rL && (minPosition >= rootToTarget || 1 - maxPosition >= rootToTarget),
+      const initBackupFun = tB[length] >= rL /* && (minPosition >= rootToTarget || 1 - maxPosition >= rootToTarget) */,
         isBackupFunRunning = !!backup;
 
       switch (true) {
@@ -228,9 +219,13 @@ class IntersectionTrigger {
       maxPosition,
       states: { ...triggerStates },
     };
+    const parseProp = (name, pluginName) => {
+      !this[name] && this._setPlugin(pluginName, name);
+      triggerParams[name] = this[name].parse(triggerParams[name]);
+    };
 
-    this.toggleClass && triggerParams.toggleClass && (triggerParams.toggleClass = this.toggleClass.parse(triggerParams.toggleClass));
-    this.animation && triggerParams.animation && (triggerParams.animation = this.animation.parse(triggerParams.animation));
+    triggerParams.toggleClass && parseProp('toggleClass', 'ToggleClass');
+    triggerParams.animation && parseProp('animation', 'Animation');
     //Add new Triggers
     this.triggers = [...new Set([...this.triggers, ...toAddTriggers])]; //new Set to remove any duplicates
     //
@@ -279,16 +274,25 @@ class IntersectionTrigger {
   }
 
   kill() {
+    this.killed = true;
+
     this._disconnect(); //Disconnect the IntersctionObserver
+
     //Remove event listeners
+    this.removeScrollListener(this._onScrollHandler);
     this.removeScrollListener(this.customScrollHandler);
     this._removeResizeListener();
+    this._rAFID && cancelAnimationFrame(this._rAFID);
+
+    this.removeGuides(); //Remove all guides from DOM
+    this.toggleClasss && this.toggleClasss.kill(); //Kill toggleClasss instance
 
     this.triggers = []; //Remove all triggers
-    this.removeGuides(); //Remove all guides from DOM
-    this.animation && this.animation.kill(); //Kill animation instance
-    this.toggleClasss && this.toggleClasss.kill(); //Kill toggleClasss instance
-    //Remove from instances
+    this.animation = null;
+    this.toggleClass = null;
+    this._utils = null;
+
+    //Remove from stored instances
     const instanceIndex = instances.indexOf(this);
     ~instanceIndex && instances.splice(instanceIndex, 1);
   }
@@ -317,9 +321,6 @@ class IntersectionTrigger {
     this._createInstance();
     //reobserve the triggers
     this.triggers.forEach((trigger) => this.observer.observe(trigger));
-
-    //Update Animation instance
-    this.animation && this.animation.update();
     //Update guides
     this._guidesInstance && this._guidesInstance.update();
   }

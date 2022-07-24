@@ -187,9 +187,11 @@ export default class Utils {
         eventIndex: isEnterEvent ? 0 : 2,
       };
       //Invoke Enter Functions
-      data.callback(trigger, this);
-      this._it.toggleClass && toggleClass && this._it.toggleClass.toggle(trigger, toggleClass, data.eventIndex);
-      this._it.animation && animation && this._it.animation.animate(trigger, animation, data.eventIndex);
+      data.callback(trigger, this._it);
+      if (this._it.killed) return this.kill(); //Located after the callback to make sure that the IntersectionTrigger instance not killed, because the instance is a parameter of it.
+
+      toggleClass && this._it.toggleClass.toggle(trigger, toggleClass, data.eventIndex);
+      animation && this._it.animation.animate(trigger, animation, data.eventIndex);
 
       const triggerProps = hasEnteredOnce
         ? {
@@ -216,9 +218,11 @@ export default class Utils {
         eventIndex: isLeaveEvent ? 1 : 3,
       };
       //Invoke leave functions
-      data.callback(trigger, this);
-      this._it.toggleClass && toggleClass && this._it.toggleClass.toggle(trigger, toggleClass, data.eventIndex);
-      this._it.animation && animation && this._it.animation.animate(trigger, animation, data.eventIndex);
+      data.callback(trigger, this._it);
+      if (this._it.killed) return this.kill(); //Located after the callback to make sure that the IntersectionTrigger instance not killed, because the instance is a parameter of it.
+
+      animation && this._it.animation.animate(trigger, animation, data.eventIndex);
+      toggleClass && this._it.toggleClass.toggle(trigger, toggleClass, data.eventIndex);
 
       //Reset trigger data props
       this.setTriggerStates(trigger, {
@@ -323,5 +327,8 @@ export default class Utils {
 
       return this.expandRectByRootMargin(rootRect, rootMargins);
     };
+  }
+  kill() {
+    this._it = null;
   }
 }

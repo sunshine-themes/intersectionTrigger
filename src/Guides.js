@@ -199,12 +199,11 @@ class Guides {
     this.createGuides();
   };
   kill = () => {
+    this._removeResizeListener();
     this.removeGuides();
 
     this._it = null;
     this._utils = null;
-
-    this._removeResizeListener();
   };
 }
 

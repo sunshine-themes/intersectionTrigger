@@ -4,25 +4,48 @@ import { clamp, is, mergeOptions, splitStr, throwError } from '../helpers';
 class Animation {
   constructor(it) {
     this._registerIntersectionTrigger(it);
-    this.init();
+    this.setUtils();
     return this;
   }
-  init() {
-    this._snap = {};
+  _registerIntersectionTrigger(intersectionTrigger) {
+    this._it = intersectionTrigger;
+    this._utils = this._it._utils;
+  }
 
+  setUtils() {
     const { ref, refOpposite, length } = this._utils.dirProps();
     const isVir = this._utils.isVirtical();
     const root = this._utils.getRoot();
 
-    this.seek = (ins, t, link) => {
+    let rAFIDs = new WeakMap();
+    this.seekSmoothly = (ins, seekTo, link, isSeekToGreater) => {
+      if (this._it.killed) return this.kill();
+      const cT = ins.currentTime;
+      const sT = isSeekToGreater ? Math.min(cT + link, seekTo) : Math.max(cT - link, seekTo);
+      ins.seek(sT);
+      const hasComplete = isSeekToGreater ? sT >= seekTo : sT <= seekTo;
+      if (hasComplete) return;
+
+      const rAFID = requestAnimationFrame(() => this.seekSmoothly(ins, seekTo, link, isSeekToGreater));
+      rAFIDs.set(ins, rAFID);
+    };
+
+    this.seek = (ins, seekTo, link) => {
       if (is.num(link)) {
-        setTimeout(() => ins.seek(t), link * 1000);
+        const cT = ins.currentTime;
+        const isSeekToGreater = seekTo > cT;
+        const rAFID = (rAFIDs.has(ins) && rAFIDs.get(ins)) || 0;
+
+        cancelAnimationFrame(rAFID);
+        this.seekSmoothly(ins, seekTo, link, isSeekToGreater);
         return;
       }
-      ins.seek(t);
+      ins.seek(seekTo);
     };
 
     this.startSnaping = ({ snapDistance, currentDis, snap, step, toRef = false }) => {
+      if (this._it.killed) return this.kill();
+
       const direction = toRef ? -1 : 1;
       if (isVir) {
         root.scrollBy({
@@ -44,20 +67,75 @@ class Animation {
       requestAnimationFrame(() => this.startSnaping({ snapDistance, currentDis, snap, step, toRef }));
     };
 
-    this.animateHandler = (trigger, { enter, leave, tIL, instance, duration, snap, step, link }) => {
+    this.parseSnap = ({ instance, snap }, update = false) => {
+      const parseNum = (n) => {
+        const arr = [];
+        let progress = n;
+        while (progress < 1) {
+          arr.push(clamp(progress, 0, 1));
+          progress = progress + n;
+        }
+        return arr.map((v) => Math.round(v * instance.duration));
+      };
+      const parseTo = (sn) => {
+        if (is.num(sn)) return parseNum(sn);
+        if (is.string(sn)) return parseMarks(sn);
+        if (is.array(sn)) return sn;
+      };
+      const parseMarks = () => {
+        if (!is.inObject(instance, 'marks')) return;
+        return instance.marks.map((mark) => mark.time);
+      };
+
+      const getTo = (params, to) => (update ? params.toOriginal : to);
+
+      let snapParams = {};
+      switch (true) {
+        case is.boolean(snap) && snap:
+          !update && (snapParams.toOriginal = 'marks');
+          snapParams.to = parseMarks(getTo(snapParams, snap));
+          break;
+        case is.array(snap):
+          !update && (snapParams.toOriginal = snap);
+          snapParams.to = getTo(snapParams, snap);
+          break;
+        case is.num(snap):
+          !update && (snapParams.toOriginal = snap);
+          snapParams.to = parseNum(getTo(snapParams, snap));
+          break;
+        case is.object(snap):
+          snapParams = snap;
+          !update && (snapParams.toOriginal = snapParams.to);
+          snapParams.to = parseTo(getTo(snapParams, snapParams.to));
+          break;
+      }
+
+      return mergeOptions(snapDefaultParams, snapParams);
+    };
+
+    this.getTIL = (trigger, minPosition, maxPosition) => {
+      const tB = trigger.getBoundingClientRect();
+      return tB[length] - (minPosition * tB[length] + (1 - maxPosition) * tB[length]);
+    };
+    this.getSnapStep = (snap) => snap && Math.round(Math.max((snap.speed * 17) / 1000, 1));
+
+    this.animateHandler = (trigger, { enter, leave, tIL, instance, snap, step, link }) => {
+      if (this._it.killed) return this.kill();
+
       const tB = trigger.getBoundingClientRect(); //trigger Bounds
       const ids = this._utils.getTriggerStates(trigger, 'ids');
       this._it.rootBounds = this._utils.getRootRect(this._it.observer.rootMargin);
       const rB = this._it.rootBounds; //root Bounds
       const scrollLength = tIL + (this._it._isREPGreater ? rB[length] : -rB[length]);
-      let currentTime = 0;
+      const duration = instance.duration;
+      let seekTo = 0;
 
       const [tEP, tLP, rEP, rLP] = this._utils.getPositions(tB, rB, { enter, leave, ref, refOpposite, length });
       const diff = rEP - tEP;
 
       if (diff > 0) {
-        currentTime = (duration * diff) / scrollLength;
-        this.seek(instance, currentTime, link);
+        seekTo = (duration * diff) / scrollLength;
+        this.seek(instance, seekTo, link);
       }
 
       //Snap
@@ -67,7 +145,7 @@ class Animation {
         clearTimeout(ids.snapTimeOutId);
         // Set a timeout to run after scrolling stops
         const snapTimeOutId = setTimeout(() => {
-          const directionalDiff = snap.to.map((n) => currentTime - n),
+          const directionalDiff = snap.to.map((n) => seekTo - n),
             diff = directionalDiff.map((n) => Math.abs(n)),
             closest = Math.min(...diff),
             closestWithDirection = directionalDiff[diff.indexOf(closest)],
@@ -92,11 +170,6 @@ class Animation {
     };
   }
 
-  _registerIntersectionTrigger(intersectionTrigger) {
-    this._it = intersectionTrigger;
-    this._utils = this._it._utils;
-  }
-
   animate(trigger, animation, eventIndex) {
     const { instance, toggleActions, link, snap } = animation;
     if (!instance) return;
@@ -105,14 +178,9 @@ class Animation {
       const { animate } = this._utils.getTriggerStates(trigger, 'onScroll');
       const ids = this._utils.getTriggerStates(trigger, 'ids');
       const { enter, leave, minPosition, maxPosition } = this._utils.getTriggerData(trigger);
-      const { length } = this._utils.dirProps();
-      const tB = trigger.getBoundingClientRect(); //trigger Bounds
-      const tIL = tB[length] - (minPosition * tB[length] + (1 - maxPosition) * tB[length]); //trigger Intersection length
-      const duration = instance.duration;
-      let step = 0;
-
-      snap && (step = Math.round(Math.max((snap.speed * 17) / 1000, 1)));
-      const animateData = { enter, leave, tIL, instance, duration, snap, link, step };
+      const tIL = this.getTIL(trigger, minPosition, maxPosition); //trigger Intersection length
+      const step = this.getSnapStep(snap) || 0;
+      const animateData = { enter, leave, tIL, instance, snap, link: Math.abs(link), step };
 
       switch (eventIndex) {
         case 0:
@@ -129,7 +197,7 @@ class Animation {
           this._utils.setTriggerScrollStates(trigger, 'animate', null);
 
           //Reset the animation
-          this.seek(instance, 1 === eventIndex ? duration : 0, link);
+          this.seek(instance, 1 === eventIndex ? instance.duration : 0, link);
           break;
       }
 
@@ -168,7 +236,7 @@ class Animation {
     }
   }
 
-  parse(params) {
+  parse(params, update = false) {
     let animation = {};
 
     switch (true) {
@@ -179,18 +247,16 @@ class Animation {
         break;
       case is.object(params):
         {
-          this._params = mergeOptions(defaultAnimationParams, params);
-          if (!is.animeInstance(this._params.instance)) throwError('Invalid anime instance');
+          animation = mergeOptions(defaultAnimationParams, params);
+          const { toggleActions, snap, instance } = animation;
 
-          const { toggleActions, snap } = this._params;
-          snap && (this._params.snap = this.parseSnap());
-
-          is.string(toggleActions) && (this._params.toggleActions = splitStr(toggleActions));
-
-          animation = this._params;
+          snap && (animation.snap = this.parseSnap({ instance, snap }, update));
+          is.string(toggleActions) && (animation.toggleActions = splitStr(toggleActions));
         }
         break;
     }
+
+    !is.animeInstance(animation.instance) && throwError('Invalid anime instance');
 
     //Reset anime instance
     is.inObject(animation, 'instance') && animation.instance.reset();
@@ -198,53 +264,27 @@ class Animation {
     return animation;
   }
 
-  parseSnap() {
-    const { instance, snap } = this._params;
-
-    const parseSnapNum = (n) => {
-      const arr = [];
-      let progress = n;
-      while (progress < 1) {
-        arr.push(clamp(progress, 0, 1));
-        progress = progress + n;
-      }
-      return arr.map((v) => Math.round(v * instance.duration));
-    };
-    const parseSnapTo = (sn) => {
-      if (is.num(sn)) return parseSnapNum(sn);
-      if (is.string(sn)) return parseSnapMarks(sn);
-      if (is.array(sn)) return sn;
-    };
-    const parseSnapMarks = () => {
-      if (!is.inObject(instance, 'marks')) return;
-
-      const marks = instance.marks;
-      const snapTo = marks.map((mark) => mark.time);
-      return snapTo;
-    };
-
-    let snapParams = {};
-    switch (true) {
-      case is.boolean(snap) && snap:
-        snapParams.to = parseSnapMarks(snap);
-        break;
-      case is.array(snap):
-        snapParams.to = snap;
-        break;
-      case is.num(snap):
-        snapParams.to = parseSnapNum(snap);
-        break;
-      case is.object(snap):
-        snapParams = snap;
-        snapParams.to = parseSnapTo(snapParams.to);
-        break;
-    }
-
-    return mergeOptions(snapDefaultParams, snapParams);
-  }
-
   update() {
     // this.init();
+    this._it.triggers.forEach((trigger) => {
+      //update the animation data
+      let { enter, leave, minPosition, maxPosition, animation } = this._utils.getTriggerData(trigger);
+      animation = this.parse(animation, true); //parsed animation data
+      this._utils.setTriggerData(trigger, null, { animation });
+
+      //update the animation handler data
+      const { animate } = this._utils.getTriggerStates(trigger, 'onScroll');
+      if (animate) {
+        const { instance, snap, link } = animation;
+        const tIL = this.getTIL(trigger, minPosition, maxPosition);
+        const step = this.getSnapStep(snap) || 0;
+        //reassign an animate handler
+        this._utils.setTriggerScrollStates(trigger, 'animate', null);
+        this._utils.setTriggerScrollStates(trigger, 'animate', () =>
+          this.animateHandler(trigger, { enter, leave, instance, snap, link, tIL, step })
+        );
+      }
+    });
   }
 
   kill() {
