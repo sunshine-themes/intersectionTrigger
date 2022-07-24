@@ -233,7 +233,9 @@ class IntersectionTrigger {
     [config.enter, config.leave].forEach((position) => !this._threshold.some((value) => position === value) && (mustUpdate = true));
 
     if (mustUpdate) {
-      this.update(toAddTriggers, triggerParams);
+      //set new triggers data
+      toAddTriggers.forEach((trigger) => this._utils.setTriggerData(trigger, triggerParams));
+      this.update();
     } else {
       toAddTriggers.forEach((trigger) => {
         this._utils.setTriggerData(trigger, triggerParams);
@@ -273,6 +275,17 @@ class IntersectionTrigger {
     this.observer = null;
   }
 
+  update() {
+    //Disconnect the IntersctionObserver
+    this._disconnect();
+    //recreate the observer
+    this._createInstance();
+    //reobserve the triggers
+    this.triggers.forEach((trigger) => this.observer.observe(trigger));
+    //Update guides
+    this._guidesInstance && this._guidesInstance.update();
+  }
+
   kill() {
     this.killed = true;
 
@@ -310,19 +323,6 @@ class IntersectionTrigger {
     this._guidesInstance && this._guidesInstance.kill();
     this._guidesInstance = null;
     return this;
-  }
-
-  update(newTriggers = null, triggerParams = null) {
-    //Disconnect the IntersctionObserver
-    this._disconnect();
-    //set new triggers data
-    newTriggers && newTriggers.forEach((trigger) => this._utils.setTriggerData(trigger, triggerParams));
-    //recreate the observer
-    this._createInstance();
-    //reobserve the triggers
-    this.triggers.forEach((trigger) => this.observer.observe(trigger));
-    //Update guides
-    this._guidesInstance && this._guidesInstance.update();
   }
 }
 
