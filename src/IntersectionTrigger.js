@@ -11,7 +11,6 @@ class IntersectionTrigger {
     this._userOptions = configuration;
     this.triggers = [];
     this._triggersData = new WeakMap();
-    this._guidesInstance = null;
     //
     this._utils = new Utils(this);
     //
@@ -21,6 +20,7 @@ class IntersectionTrigger {
     //
     this.animation = null;
     this.toggleClass = null;
+    this.guides = null;
     //
     this._setStates();
     this._setInstance();
@@ -202,6 +202,12 @@ class IntersectionTrigger {
     this._addResizeListener();
     this.customScrollHandler && this.addScrollListener(this.customScrollHandler);
 
+    //Add guides
+    if (this._options.guides) {
+      this._setPlugin('Guides', 'guides');
+      this.guides.init(this._options.guides);
+    }
+
     return this;
   }
 
@@ -244,7 +250,7 @@ class IntersectionTrigger {
     }
 
     //Update guides
-    this._guidesInstance && this._guidesInstance.update();
+    this.guides && this.guides.update();
 
     return this;
   }
@@ -265,7 +271,7 @@ class IntersectionTrigger {
     this.triggers = updatedStoredTriggers;
 
     //Update guides
-    this._guidesInstance && this._guidesInstance.update();
+    this.guides && this.guides.update();
 
     return this;
   }
@@ -283,7 +289,7 @@ class IntersectionTrigger {
     //reobserve the triggers
     this.triggers.forEach((trigger) => this.observer.observe(trigger));
     //Update guides
-    this._guidesInstance && this._guidesInstance.update();
+    this.guides && this.guides.update();
   }
 
   kill() {
@@ -297,38 +303,23 @@ class IntersectionTrigger {
     this._removeResizeListener();
     this._rAFID && cancelAnimationFrame(this._rAFID);
 
-    this.removeGuides(); //Remove all guides from DOM
+    this.guides && this.guides.kill(); //Kill guides instance
     this.toggleClasss && this.toggleClasss.kill(); //Kill toggleClasss instance
+    this.animation && this.animation.kill(); //Kill animation instance
 
     this.triggers = []; //Remove all triggers
-    this.animation = null;
-    this.toggleClass = null;
-    this._utils = null;
+    this.animation = this.toggleClass = this.guides = this._utils = null;
 
     //Remove from stored instances
     const instanceIndex = instances.indexOf(this);
     ~instanceIndex && instances.splice(instanceIndex, 1);
-  }
-
-  addGuides(guidesIns) {
-    if (!is.inObject(guidesIns, '_registerIntersectionTrigger')) throwError('Invalid Guides Instance.');
-
-    guidesIns._registerIntersectionTrigger(this);
-    guidesIns.update();
-    this._guidesInstance = guidesIns;
-    return this;
-  }
-
-  removeGuides() {
-    this._guidesInstance && this._guidesInstance.kill();
-    this._guidesInstance = null;
-    return this;
   }
 }
 
 IntersectionTrigger.getInstances = () => instances;
 IntersectionTrigger.getInstanceById = (id) => instances.find((ins) => ins.id === id);
 IntersectionTrigger.update = () => instances.forEach((ins) => ins.update());
+IntersectionTrigger.kill = () => instances.forEach((ins) => ins.kill());
 IntersectionTrigger.registerPlugins = (plugins = []) => registeredPlugins.push(...plugins);
 IntersectionTrigger.getRegisteredPlugins = () => registeredPlugins;
 

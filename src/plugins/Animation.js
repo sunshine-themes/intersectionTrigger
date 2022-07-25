@@ -19,7 +19,8 @@ class Animation {
 
     let rAFIDs = new WeakMap();
     this.seekSmoothly = (ins, seekTo, link, isSeekToGreater) => {
-      if (this._it.killed) return this.kill();
+      if (this.killed) return;
+
       const cT = ins.currentTime;
       const sT = isSeekToGreater ? Math.min(cT + link, seekTo) : Math.max(cT - link, seekTo);
       ins.seek(sT);
@@ -44,7 +45,7 @@ class Animation {
     };
 
     this.startSnaping = ({ snapDistance, currentDis, snap, step, toRef = false }) => {
-      if (this._it.killed) return this.kill();
+      if (this.killed) return;
 
       const direction = toRef ? -1 : 1;
       if (isVir) {
@@ -120,7 +121,7 @@ class Animation {
     this.getSnapStep = (snap) => snap && Math.round(Math.max((snap.speed * 17) / 1000, 1));
 
     this.animateHandler = (trigger, { enter, leave, tIL, instance, snap, step, link }) => {
-      if (this._it.killed) return this.kill();
+      if (this.killed) return;
 
       const tB = trigger.getBoundingClientRect(); //trigger Bounds
       const ids = this._utils.getTriggerStates(trigger, 'ids');
@@ -265,7 +266,6 @@ class Animation {
   }
 
   update() {
-    // this.init();
     this._it.triggers.forEach((trigger) => {
       //update the animation data
       let { enter, leave, minPosition, maxPosition, animation } = this._utils.getTriggerData(trigger);
@@ -288,6 +288,8 @@ class Animation {
   }
 
   kill() {
+    this.killed = true;
+
     this._it = null;
     this._utils = null;
   }

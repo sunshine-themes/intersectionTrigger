@@ -14,9 +14,9 @@ const babelConfig = {
           useBuiltIns: 'entry',
           corejs: 3.22,
           modules: false,
-          targets: {
-            browsers: ['> 0.25%, not dead'],
-          },
+          // targets: {
+          //   browsers: ['> 0.25%, not dead'],
+          // },
         },
       ],
     ],
@@ -55,7 +55,7 @@ import('esbuild-plugin-babel').then(({ default: babel }) => {
     { name: 'IntersectionTrigger', path: 'IntersectionTrigger' },
     { name: 'Animation', path: 'plugins/Animation' },
     { name: 'ToggleClass', path: 'plugins/ToggleClass' },
-    { name: 'Guides', path: 'Guides' },
+    { name: 'Guides', path: 'plugins/Guides' },
   ].forEach((obj) => {
     build(buildConfig('iife', 'es5', false, obj));
     build(buildConfig('iife', 'es5', true, obj));

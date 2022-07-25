@@ -21,6 +21,7 @@ const defaultInsOptions = {
   axis: 'y',
   name: '',
   root: null,
+  guides: false,
   onScroll: fn,
 };
 

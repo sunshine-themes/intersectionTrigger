@@ -1,18 +1,23 @@
-import { guideDefaultParams } from './constants';
-import { getParents, is, mergeOptions } from './helpers.js';
+import { guideDefaultParams } from '../constants';
+import { getParents, is, mergeOptions } from '../helpers.js';
 
 class Guides {
-  constructor(params = {}) {
-    this.params = params;
-    this._guides = [];
+  constructor(it) {
+    this._registerIntersectionTrigger(it);
     return this;
   }
 
   _registerIntersectionTrigger(intersectionTrigger) {
     this._it = intersectionTrigger;
     this._utils = this._it._utils;
+  }
+
+  init(options) {
+    this.options = is.object(options) ? options : {};
+    this._guides = [];
 
     this._addResizeListener();
+    this.update();
   }
 
   _addResizeListener() {
@@ -146,7 +151,7 @@ class Guides {
       return guideParams;
     };
     //Guides Parameters
-    const guideParams = parseGuidesParams(this.params);
+    const guideParams = parseGuidesParams(this.options);
     //Create Root Guides
     const guideTextPrefix = this._it.name;
 
@@ -189,6 +194,7 @@ class Guides {
       });
     });
   }
+
   removeGuides = () => {
     this._guides.forEach((guide) => guide && guide.remove());
     this._guides = [];
@@ -198,9 +204,12 @@ class Guides {
     this.removeGuides();
     this.createGuides();
   };
+
   kill = () => {
     this._removeResizeListener();
     this.removeGuides();
+
+    this._it.guides = null;
 
     this._it = null;
     this._utils = null;
