@@ -215,5 +215,6 @@ class Guides {
     this._utils = null;
   };
 }
+Guides.pluginName = 'guides';
 
-export { Guides as default };
+export default Guides;

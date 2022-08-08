@@ -56,5 +56,6 @@ class ToggleClass {
     this._utils = null;
   };
 }
+ToggleClass.pluginName = 'toggleClass';
 
-export { ToggleClass as default };
+export default ToggleClass;

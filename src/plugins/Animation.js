@@ -295,4 +295,6 @@ class Animation {
   }
 }
 
-export { Animation as default };
+Animation.pluginName = 'animation';
+
+export default Animation;
