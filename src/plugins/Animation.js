@@ -213,6 +213,9 @@ class Animation {
         instance.reversed && instance.reverse();
         1 > instance.progress && instance[action]();
         break;
+      case 'resume':
+        1 > instance.progress && 0 < instance.progress && instance.play();
+        break;
       case 'restart':
       case 'reset':
         instance.reversed && instance.reverse();

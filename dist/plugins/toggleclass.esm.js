@@ -7,7 +7,7 @@
 * @license: Released under the Standard 'no charge' license: https://sunshine-themes.com/standard-license License.
 * @author: Sherif Magdy, sherifmagdy@sunshine-themes.com
 *
-* Released on: August 8, 2022
+* Released on: August 16, 2022
 */
 
 // src/constants.js

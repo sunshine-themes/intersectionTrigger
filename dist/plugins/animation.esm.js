@@ -7,7 +7,7 @@
 * @license: Released under the Standard 'no charge' license: https://sunshine-themes.com/standard-license License.
 * @author: Sherif Magdy, sherifmagdy@sunshine-themes.com
 *
-* Released on: August 8, 2022
+* Released on: August 16, 2022
 */
 
 // src/constants.js
@@ -240,6 +240,9 @@ var Animation = class {
       case "play":
         instance.reversed && instance.reverse();
         1 > instance.progress && instance[action]();
+        break;
+      case "resume":
+        1 > instance.progress && 0 < instance.progress && instance.play();
         break;
       case "restart":
       case "reset":
