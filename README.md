@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/sherif-magdy/sunshine-assets/main/intersectiontrigger-logo.png"/>
+  <img style="width:50%;" src="https://raw.githubusercontent.com/sherif-magdy/sunshine-assets/main/intersectiontrigger-logo.png"/>
 </p>
 
 <p align="center">
