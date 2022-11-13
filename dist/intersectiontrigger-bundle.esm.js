@@ -1,13 +1,13 @@
 /*
 * IntersectionTrigger v1.0.0 
-* IntersectionTrigger is a robust JavaScript toolset that turns developers into animation superheroes. Build high-performance animations that work in **every** major browser.
-* https://sunshine-themes.com
+* IntersectionTrigger utilizes the most modern web technology to trigger anything by intersection. Including scroll-based animations.
+* https://sunshine-themes.com/?appID=ss_app_1
 *
 * Copyright 2022, Sunshine. All rights reserved.
-* @license: Released under the Standard 'no charge' license: https://sunshine-themes.com/standard-license License.
+* @license: Released under the personal 'no charge' license can be viewed at http://sunshine-themes.com/?appID=ss_app_1&tab=license, Licensees of commercial or business license are granted additional rights. See http://sunshine-themes.com/?appID=ss_app_1&tab=license for details..
 * @author: Sherif Magdy, sherifmagdy@sunshine-themes.com
 *
-* Released on: August 16, 2022
+* Released on: November 13, 2022
 */
 
 import IntersectionTrigger from "./core/core.esm.js";

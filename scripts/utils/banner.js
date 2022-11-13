@@ -15,7 +15,7 @@ function banner(name = null) {
 * ${pkg.homepage}
 *
 * Copyright ${date.year}, Sunshine. All rights reserved.
-* @license: Released under the ${pkg.license} License.
+* @license: Released under the ${pkg.license}.
 * @author: ${pkg.author}, ${pkg.maintainers[0].email}
 *
 * Released on: ${date.month} ${date.day}, ${date.year}

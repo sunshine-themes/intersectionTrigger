@@ -1,8 +1,8 @@
 {
   "name": "intersectiontrigger",
   "version": "1.0.0",
-  "description": "IntersectionTrigger is a robust JavaScript toolset that turns developers into animation superheroes. Build high-performance animations that work in **every** major browser.",
-  "homepage": "https://sunshine-themes.com",
+  "description": "IntersectionTrigger utilizes the most modern web technology to trigger anything by intersection. Including scroll-based animations.",
+  "homepage": "https://sunshine-themes.com/?appID=ss_app_1",
   "module": "./intersectiontrigger.esm.js",
   "main": "./intersectiontrigger.esm.js",
   "exports": {
@@ -30,13 +30,13 @@
     "build": "node scripts/build",
     "watch": "npm run build -- -w"
   },
-  "license": "Standard 'no charge' license: https://sunshine-themes.com/standard-license",
+  "license": "personal 'no charge' license can be viewed at http://sunshine-themes.com/?appID=ss_app_1&tab=license, Licensees of commercial or business license are granted additional rights. See http://sunshine-themes.com/?appID=ss_app_1&tab=license for details.",
   "bugs": {
-    "url": "https://github.com/sherif-magdy/IntersectionTrigger/issues"
+    "url": "https://github.com/sunshine-themes/intersectionTrigger/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/sherif-magdy/IntersectionTrigger"
+    "url": "https://github.com/sunshine-themes/intersectionTrigger"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.18.2",

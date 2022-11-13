@@ -3,9 +3,9 @@
 </p>
 
 <p align="center">
-  <a href="https://sunshine-themes.com/intersectiontrigger-getting-started">Get Started</a> |
-  <a href="https://sunshine-themes.com/intersectiontrigger-docs">Documentation</a> |
-  <a href="https://sunshine-themes.com/intersectiontrigger-pricing">Pricing</a>
+  <a href="https://sunshine-themes.com/?appID=ss_app_1">Overview</a> |
+  <a href="https://sunshine-themes.com/?appID=ss_app_1&tab=docs">Documentation</a> |
+  <a href="https://sunshine-themes.com/?appID=ss_app_1&tab=pricing">Pricing</a>
 </p>
 
 <p align="center">
@@ -73,7 +73,7 @@ import IntersectionTrigger from 'intersectiontrigger/bundle';
 const itInstance = new IntersectionTrigger(...);
 ```
 
-[For more installation options.](https://sunshine-themes.com/intersectiontrigger-installation)
+[For more installation options.](https://sunshine-themes.com/?appID=ss_app_1&tab=docs)
 
 ## Features
 
@@ -84,13 +84,13 @@ const itInstance = new IntersectionTrigger(...);
 - **Library Agnostic**: IntersectionTrigger requires Zero JavaScript libraries, which makes it much smaller and faster.
 - **Unlimited Triggers With Unlimited Animations**: Add as many triggers ( with controlled/linked animations ) as you want to one IntersectionTrigger instance, so you can use only one instance to power up your whole application.
 - **Visual Guides**: IntersectionTrigger comes with Guides Plugin to visualize the enter/leave positions of both the trigger and the root, makes the development process much easier for debugging.
-- **Want to discover more, [visit us](https://sunshine-themes.com/ss_applications/intersectiontrigger) ...**
+- **Want to discover more, [visit us](https://sunshine-themes.com/?appID=ss_app_1) ...**
 
 ## Community
 
-The IntersectionTrigger community can be found on [GitHub Discussions](https://github.com/sunshine/intersectiontrigger/discussions), where you can ask questions, voice ideas, and share your projects
+The IntersectionTrigger community can be found on [GitHub Discussions](https://github.com/sunshine-themes/intersectionTrigger/discussions), where you can ask questions, voice ideas, and share your projects
 
 ## Major Roadmapped Features
 
-- [Top Feature Requests](https://github.com/sunshine/intersectiontrigger/issues?q=is%3Aissue+is%3Aopen+label%3A%22feature+request%22+sort%3Areactions-%2B1-desc+) (Add your own votes using the 👍 reaction)
-- [Top Bugs 😱](https://github.com/sunshine/intersectiontrigger/issues?q=is%3Aissue+is%3Aopen+-label%3A%22feature+request%22++sort%3Areactions-%2B1-desc+) (Add your own votes using the 👍 reaction)
+- [Top Feature Requests](https://github.com/sunshine-themes/intersectionTrigger/issues?q=is%3Aissue+is%3Aopen+label%3A%22feature+request%22+sort%3Areactions-%2B1-desc+) (Add your own votes using the 👍 reaction)
+- [Top Bugs 😱](https://github.com/sunshine-themes/intersectionTrigger/issues?q=is%3Aissue+is%3Aopen+-label%3A%22feature+request%22++sort%3Areactions-%2B1-desc+) (Add your own votes using the 👍 reaction)
