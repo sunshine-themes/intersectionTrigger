@@ -1,56 +1,57 @@
 {
-  "name": "intersectiontrigger",
-  "version": "1.0.0",
-  "description": "IntersectionTrigger utilizes the most modern web technology to trigger anything by intersection. Including scroll-based animations.",
-  "homepage": "https://sunshine-themes.com/?appID=ss_app_1",
-  "module": "./intersectiontrigger.esm.js",
-  "main": "./intersectiontrigger.esm.js",
-  "exports": {
-    ".": "./intersectiontrigger.esm.js",
-    "./bundle": "./intersectiontrigger-bundle.esm.js"
-  },
-  "keywords": [
-    "intersection",
-    "trigger",
-    "JavaScript",
-    "animation",
-    "animejs",
-    "IntersectionObserver",
-    "scroll"
-  ],
-  "author": "Sherif Magdy",
-  "maintainers": [
-    {
-      "name": "Sherif Magdy",
-      "email": "sherifmagdy@sunshine-themes.com",
-      "web": "https://sunshine-themes.com"
-    }
-  ],
-  "scripts": {
-    "build": "node scripts/build",
-    "watch": "npm run build -- -w"
-  },
-  "license": "personal 'no charge' license can be viewed at http://sunshine-themes.com/?appID=ss_app_1&tab=license, Licensees of commercial or business license are granted additional rights. See http://sunshine-themes.com/?appID=ss_app_1&tab=license for details.",
-  "bugs": {
-    "url": "https://github.com/sunshine-themes/intersectionTrigger/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/sunshine-themes/intersectionTrigger"
-  },
-  "devDependencies": {
-    "@babel/eslint-parser": "^7.18.2",
-    "@babel/eslint-plugin": "^7.17.7",
-    "@babel/preset-env": "^7.18.2",
-    "@sherifmagdy/animejs": "^3.3.0",
-    "core-js": "^3.22.8",
-    "esbuild": "^0.14.43",
-    "esbuild-plugin-babel": "^0.2.3",
-    "esbuild-plugin-filesize": "^0.3.0",
-    "eslint": "^8.17.0",
-    "eslint-plugin-import": "^2.26.0",
-    "estrella": "^1.4.1",
-    "exec-sh": "^0.4.0",
-    "fs-extra": "^10.1.0"
-  }
+	"name": "intersectiontrigger",
+	"version": "1.0.1",
+	"description": "IntersectionTrigger utilizes the most modern web technology to trigger anything by intersection. Including scroll-based animations.",
+	"homepage": "https://sunshine-themes.com/?appID=ss_app_1",
+	"module": "./intersectiontrigger.esm.js",
+	"main": "./intersectiontrigger.esm.js",
+	"exports": {
+		".": "./intersectiontrigger.esm.js",
+		"./bundle": "./intersectiontrigger-bundle.esm.js"
+	},
+	"keywords": [
+		"intersection",
+		"trigger",
+		"JavaScript",
+		"animation",
+		"animejs",
+		"IntersectionObserver",
+		"scroll"
+	],
+	"author": "Sherif Magdy",
+	"maintainers": [
+		{
+			"name": "Sherif Magdy",
+			"email": "sherifmagdy@sunshine-themes.com",
+			"web": "https://sunshine-themes.com"
+		}
+	],
+	"scripts": {
+		"build": "node scripts/build",
+		"watch": "npm run build -- -w"
+	},
+	"license": "personal 'no charge' license can be viewed at http://sunshine-themes.com/?appID=ss_app_1&tab=license, Licensees of commercial or business license are granted additional rights. See http://sunshine-themes.com/?appID=ss_app_1&tab=license for details.",
+	"bugs": {
+		"url": "https://github.com/sunshine-themes/intersectionTrigger/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/sunshine-themes/intersectionTrigger"
+	},
+	"devDependencies": {
+		"@babel/eslint-parser": "^7.18.2",
+		"@babel/eslint-plugin": "^7.17.7",
+		"@babel/preset-env": "^7.18.2",
+		"@sherifmagdy/animejs": "^3.3.0",
+		"core-js": "^3.22.8",
+		"esbuild": "^0.14.43",
+		"esbuild-plugin-babel": "^0.2.3",
+		"esbuild-plugin-filesize": "^0.3.0",
+		"eslint": "^8.17.0",
+		"eslint-plugin-import": "^2.26.0",
+		"estrella": "^1.4.1",
+		"exec-sh": "^0.4.0",
+		"fs-extra": "^10.1.0",
+		"intersectiontrigger": "^1.0.0"
+	}
 }

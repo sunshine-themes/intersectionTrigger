@@ -1,5 +1,5 @@
 /*
-* IntersectionTrigger v1.0.0 
+* IntersectionTrigger v1.0.1 
 * IntersectionTrigger utilizes the most modern web technology to trigger anything by intersection. Including scroll-based animations.
 * https://sunshine-themes.com/?appID=ss_app_1
 *
@@ -7,7 +7,7 @@
 * @license: Released under the personal 'no charge' license can be viewed at http://sunshine-themes.com/?appID=ss_app_1&tab=license, Licensees of commercial or business license are granted additional rights. See http://sunshine-themes.com/?appID=ss_app_1&tab=license for details..
 * @author: Sherif Magdy, sherifmagdy@sunshine-themes.com
 *
-* Released on: November 13, 2022
+* Released on: December 20, 2022
 */
 
 // src/constants.js
@@ -100,10 +100,10 @@ var Utils = class {
     return this;
   }
   setUtils() {
-    this.isVirtical = () => this._it.axis === "y";
+    this.isVertical = () => this._it.axis === "y";
     this.isViewport = () => !this._it._root;
     this.getRoot = () => this._it._root ?? window;
-    this.dirProps = () => this.isVirtical() ? {ref: "top", length: "height", refOpposite: "bottom", clientLength: document.documentElement.clientHeight} : {ref: "left", length: "width", refOpposite: "right", clientLength: document.documentElement.clientWidth};
+    this.dirProps = () => this.isVertical() ? {ref: "top", length: "height", refOpposite: "bottom", clientLength: document.documentElement.clientHeight} : {ref: "left", length: "width", refOpposite: "right", clientLength: document.documentElement.clientWidth};
     this.setRootMargin = (rEP, rLP) => {
       const {length, clientLength} = this.dirProps();
       const rootLength = this._it._root ? getBoundsProp(this._it._root, length) : clientLength;
@@ -120,8 +120,8 @@ var Utils = class {
       let rootMargins = {};
       rootMargins.fromOppRef = `${(this._it._isREPGreater ? rEP.pixeled : rLP.pixeled) - rootLength}px`;
       rootMargins.fromRef = `${-1 * (this._it._isREPGreater ? rLP.pixeled : rEP.pixeled)}px`;
-      const extendMargin = getScrollValue(this.isViewport() ? document.body : this._it._root, this.isVirtical() ? "x" : "y");
-      return this.isVirtical() ? `${rootMargins.fromRef} ${extendMargin}px ${rootMargins.fromOppRef} ${extendMargin}px` : `${extendMargin}px ${rootMargins.fromOppRef} ${extendMargin}px ${rootMargins.fromRef}`;
+      const extendMargin = getScrollValue(this.isViewport() ? document.body : this._it._root, this.isVertical() ? "x" : "y");
+      return this.isVertical() ? `${rootMargins.fromRef} ${extendMargin}px ${rootMargins.fromOppRef} ${extendMargin}px` : `${extendMargin}px ${rootMargins.fromOppRef} ${extendMargin}px ${rootMargins.fromRef}`;
     };
     this.setThreshold = () => {
       const {enter, leave, maxPosition} = this._it._defaultTriggerParams;

@@ -1,5 +1,5 @@
 /*
-* IntersectionTrigger v1.0.0 
+* IntersectionTrigger v1.0.1 
 * IntersectionTrigger utilizes the most modern web technology to trigger anything by intersection. Including scroll-based animations.
 * https://sunshine-themes.com/?appID=ss_app_1
 *
@@ -7,7 +7,7 @@
 * @license: Released under the personal 'no charge' license can be viewed at http://sunshine-themes.com/?appID=ss_app_1&tab=license, Licensees of commercial or business license are granted additional rights. See http://sunshine-themes.com/?appID=ss_app_1&tab=license for details..
 * @author: Sherif Magdy, sherifmagdy@sunshine-themes.com
 *
-* Released on: November 13, 2022
+* Released on: December 20, 2022
 */
 
 // src/constants.js
@@ -71,7 +71,7 @@ var Animation = class {
   }
   setUtils() {
     const {ref, refOpposite, length} = this._utils.dirProps();
-    const isVir = this._utils.isVirtical();
+    const isVer = this._utils.isVertical();
     const root = this._utils.getRoot();
     let rAFIDs = new WeakMap();
     this.seekSmoothly = (ins, seekTo, link, isSeekToGreater) => {
@@ -101,7 +101,7 @@ var Animation = class {
       if (this.killed)
         return;
       const direction = toRef ? -1 : 1;
-      if (isVir) {
+      if (isVer) {
         root.scrollBy({
           top: step * direction,
           behavior: "instant"
