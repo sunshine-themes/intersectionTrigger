@@ -1,5 +1,5 @@
 /*
-* IntersectionTrigger v1.0.0 
+* IntersectionTrigger v1.0.1 
 * IntersectionTrigger utilizes the most modern web technology to trigger anything by intersection. Including scroll-based animations.
 * https://sunshine-themes.com/?appID=ss_app_1
 *
@@ -7,7 +7,7 @@
 * @license: Released under the personal 'no charge' license can be viewed at http://sunshine-themes.com/?appID=ss_app_1&tab=license, Licensees of commercial or business license are granted additional rights. See http://sunshine-themes.com/?appID=ss_app_1&tab=license for details..
 * @author: Sherif Magdy, sherifmagdy@sunshine-themes.com
 *
-* Released on: November 13, 2022
+* Released on: December 20, 2022
 */
 
 // src/constants.js
@@ -75,6 +75,20 @@ var mergeOptions = (def, custom) => {
   });
   return options;
 };
+var getMinMax = (n1, n2) => [n1, n2].sort((a, b) => a - b);
+var setElProps = (el, props) => {
+  for (const propName in props) {
+    el.style[propName] = props[propName];
+  }
+};
+var getScrollBarWidth = () => {
+  let el = document.createElement("div");
+  el.style.cssText = "overflow:scroll; visibility:hidden; position:absolute;";
+  document.body.appendChild(el);
+  let width = el.offsetWidth - el.clientWidth;
+  el.remove();
+  return width;
+};
 
 // src/plugins/guides.js
 var Guides = class {
@@ -89,6 +103,13 @@ var Guides = class {
   init(options) {
     this.options = is.object(options) ? options : {};
     this._guides = [];
+    this._scrollBarWidth = getScrollBarWidth();
+    this.isVer = this._utils.isVertical();
+    this.rootEl = this._it._root ?? document.body;
+    this.scrollWidth = {
+      x: is.scrollable(this.rootEl, "x") ? this._scrollBarWidth : 0,
+      y: is.scrollable(this.rootEl, "y") ? this._scrollBarWidth : 0
+    };
     this._addResizeListener();
     this.update();
   }
@@ -99,93 +120,102 @@ var Guides = class {
   _removeResizeListener() {
     this._utils.getRoot().removeEventListener("resize", this._onResizeHandler, false);
   }
-  createGuides() {
-    const isVirtical = this._utils.isVirtical();
-    const createGuide = (options) => {
-      const {triggerGuide, trigger, enter, position, text, color, backgroundColor} = options;
-      const setProp = (el, prop, value) => el.style[prop] = value;
-      const guide = document.createElement("div");
-      const guideWidth = isVirtical ? "100px" : "1px";
-      const guideHeight = isVirtical ? "1px" : "100px";
-      const guidePositionRef = isVirtical ? "top" : "left";
-      setProp(guide, "width", guideWidth);
-      setProp(guide, "height", guideHeight);
-      setProp(guide, "position", "absolute");
-      setProp(guide, "zIndex", "9999");
-      setProp(guide, "backgroundColor", backgroundColor);
-      setProp(guide, guidePositionRef, position);
-      const createText = () => {
-        let virticalAlignment = {
-          dir: isVirtical ? enter ? "bottom" : "top" : "bottom",
-          value: isVirtical ? "5px" : "25px"
-        };
-        let horizontalAlignment = {
-          dir: isVirtical ? "right" : enter ? "right" : "left",
-          value: isVirtical ? triggerGuide ? "0px" : !this._it._root ? "25px" : "0px" : "5px"
-        };
-        const textElement = document.createElement("span");
-        textElement.innerText = text;
-        guide.appendChild(textElement);
-        setProp(textElement, "position", "absolute");
-        setProp(textElement, "color", color);
-        setProp(textElement, "fontSize", "16px");
-        setProp(textElement, "fontWeight", "bold");
-        setProp(textElement, "backgroundColor", backgroundColor);
-        setProp(textElement, "padding", "5px");
-        setProp(textElement, "width", "max-content");
-        setProp(textElement, virticalAlignment.dir, virticalAlignment.value);
-        setProp(textElement, horizontalAlignment.dir, horizontalAlignment.value);
+  _guideCreation(options, triggerEl = null) {
+    const {enter, position, isHigherValue, text, color, backgroundColor} = options;
+    const guide = document.createElement("div");
+    setElProps(guide, {
+      width: this.isVer ? "100px" : "1px",
+      height: this.isVer ? "1px" : "100px",
+      position: "absolute",
+      zIndex: "9999",
+      backgroundColor,
+      [this.isVer ? "top" : "left"]: position
+    });
+    const createText = () => {
+      let verticalAlignment = {
+        dir: this.isVer ? enter ? "bottom" : "top" : "bottom",
+        value: this.isVer ? "5px" : "25px"
       };
-      createText();
-      this._guides.push(guide);
-      document.body.append(guide);
-      const setTranslateProp = (diffX, diffY) => {
-        const parts = [...guide.style.transform.matchAll(/(-?\d*\.?\d+)\s*(px|%)?/g)];
-        const translateXInPx = parts.length ? parts[0][1] : 0;
-        const translateYInPx = parts.length > 1 ? parts[1][1] : 0;
-        let x = parseFloat(diffX) + parseFloat(translateXInPx);
-        let y = parseFloat(diffY) + parseFloat(translateYInPx);
-        setProp(guide, "transform", `translate(${x}px,${y}px)`);
+      let horizontalAlignment = {
+        dir: this.isVer ? "right" : enter ? "right" : "left",
+        value: this.isVer ? triggerEl ? "0px" : !this._it._root ? "25px" : "0px" : "5px"
       };
-      const positionGuide = (isTrigger = true) => {
-        const guideBounds = guide.getBoundingClientRect();
-        const tBounds = isTrigger ? trigger.getBoundingClientRect() : this._utils.getRootRect(this._it.observer.rootMargin);
-        const rBounds = (this._it._root ?? document.body).getBoundingClientRect();
-        const triggerDiffs = isVirtical ? {
-          x: tBounds.right - guideBounds.right,
-          y: tBounds.top + position * tBounds.height - guideBounds.top
-        } : {
-          x: tBounds.left + position * tBounds.width - guideBounds.left,
-          y: tBounds.top - guideBounds.top
-        };
-        const rootDiffs = isVirtical ? enter ? {
-          x: rBounds.right - guideBounds.left,
-          y: tBounds.bottom - guideBounds.bottom
-        } : {
-          x: rBounds.right - guideBounds.left,
-          y: tBounds.top - guideBounds.top
-        } : enter ? {
-          x: tBounds.right - guideBounds.right,
-          y: rBounds.bottom - guideBounds.top
-        } : {x: tBounds.left - guideBounds.left, y: rBounds.bottom - guideBounds.top};
-        const diffs = isTrigger ? triggerDiffs : rootDiffs;
-        setTranslateProp(diffs.x, diffs.y);
-      };
-      if (!triggerGuide) {
-        setProp(guide, isVirtical ? "width" : "height", this._it._isViewport ? isVirtical ? "100vw" : "100vh" : "100px");
-        setProp(guide, "position", this._it._isViewport ? "fixed" : "absolute");
-        this._it._isViewport && !isVirtical && setProp(guide, "top", "0px");
-        if (!this._it._isViewport)
-          positionGuide(false);
-        return;
-      }
-      positionGuide();
-      getParents(trigger).forEach((parent) => {
-        if (!is.scrollable(parent))
-          return;
-        parent.addEventListener("scroll", () => positionGuide(), false);
+      const textElement = document.createElement("span");
+      textElement.innerText = text;
+      guide.appendChild(textElement);
+      setElProps(textElement, {
+        position: "absolute",
+        color,
+        fontSize: "16px",
+        fontWeight: "bold",
+        backgroundColor,
+        padding: "5px",
+        width: "max-content",
+        [verticalAlignment.dir]: verticalAlignment.value,
+        [horizontalAlignment.dir]: horizontalAlignment.value
       });
     };
+    createText();
+    this._guides.push(guide);
+    document.body.append(guide);
+    const setTranslateProp = (diffX, diffY) => {
+      const parts = [...guide.style.transform.matchAll(/(-?\d*\.?\d+)\s*(px|%)?/g)];
+      const translateXInPx = parts.length ? parts[0][1] : 0;
+      const translateYInPx = parts.length > 1 ? parts[1][1] : 0;
+      let x = parseFloat(diffX) + parseFloat(translateXInPx);
+      let y = parseFloat(diffY) + parseFloat(translateYInPx);
+      setElProps(guide, {transform: `translate(${x}px,${y}px)`});
+    };
+    const positionGuide = (isTrigger = true) => {
+      const guideBounds = guide.getBoundingClientRect();
+      const rDefaultBounds = this.rootEl.getBoundingClientRect();
+      let targetBounds = this._utils.getRootRect(this._it.observer.rootMargin);
+      let scrollWidth = {
+        x: isHigherValue ? this.scrollWidth.x : 0,
+        y: isHigherValue ? this.scrollWidth.y : 0
+      };
+      const rootDiffs = this.isVer ? enter ? {
+        x: rDefaultBounds.right - guideBounds.left - this.scrollWidth.y,
+        y: targetBounds.bottom - guideBounds.bottom - scrollWidth.x
+      } : {
+        x: rDefaultBounds.right - guideBounds.left - this.scrollWidth.y,
+        y: targetBounds.top - guideBounds.top - scrollWidth.x
+      } : enter ? {
+        x: targetBounds.right - guideBounds.right,
+        y: rDefaultBounds.bottom - guideBounds.top - this.scrollWidth.x
+      } : {x: targetBounds.left - guideBounds.left, y: rDefaultBounds.bottom - guideBounds.top - this.scrollWidth.x};
+      let triggerDiffs = {};
+      if (isTrigger) {
+        targetBounds = triggerEl.getBoundingClientRect();
+        triggerDiffs = this.isVer ? {
+          x: targetBounds.right - guideBounds.right,
+          y: targetBounds.top + position * targetBounds.height - guideBounds.top
+        } : {
+          x: targetBounds.left + position * targetBounds.width - guideBounds.left,
+          y: targetBounds.top - guideBounds.top
+        };
+      }
+      const diffs = isTrigger ? triggerDiffs : rootDiffs;
+      setTranslateProp(diffs.x, diffs.y);
+    };
+    if (!triggerEl) {
+      setElProps(guide, {
+        [this.isVer ? "width" : "height"]: this._it._isViewport ? this.isVer ? "100vw" : "100vh" : "100px",
+        position: this._it._isViewport ? "fixed" : "absolute"
+      });
+      this._it._isViewport && !this.isVer && setElProps(guide, {top: "0px"});
+      if (!this._it._isViewport)
+        positionGuide(false);
+      return;
+    }
+    positionGuide();
+    getParents(triggerEl).forEach((parent) => {
+      if (!is.scrollable(parent))
+        return;
+      parent.addEventListener("scroll", positionGuide, false);
+    });
+  }
+  createGuides() {
     const parseGuidesParams = (params) => {
       let guideParams2 = guideDefaultParams;
       if (is.object(params)) {
@@ -195,42 +225,40 @@ var Guides = class {
     };
     const guideParams = parseGuidesParams(this.options);
     const guideTextPrefix = this._it.name;
-    createGuide({
-      triggerGuide: false,
+    const rEPValue = this._it._positionsData.rEP.value;
+    const rLPValue = this._it._positionsData.rLP.value;
+    this._guideCreation({
       enter: true,
-      position: `${this._it._positionsData.rEP.value}${this._it._positionsData.rEP.unit}`,
+      position: `${rEPValue}${this._it._positionsData.rEP.unit}`,
+      isHigherValue: getMinMax(rEPValue, rLPValue)[1] === rEPValue,
       text: `${guideTextPrefix} ${guideParams.enter.root.text}`,
       color: guideParams.enter.root.color,
       backgroundColor: guideParams.enter.root.backgroundColor
     });
-    createGuide({
-      triggerGuide: false,
+    this._guideCreation({
       enter: false,
-      position: `${this._it._positionsData.rLP.value}${this._it._positionsData.rLP.unit}`,
+      position: `${rLPValue}${this._it._positionsData.rLP.unit}`,
+      isHigherValue: getMinMax(rEPValue, rLPValue)[1] === rLPValue,
       text: `${guideTextPrefix} ${guideParams.leave.root.text}`,
       color: guideParams.leave.root.color,
       backgroundColor: guideParams.leave.root.backgroundColor
     });
     this._it.triggers.forEach((trigger) => {
       const {enter, leave} = this._utils.getTriggerData(trigger);
-      createGuide({
-        triggerGuide: true,
-        trigger,
+      this._guideCreation({
         enter: true,
         position: enter,
         text: `${guideTextPrefix} ${guideParams.enter.trigger.text}`,
         color: guideParams.enter.trigger.color,
         backgroundColor: guideParams.enter.trigger.backgroundColor
-      });
-      createGuide({
-        triggerGuide: true,
-        trigger,
+      }, trigger);
+      this._guideCreation({
         enter: false,
         position: leave,
         text: `${guideTextPrefix} ${guideParams.leave.trigger.text}`,
         color: guideParams.leave.trigger.color,
         backgroundColor: guideParams.leave.trigger.backgroundColor
-      });
+      }, trigger);
     });
   }
   removeGuides = () => {
