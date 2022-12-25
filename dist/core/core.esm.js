@@ -1,5 +1,5 @@
 /*
-* IntersectionTrigger v1.0.1 
+* IntersectionTrigger v1.0.2 
 * IntersectionTrigger utilizes the most modern web technology to trigger anything by intersection. Including scroll-based animations.
 * https://sunshine-themes.com/?appID=ss_app_1
 *
@@ -7,7 +7,7 @@
 * @license: Released under the personal 'no charge' license can be viewed at http://sunshine-themes.com/?appID=ss_app_1&tab=license, Licensees of commercial or business license are granted additional rights. See http://sunshine-themes.com/?appID=ss_app_1&tab=license for details..
 * @author: Sherif Magdy, sherifmagdy@sunshine-themes.com
 *
-* Released on: December 20, 2022
+* Released on: December 25, 2022
 */
 
 // src/constants.js
@@ -92,7 +92,7 @@ var parseString = (string) => {
   return string.split(/\s+/).map((v) => parseValue(v));
 };
 
-// src/Utils.js
+// src/utils.js
 var Utils = class {
   constructor(intersectionTrigger) {
     this._it = intersectionTrigger;
@@ -364,7 +364,7 @@ var Utils = class {
     this._it = null;
   }
 };
-var Utils_default = Utils;
+var utils_default = Utils;
 
 // src/core/core.js
 var registeredPlugins = [];
@@ -375,7 +375,7 @@ var IntersectionTrigger = class {
     this._userOptions = configuration;
     this.triggers = [];
     this._triggersData = new WeakMap();
-    this._utils = new Utils_default(this);
+    this._utils = new utils_default(this);
     this.id = instanceID;
     instanceID++;
     instances.push(this);

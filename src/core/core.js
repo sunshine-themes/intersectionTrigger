@@ -1,6 +1,6 @@
 import { defaultInsOptions, triggerStates } from '../constants';
 import { mergeOptions, is, throwError, getMinMax } from '../helpers';
-import Utils from '../Utils';
+import Utils from '../utils';
 
 const registeredPlugins = [];
 const instances = [];
