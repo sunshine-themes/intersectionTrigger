@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://sunshine-themes.com/?appID=ss_app_1" >
+  <a href="https://sunshine-themes.com/?appID=ss_app_1" target="__blank" >
     <img src="https://raw.githubusercontent.com/sherif-magdy/sunshine-assets/main/intersectiontrigger-logo-no-bg.png"/>
   </a>
 </p>
