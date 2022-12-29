@@ -52,11 +52,11 @@ class Guides {
 		//Create the text element
 		const createText = () => {
 			let verticalAlignment = {
-				dir: this.isVer ? (enter ? 'bottom' : 'top') : 'bottom',
+				dir: this.isVer ? (isHigherValue ? 'bottom' : 'top') : 'bottom',
 				value: this.isVer ? '5px' : '25px',
 			};
 			let horizontalAlignment = {
-				dir: this.isVer ? 'right' : enter ? 'right' : 'left',
+				dir: this.isVer ? 'right' : isHigherValue ? 'right' : 'left',
 				value: this.isVer ? (triggerEl ? '0px' : !this._it._root ? '25px' : '0px') : '5px',
 			};
 

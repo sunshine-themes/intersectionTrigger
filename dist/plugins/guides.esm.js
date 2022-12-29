@@ -1,5 +1,5 @@
 /*
-* IntersectionTrigger v1.0.2 
+* IntersectionTrigger v1.0.3 
 * IntersectionTrigger utilizes the most modern web technology to trigger anything by intersection. Including scroll-based animations.
 * https://sunshine-themes.com/?appID=ss_app_1
 *
@@ -7,7 +7,7 @@
 * @license: Released under the personal 'no charge' license can be viewed at http://sunshine-themes.com/?appID=ss_app_1&tab=license, Licensees of commercial or business license are granted additional rights. See http://sunshine-themes.com/?appID=ss_app_1&tab=license for details..
 * @author: Sherif Magdy, sherifmagdy@sunshine-themes.com
 *
-* Released on: December 25, 2022
+* Released on: December 29, 2022
 */
 
 // src/constants.js
@@ -133,11 +133,11 @@ var Guides = class {
     });
     const createText = () => {
       let verticalAlignment = {
-        dir: this.isVer ? enter ? "bottom" : "top" : "bottom",
+        dir: this.isVer ? isHigherValue ? "bottom" : "top" : "bottom",
         value: this.isVer ? "5px" : "25px"
       };
       let horizontalAlignment = {
-        dir: this.isVer ? "right" : enter ? "right" : "left",
+        dir: this.isVer ? "right" : isHigherValue ? "right" : "left",
         value: this.isVer ? triggerEl ? "0px" : !this._it._root ? "25px" : "0px" : "5px"
       };
       const textElement = document.createElement("span");
