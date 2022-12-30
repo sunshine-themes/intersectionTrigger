@@ -26,7 +26,8 @@
   <a href="https://bundlephobia.com/result?p=intersectiontrigger">
     <img alt="Dependency count" src="https://badgen.net/bundlephobia/dependency-count/intersectiontrigger" />
   </a>
-  [![Rate this package](https://badges.openbase.com/js/rating/intersectiontrigger.svg?token=fKPUe/O+HyTf9vpGcxPEOqx9SD54yG9T0e/Biw7dk3I=)](https://openbase.com/js/intersectiontrigger?utm_source=embedded&amp;utm_medium=badge&amp;utm_campaign=rate-badge)
+  <a href="https://openbase.com/js/intersectiontrigger?utm_source=embedded&amp;utm_medium=badge&amp;utm_campaign=rate-badge"><img src="https://badges.openbase.com/js/rating/intersectiontrigger.svg?token=fKPUe/O+HyTf9vpGcxPEOqx9SD54yG9T0e/Biw7dk3I=" alt="Rate this package"></a>
+  
 </p>
 
 # IntersectionTrigger
