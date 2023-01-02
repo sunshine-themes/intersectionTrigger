@@ -196,11 +196,12 @@ class Guides {
 
 		//Create Triggers Guides
 		this._it.triggers.forEach((trigger) => {
-			const { enter, leave } = this._utils.getTriggerData(trigger);
+			const { enter, leave, maxPosition } = this._utils.getTriggerData(trigger);
 			this._guideCreation(
 				{
 					enter: true,
 					position: enter,
+					isHigherValue: enter === maxPosition,
 					text: `${guideTextPrefix} ${guideParams.enter.trigger.text}`,
 					color: guideParams.enter.trigger.color,
 					backgroundColor: guideParams.enter.trigger.backgroundColor,
@@ -211,6 +212,7 @@ class Guides {
 				{
 					enter: false,
 					position: leave,
+					isHigherValue: leave === maxPosition,
 					text: `${guideTextPrefix} ${guideParams.leave.trigger.text}`,
 					color: guideParams.leave.trigger.color,
 					backgroundColor: guideParams.leave.trigger.backgroundColor,

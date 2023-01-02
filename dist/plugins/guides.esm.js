@@ -3,11 +3,11 @@
 * IntersectionTrigger utilizes the most modern web technology to trigger anything by intersection. Including scroll-based animations.
 * https://sunshine-themes.com/?appID=ss_app_1
 *
-* Copyright 2022, Sunshine. All rights reserved.
+* Copyright 2023, Sunshine. All rights reserved.
 * @license: Released under the personal 'no charge' license can be viewed at http://sunshine-themes.com/?appID=ss_app_1&tab=license, Licensees of commercial or business license are granted additional rights. See http://sunshine-themes.com/?appID=ss_app_1&tab=license for details..
 * @author: Sherif Magdy, sherifmagdy@sunshine-themes.com
 *
-* Released on: December 29, 2022
+* Released on: January 2, 2023
 */
 
 // src/constants.js
@@ -244,10 +244,11 @@ var Guides = class {
       backgroundColor: guideParams.leave.root.backgroundColor
     });
     this._it.triggers.forEach((trigger) => {
-      const {enter, leave} = this._utils.getTriggerData(trigger);
+      const {enter, leave, maxPosition} = this._utils.getTriggerData(trigger);
       this._guideCreation({
         enter: true,
         position: enter,
+        isHigherValue: enter === maxPosition,
         text: `${guideTextPrefix} ${guideParams.enter.trigger.text}`,
         color: guideParams.enter.trigger.color,
         backgroundColor: guideParams.enter.trigger.backgroundColor
@@ -255,6 +256,7 @@ var Guides = class {
       this._guideCreation({
         enter: false,
         position: leave,
+        isHigherValue: leave === maxPosition,
         text: `${guideTextPrefix} ${guideParams.leave.trigger.text}`,
         color: guideParams.leave.trigger.color,
         backgroundColor: guideParams.leave.trigger.backgroundColor
