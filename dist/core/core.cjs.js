@@ -3,11 +3,11 @@
 * IntersectionTrigger utilizes the most modern web technology to trigger anything by intersection. Including scroll-based animations.
 * https://sunshine-themes.com/?appID=ss_app_1
 *
-* Copyright 2022, Sunshine. All rights reserved.
+* Copyright 2023, Sunshine. All rights reserved.
 * @license: Released under the personal 'no charge' license can be viewed at http://sunshine-themes.com/?appID=ss_app_1&tab=license, Licensees of commercial or business license are granted additional rights. See http://sunshine-themes.com/?appID=ss_app_1&tab=license for details..
 * @author: Sherif Magdy, sherifmagdy@sunshine-themes.com
 *
-* Released on: December 29, 2022
+* Released on: January 2, 2023
 */
 
 var __defProp = Object.defineProperty;
