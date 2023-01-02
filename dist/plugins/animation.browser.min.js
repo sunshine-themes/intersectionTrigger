@@ -1,5 +1,5 @@
 /*
-* IntersectionTrigger v1.0.3 
+* IntersectionTrigger v1.0.4 
 * IntersectionTrigger utilizes the most modern web technology to trigger anything by intersection. Including scroll-based animations.
 * https://sunshine-themes.com/?appID=ss_app_1
 *
