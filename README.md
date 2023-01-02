@@ -7,27 +7,27 @@
 <p align="center">
   <a href="https://sunshine-themes.com/?appID=ss_app_1">Overview</a> |
   <a href="https://sunshine-themes.com/?appID=ss_app_1&tab=docs">Documentation</a> |
-  <a href="https://sunshine-themes.com/?appID=ss_app_1&tab=pricing">Pricing</a>
+  <a href="https://sunshine-themes.com/?appID=ss_app_1&tab=pricing">Pricing</a> |
+  <a href="https://codepen.io/collection/qOpKmv">Examples</a>
 </p>
 
 <p align="center">
-  <!-- <a href="https://www.jsdelivr.com/package/npm/intersectiontrigger">
-    <img src="https://data.jsdelivr.com/v1/package/npm/intersectiontrigger/badge?style=rounded" alt="jsDelivr Hits"/>
-  </a> -->
   <a href="https://www.npmjs.com/package/intersectiontrigger">
     <img alt="NPM Version" src="https://badgen.net/npm/v/intersectiontrigger" />
   </a>
-  <a href="https://bundlephobia.com/result?p=intersectiontrigger">
+  <!-- <a href="https://bundlephobia.com/result?p=intersectiontrigger">
     <img alt="tree-shakeable" src="https://badgen.net/bundlephobia/tree-shaking/intersectiontrigger" />
-  </a>
+  </a> -->
   <a href="https://bundlephobia.com/result?p=intersectiontrigger">
     <img alt="minified gziped size" src="https://badgen.net/bundlephobia/minzip/intersectiontrigger" />
   </a>
-  <a href="https://bundlephobia.com/result?p=intersectiontrigger">
+  <!-- <a href="https://bundlephobia.com/result?p=intersectiontrigger">
     <img alt="Dependency count" src="https://badgen.net/bundlephobia/dependency-count/intersectiontrigger" />
+  </a> -->
+  <a href="https://www.jsdelivr.com/package/npm/intersectiontrigger">
+    <img src="https://data.jsdelivr.com/v1/package/npm/intersectiontrigger/badge?style=rounded" alt="jsDelivr Hits"/>
   </a>
   <a href="https://openbase.com/js/intersectiontrigger?utm_source=embedded&amp;utm_medium=badge&amp;utm_campaign=rate-badge"><img src="https://badges.openbase.com/js/rating/intersectiontrigger.svg?token=fKPUe/O+HyTf9vpGcxPEOqx9SD54yG9T0e/Biw7dk3I=" alt="Rate this package"></a>
-  
 </p>
 
 # IntersectionTrigger
@@ -39,13 +39,13 @@ IntersectionTrigger utilizes the most modern web technology to trigger anything 
 ### From NPM
 
 ```bash
-$ npm i intersectiontrigger
+npm i intersectiontrigger
 ```
 
 ### From Yarn
 
 ```bash
-$ yarn add intersectiontrigger
+yarn add intersectiontrigger
 ```
 
 And import it
