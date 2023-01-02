@@ -3,11 +3,11 @@
 * IntersectionTrigger utilizes the most modern web technology to trigger anything by intersection. Including scroll-based animations.
 * https://sunshine-themes.com/?appID=ss_app_1
 *
-* Copyright 2022, Sunshine. All rights reserved.
+* Copyright 2023, Sunshine. All rights reserved.
 * @license: Released under the personal 'no charge' license can be viewed at http://sunshine-themes.com/?appID=ss_app_1&tab=license, Licensees of commercial or business license are granted additional rights. See http://sunshine-themes.com/?appID=ss_app_1&tab=license for details..
 * @author: Sherif Magdy, sherifmagdy@sunshine-themes.com
 *
-* Released on: December 29, 2022
+* Released on: January 2, 2023
 */
 
 var __defProp = Object.defineProperty;
@@ -247,15 +247,19 @@ var Animation = class {
       return;
     }
     const action = toggleActions[eventIndex];
+    const progress = instance.currentTime / instance.duration;
     if (action === "none")
       return;
     switch (action) {
       case "play":
-        instance.reversed && instance.reverse();
-        1 > instance.progress && instance[action]();
+        if (instance.reversed) {
+          instance.reverse();
+          instance.completed = false;
+        }
+        progress < 1 && instance[action]();
         break;
       case "resume":
-        1 > instance.progress && 0 < instance.progress && instance.play();
+        progress < 1 && progress > 0 && instance.play();
         break;
       case "restart":
       case "reset":
@@ -270,9 +274,7 @@ var Animation = class {
         instance.seek(instance.reversed ? 0 : instance.duration);
         break;
       case "reverse":
-        if (instance.reversed)
-          break;
-        instance[action]();
+        !instance.reversed && instance[action]();
         instance.paused && instance.play();
         break;
       case "kill":

@@ -206,15 +206,19 @@ class Animation {
 		}
 
 		const action = toggleActions[eventIndex];
+		const progress = instance.currentTime / instance.duration;
 		if ('none' === action) return;
 
 		switch (action) {
 			case 'play':
-				instance.reversed && instance.reverse();
-				1 > instance.progress && instance[action]();
+				if (instance.reversed) {
+					instance.reverse();
+					instance.completed = false;
+				}
+				progress < 1 && instance[action]();
 				break;
 			case 'resume':
-				1 > instance.progress && 0 < instance.progress && instance.play();
+				progress < 1 && progress > 0 && instance.play();
 				break;
 			case 'restart':
 			case 'reset':
@@ -229,8 +233,7 @@ class Animation {
 				instance.seek(instance.reversed ? 0 : instance.duration);
 				break;
 			case 'reverse':
-				if (instance.reversed) break;
-				instance[action]();
+				!instance.reversed && instance[action]();
 				instance.paused && instance.play();
 				break;
 			case 'kill':
