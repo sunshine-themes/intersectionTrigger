@@ -7,58 +7,59 @@
 * @license: Released under the personal 'no charge' license can be viewed at http://sunshine-themes.com/?appID=ss_app_1&tab=license, Licensees of commercial or business license are granted additional rights. See http://sunshine-themes.com/?appID=ss_app_1&tab=license for details..
 * @author: Sherif Magdy, sherifmagdy@sunshine-themes.com
 *
-* Released on: January 2, 2023
+* Released on: February 8, 2023
 */
 
-// src/constants.js
+// src/constants.ts
 var fn = () => {
 };
-var animationDefaultToggleActions = ["play", "complete", "reverse", "complete"];
-var snapDefaultParams = {to: null, after: 1, speed: 100, maxDistance: 500, onStart: fn, onComplete: fn};
-var defaultAnimationParams = {
-  instance: null,
-  toggleActions: animationDefaultToggleActions,
+var snapDefaultConfig = {to: 0, after: 1, speed: 100, maxDistance: 500, onStart: fn, onComplete: fn};
+var defaultAnimationConfig = {
+  instance: {},
+  toggleActions: "play complete reverse complete",
   link: false,
   snap: false
 };
 
-// src/helpers.js
+// src/helpers.ts
 var is = {
   function: (a) => typeof a === "function",
   string: (a) => typeof a === "string",
   boolean: (a) => typeof a === "boolean",
-  object: (a) => a && typeof a === "object" && !(a instanceof Array),
-  inObject: (obj, prop) => is.object(obj) && prop in obj,
+  object: (a) => !!a && typeof a === "object" && a !== null && !(a instanceof Array),
   num: (a) => typeof a === "number",
-  percent: (a) => a && a.includes("%"),
-  pixel: (a) => a && a.includes("px"),
   array: (a) => a instanceof Array,
-  element: (a) => a instanceof HTMLElement || a instanceof Element,
-  doc: (a) => a && a.nodeType === 9,
-  scrollable: (element, dir = null) => dir ? dir === "y" ? element.scrollHeight > element.clientHeight : element.scrollWidth > element.clientWidth : element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth,
+  element: (a) => a instanceof HTMLElement,
+  empty: (a) => Object.keys(a).length === 0,
+  doc: (a) => is.element(a) && a.nodeType === 9,
   anime: (a) => is.object(a) && a.hasOwnProperty("animatables") && !a.hasOwnProperty("add"),
   tl: (a) => is.object(a) && a.hasOwnProperty("add") && is.function(a.add),
-  animeInstance: (a) => is.anime(a) || is.tl(a)
+  animeInstance: (a) => is.anime(a) || is.tl(a),
+  pixel: (a) => a.includes("px"),
+  inObject: (obj, prop) => is.object(obj) && prop in obj,
+  percent: (a) => a.includes("%"),
+  scrollable: (element, dir) => dir ? dir === "y" ? element.scrollHeight > element.clientHeight : element.scrollWidth > element.clientWidth : element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth
 };
 var clamp = (a, min, max) => Math.min(Math.max(a, min), max);
 var splitStr = (st) => st.split(/\s+/);
-var mergeOptions = (def, custom) => {
-  const defaultOptions = def;
-  const options = custom;
-  Object.entries(defaultOptions).forEach(([k, v]) => {
-    if (is.object(v)) {
-      mergeOptions(v, options[k] = options[k] || {});
-    } else if (!(k in options)) {
-      options[k] = v;
+var mergeOptions = (defaultOptions, customOptions) => {
+  const options = {...defaultOptions};
+  for (const [key, value] of Object.entries(customOptions)) {
+    if (is.object(options[key]) && !is.empty(options[key])) {
+      if (!is.object(value))
+        continue;
+      options[key] = mergeOptions(options[key], value);
+    } else {
+      options[key] = value;
     }
-  });
+  }
   return options;
 };
 var throwError = (message) => {
   throw new Error(message);
 };
 
-// src/plugins/animation.js
+// src/plugins/animation.ts
 var Animation = class {
   constructor(it) {
     this._registerIntersectionTrigger(it);
@@ -120,57 +121,50 @@ var Animation = class {
       }
       requestAnimationFrame(() => this.startSnaping({snapDistance, currentDis, snap, step, toRef}));
     };
-    this.parseSnap = ({instance, snap}, update = false) => {
+    this.parseSnap = ({instance, snap}, update) => {
       const parseNum = (n) => {
         const arr = [];
-        let progress = n;
-        while (progress < 1) {
+        let progress = 0;
+        while (progress <= 1) {
           arr.push(clamp(progress, 0, 1));
           progress = progress + n;
         }
         return arr.map((v) => Math.round(v * instance.duration));
       };
-      const parseTo = (sn) => {
-        if (is.num(sn))
-          return parseNum(sn);
-        if (is.string(sn))
-          return parseMarks(sn);
-        if (is.array(sn))
-          return sn;
-      };
       const parseMarks = () => {
         if (!is.inObject(instance, "marks"))
-          return;
+          return throwError('"marks" feature is not available in the provided anime instance');
         return instance.marks.map((mark) => mark.time);
       };
-      const getTo = (params, to) => update ? params.toOriginal : to;
+      const mergeOpts = (customOpts) => mergeOptions(snapDefaultConfig, customOpts);
+      const parseOriginalToParam = (to) => is.num(to) ? parseNum(to) : parseMarks();
       let snapParams = {};
-      switch (true) {
-        case (is.boolean(snap) && snap):
-          !update && (snapParams.toOriginal = "marks");
-          snapParams.to = parseMarks(getTo(snapParams, snap));
-          break;
-        case is.array(snap):
-          !update && (snapParams.toOriginal = snap);
-          snapParams.to = getTo(snapParams, snap);
-          break;
-        case is.num(snap):
-          !update && (snapParams.toOriginal = snap);
-          snapParams.to = parseNum(getTo(snapParams, snap));
-          break;
-        case is.object(snap):
-          snapParams = snap;
-          !update && (snapParams.toOriginal = snapParams.to);
-          snapParams.to = parseTo(getTo(snapParams, snapParams.to));
-          break;
+      let mergedParams = {};
+      if (update) {
+        const {originalToParam} = snap;
+        originalToParam && (snapParams = {...snap, to: parseOriginalToParam(originalToParam)});
+      } else {
+        if (is.boolean(snap))
+          mergedParams = mergeOpts({to: "marks"});
+        if (is.array(snap) || is.num(snap))
+          mergedParams = mergeOpts({to: snap});
+        if (is.object(snap))
+          mergedParams = mergeOpts(snap);
+        snapParams = mergedParams;
+        const {to} = mergedParams;
+        if (is.string(to) && !!to)
+          snapParams = {...mergedParams, originalToParam: "marks", to: parseMarks()};
+        if (is.num(to) && !!to)
+          snapParams = {...mergedParams, originalToParam: to, to: parseNum(to)};
+        console.log(snapParams.to);
       }
-      return mergeOptions(snapDefaultParams, snapParams);
+      return snapParams;
     };
     this.getTIL = (trigger, minPosition, maxPosition) => {
       const tB = trigger.getBoundingClientRect();
       return tB[length] - (minPosition * tB[length] + (1 - maxPosition) * tB[length]);
     };
-    this.getSnapStep = (snap) => snap && Math.round(Math.max(snap.speed * 17 / 1e3, 1));
+    this.getSnapStep = (snap) => is.object(snap) ? Math.round(Math.max(snap.speed * 17 / 1e3, 1)) : 0;
     this.animateHandler = (trigger, {enter, leave, tIL, instance, snap, step, link}) => {
       if (this.killed)
         return;
@@ -187,7 +181,7 @@ var Animation = class {
         seekTo = duration * diff / scrollLength;
         this.seek(instance, seekTo, link);
       }
-      if (snap) {
+      if (!is.boolean(snap)) {
         let dis = 0;
         clearTimeout(ids.snapTimeOutId);
         const snapTimeOutId = setTimeout(() => {
@@ -207,14 +201,12 @@ var Animation = class {
   }
   animate(trigger, animation, eventIndex) {
     const {instance, toggleActions, link, snap} = animation;
-    if (!instance)
-      return;
     if (link) {
       const {animate} = this._utils.getTriggerStates(trigger, "onScroll");
       const ids = this._utils.getTriggerStates(trigger, "ids");
       const {enter, leave, minPosition, maxPosition} = this._utils.getTriggerData(trigger);
       const tIL = this.getTIL(trigger, minPosition, maxPosition);
-      const step = this.getSnapStep(snap) || 0;
+      const step = this.getSnapStep(snap);
       const animateData = {enter, leave, tIL, instance, snap, link: is.boolean(link) ? link : Math.abs(link), step};
       switch (eventIndex) {
         case 0:
@@ -227,7 +219,7 @@ var Animation = class {
         case 1:
         case 3:
           clearTimeout(ids.snapTimeOutId);
-          this._utils.setTriggerScrollStates(trigger, "animate", null);
+          this._utils.setTriggerScrollStates(trigger, "animate");
           this.seek(instance, eventIndex === 1 ? instance.duration : 0, link);
           break;
       }
@@ -266,50 +258,56 @@ var Animation = class {
         break;
       case "kill":
         is.inObject(instance, "kill") && instance.kill();
-        this._utils.setTriggerData(trigger, null, {animation: {...defaultAnimationParams}});
+        this._utils.setTriggerData(trigger, {animation: void 0}, true);
         break;
     }
   }
-  parse(params, update = false) {
-    let animation = {};
-    switch (true) {
-      case is.animeInstance(params):
-        animation = mergeOptions(defaultAnimationParams, {
+  parse(params, update) {
+    let mergedParams = {}, animationParams = {};
+    if (update) {
+      const {instance, snap} = params;
+      !is.boolean(snap) && (animationParams = {...params, snap: this.parseSnap({instance, snap}, true)});
+    } else {
+      if (!is.object(params))
+        return throwError('"animation" parameter is NOT valid.');
+      if (is.animeInstance(params)) {
+        mergedParams = mergeOptions(defaultAnimationConfig, {
           instance: params
         });
-        break;
-      case is.object(params):
-        {
-          animation = mergeOptions(defaultAnimationParams, params);
-          const {toggleActions, snap, instance} = animation;
-          snap && (animation.snap = this.parseSnap({instance, snap}, update));
-          is.string(toggleActions) && (animation.toggleActions = splitStr(toggleActions));
-        }
-        break;
+      } else if (params.instance && is.animeInstance(params.instance)) {
+        mergedParams = mergeOptions(defaultAnimationConfig, params);
+      } else {
+        return throwError('"instance" parameter must be anime instance.');
+      }
+      const {toggleActions, snap, instance, link} = mergedParams;
+      animationParams = {
+        instance,
+        toggleActions: splitStr(toggleActions),
+        snap: !!snap && this.parseSnap({instance, snap}),
+        link
+      };
     }
-    !is.animeInstance(animation.instance) && throwError("Invalid anime instance");
-    is.inObject(animation, "instance") && animation.instance.reset();
-    return animation;
+    animationParams.instance.reset();
+    return animationParams;
   }
   update() {
     this._it.triggers.forEach((trigger) => {
       let {enter, leave, minPosition, maxPosition, animation} = this._utils.getTriggerData(trigger);
-      animation = this.parse(animation, true);
-      this._utils.setTriggerData(trigger, null, {animation});
+      animation = animation && this.parse(animation, true);
+      this._utils.setTriggerData(trigger, {animation}, true);
       const {animate} = this._utils.getTriggerStates(trigger, "onScroll");
-      if (animate) {
+      if (animate && !!animation) {
         const {instance, snap, link} = animation;
         const tIL = this.getTIL(trigger, minPosition, maxPosition);
-        const step = this.getSnapStep(snap) || 0;
-        this._utils.setTriggerScrollStates(trigger, "animate", null);
+        const step = this.getSnapStep(snap);
+        this._utils.setTriggerScrollStates(trigger, "animate");
         this._utils.setTriggerScrollStates(trigger, "animate", () => this.animateHandler(trigger, {enter, leave, instance, snap, link, tIL, step}));
       }
     });
   }
   kill() {
     this.killed = true;
-    this._it = null;
-    this._utils = null;
+    this._it = this._utils = void 0;
   }
 };
 Animation.pluginName = "animation";

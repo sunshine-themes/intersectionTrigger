@@ -1,24 +1,48 @@
-import { guideDefaultParams } from '../constants';
+import type { EventHandler, PluginName } from '../core/core';
+import type IntersectionTrigger from '../core/core';
+import type Utils from '../core/utils';
+import type { GuideDefaultConfiguration, Root } from '../constants';
+
+import { guideDefaultConfig } from '../constants';
 import { getMinMax, getParents, getScrollBarWidth, is, mergeOptions, setElProps } from '../helpers.js';
 
+interface GuidesParams {
+	enter: boolean;
+	isHigherValue: boolean;
+	text: string;
+	color: string;
+	backgroundColor: string;
+}
+
 class Guides {
-	constructor(it) {
+	_it: IntersectionTrigger | undefined;
+	_utils: Utils | undefined;
+	options: GuideDefaultConfiguration;
+	_guides: HTMLElement[];
+	_scrollBarWidth: number;
+	isVer: boolean;
+	rootEl: Exclude<Root, null>;
+	scrollWidth: { x: number; y: number };
+	_onResizeHandler: EventHandler;
+	static pluginName: PluginName;
+
+	constructor(it: IntersectionTrigger) {
 		this._registerIntersectionTrigger(it);
 		return this;
 	}
 
-	_registerIntersectionTrigger(intersectionTrigger) {
+	_registerIntersectionTrigger(intersectionTrigger: IntersectionTrigger) {
 		this._it = intersectionTrigger;
-		this._utils = this._it._utils;
+		this._utils = this._it!._utils;
 	}
 
-	init(options) {
+	init(options: GuideDefaultConfiguration | boolean) {
 		this.options = is.object(options) ? options : {};
 		this._guides = [];
 
 		this._scrollBarWidth = getScrollBarWidth();
-		this.isVer = this._utils.isVertical();
-		this.rootEl = this._it._root ?? document.body;
+		this.isVer = this._utils!.isVertical();
+		this.rootEl = this._utils!.getRoot();
 		this.scrollWidth = {
 			x: is.scrollable(this.rootEl, 'x') ? this._scrollBarWidth : 0,
 			y: is.scrollable(this.rootEl, 'y') ? this._scrollBarWidth : 0,
@@ -30,13 +54,15 @@ class Guides {
 
 	_addResizeListener() {
 		this._onResizeHandler = this.update; //Update guides
-		this._utils.getRoot().addEventListener('resize', this._onResizeHandler, false);
+		addEventListener('resize', this._onResizeHandler, false);
 	}
 	_removeResizeListener() {
-		this._utils.getRoot().removeEventListener('resize', this._onResizeHandler, false);
+		removeEventListener('resize', this._onResizeHandler, false);
 	}
 
-	_guideCreation(options, triggerEl = null) {
+	_guideCreation(options: GuidesParams & { position: string }): void;
+	_guideCreation(options: GuidesParams & { position: number }, triggerEl: HTMLElement): void;
+	_guideCreation(options: GuidesParams & { position: string | number }, triggerEl?: HTMLElement) {
 		const { enter, position, isHigherValue, text, color, backgroundColor } = options;
 
 		const guide = document.createElement('div');
@@ -47,7 +73,7 @@ class Guides {
 			position: 'absolute',
 			zIndex: '9999',
 			backgroundColor: backgroundColor,
-			[this.isVer ? 'top' : 'left']: position,
+			[this.isVer ? 'top' : 'left']: position.toString(),
 		});
 		//Create the text element
 		const createText = () => {
@@ -57,7 +83,7 @@ class Guides {
 			};
 			let horizontalAlignment = {
 				dir: this.isVer ? 'right' : isHigherValue ? 'right' : 'left',
-				value: this.isVer ? (triggerEl ? '0px' : !this._it._root ? '25px' : '0px') : '5px',
+				value: this.isVer ? (triggerEl ? '0px' : !this._it!._root ? '25px' : '0px') : '5px',
 			};
 
 			const textElement = document.createElement('span');
@@ -66,7 +92,7 @@ class Guides {
 
 			setElProps(textElement, {
 				position: 'absolute',
-				color: color,
+				color,
 				fontSize: '16px',
 				fontWeight: 'bold',
 				backgroundColor: backgroundColor,
@@ -82,28 +108,30 @@ class Guides {
 		//Append the guide to the document body
 		document.body.append(guide);
 
-		const setTranslateProp = (diffX, diffY) => {
+		const setTranslateProp = (diffX: number, diffY: number) => {
 			const parts = [...guide.style.transform.matchAll(/(-?\d*\.?\d+)\s*(px|%)?/g)];
-			const translateXInPx = parts.length ? parts[0][1] : 0;
-			const translateYInPx = parts.length > 1 ? parts[1][1] : 0;
+			const translateXInPx = parts.length ? parts[0][1] : '0';
+			const translateYInPx = parts.length > 1 ? parts[1][1] : '0';
 
-			let x = parseFloat(diffX) + parseFloat(translateXInPx);
-			let y = parseFloat(diffY) + parseFloat(translateYInPx);
+			let x = diffX + parseFloat(translateXInPx);
+			let y = diffY + parseFloat(translateYInPx);
 
 			setElProps(guide, { transform: `translate(${x}px,${y}px)` });
 		};
 
-		const positionGuide = (isTrigger = true) => {
+		const positionGuide = () => {
 			const guideBounds = guide.getBoundingClientRect();
 
 			const rDefaultBounds = this.rootEl.getBoundingClientRect(); //root Bounds regardless the root margins
-			let targetBounds = this._utils.getRootRect(this._it.observer.rootMargin);
+			let targetBounds = this._utils!.getRootRect(this._it!.observer!.rootMargin);
 			let scrollWidth = {
 				x: isHigherValue ? this.scrollWidth.x : 0,
 				y: isHigherValue ? this.scrollWidth.y : 0,
 			};
+			let diffs = { x: 0, y: 0 };
 
-			const rootDiffs = this.isVer
+			//Root Difference
+			diffs = this.isVer
 				? enter
 					? {
 							x: rDefaultBounds.right - guideBounds.left - this.scrollWidth.y,
@@ -120,21 +148,19 @@ class Guides {
 				  }
 				: { x: targetBounds.left - guideBounds.left, y: rDefaultBounds.bottom - guideBounds.top - this.scrollWidth.x };
 
-			let triggerDiffs = {};
-			if (isTrigger) {
-				targetBounds = triggerEl.getBoundingClientRect();
-				triggerDiffs = this.isVer
+			if (triggerEl) {
+				targetBounds = triggerEl!.getBoundingClientRect();
+				//Trigger Difference
+				diffs = this.isVer
 					? {
 							x: targetBounds.right - guideBounds.right,
-							y: targetBounds.top + position * targetBounds.height - guideBounds.top,
+							y: targetBounds.top + (position as number) * targetBounds.height - guideBounds.top,
 					  }
 					: {
-							x: targetBounds.left + position * targetBounds.width - guideBounds.left,
+							x: targetBounds.left + (position as number) * targetBounds.width - guideBounds.left,
 							y: targetBounds.top - guideBounds.top,
 					  };
 			}
-
-			const diffs = isTrigger ? triggerDiffs : rootDiffs;
 
 			setTranslateProp(diffs.x, diffs.y);
 		};
@@ -142,18 +168,18 @@ class Guides {
 		//Root Guide
 		if (!triggerEl) {
 			setElProps(guide, {
-				[this.isVer ? 'width' : 'height']: this._it._isViewport ? (this.isVer ? '100vw' : '100vh') : '100px',
-				position: this._it._isViewport ? 'fixed' : 'absolute',
+				[this.isVer ? 'width' : 'height']: !this._it!._root ? (this.isVer ? '100vw' : '100vh') : '100px',
+				position: !this._it!._root ? 'fixed' : 'absolute',
 			});
-			this._it._isViewport && !this.isVer && setElProps(guide, { top: '0px' });
+			!this._it!._root && !this.isVer && setElProps(guide, { top: '0px' });
 
 			//the root is not the viewport and it is an element
-			if (!this._it._isViewport) positionGuide(false);
+			if (this._it!._root) positionGuide();
 			return;
 		}
 		//Trigger guide
 		positionGuide();
-		//RePosition the guide on every parent Scroll
+		//RePosition the guide on every parent on scroll
 		getParents(triggerEl).forEach((parent) => {
 			if (!is.scrollable(parent)) return;
 
@@ -163,23 +189,16 @@ class Guides {
 
 	createGuides() {
 		//Guides Parameters
-		const parseGuidesParams = (params) => {
-			let guideParams = guideDefaultParams;
-			if (is.object(params)) {
-				guideParams = mergeOptions(guideParams, params);
-			}
-			return guideParams;
-		};
-		const guideParams = parseGuidesParams(this.options);
-		const guideTextPrefix = this._it.name;
+		const guideParams = mergeOptions(guideDefaultConfig, this.options);
+		const guideTextPrefix = this._it!.name;
 
 		//Create Root Guides
-		const rEPValue = this._it._positionsData.rEP.value;
-		const rLPValue = this._it._positionsData.rLP.value;
+		const rEPValue = this._it!._positionsData.rEP.value;
+		const rLPValue = this._it!._positionsData.rLP.value;
 
 		this._guideCreation({
 			enter: true,
-			position: `${rEPValue}${this._it._positionsData.rEP.unit}`,
+			position: `${rEPValue}${this._it!._positionsData.rEP.unit}`,
 			isHigherValue: getMinMax(rEPValue, rLPValue)[1] === rEPValue,
 			text: `${guideTextPrefix} ${guideParams.enter.root.text}`,
 			color: guideParams.enter.root.color,
@@ -187,7 +206,7 @@ class Guides {
 		});
 		this._guideCreation({
 			enter: false,
-			position: `${rLPValue}${this._it._positionsData.rLP.unit}`,
+			position: `${rLPValue}${this._it!._positionsData.rLP.unit}`,
 			isHigherValue: getMinMax(rEPValue, rLPValue)[1] === rLPValue,
 			text: `${guideTextPrefix} ${guideParams.leave.root.text}`,
 			color: guideParams.leave.root.color,
@@ -195,8 +214,8 @@ class Guides {
 		});
 
 		//Create Triggers Guides
-		this._it.triggers.forEach((trigger) => {
-			const { enter, leave, maxPosition } = this._utils.getTriggerData(trigger);
+		this._it!.triggers.forEach((trigger) => {
+			const { enter, leave, maxPosition } = this._utils!.getTriggerData(trigger);
 			this._guideCreation(
 				{
 					enter: true,
@@ -236,10 +255,9 @@ class Guides {
 		this._removeResizeListener();
 		this.removeGuides();
 
-		this._it.guides = null;
-
-		this._it = null;
-		this._utils = null;
+		this._it!.guides = undefined;
+		this._it = undefined;
+		this._utils = undefined;
 	};
 }
 Guides.pluginName = 'guides';

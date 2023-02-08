@@ -7,11 +7,11 @@
 * @license: Released under the personal 'no charge' license can be viewed at http://sunshine-themes.com/?appID=ss_app_1&tab=license, Licensees of commercial or business license are granted additional rights. See http://sunshine-themes.com/?appID=ss_app_1&tab=license for details..
 * @author: Sherif Magdy, sherifmagdy@sunshine-themes.com
 *
-* Released on: January 2, 2023
+* Released on: February 8, 2023
 */
 
-// src/constants.js
-var guideDefaultParams = {
+// src/constants.ts
+var guideDefaultConfig = {
   enter: {
     trigger: {
       backgroundColor: "rgb(0, 149, 0)",
@@ -38,41 +38,43 @@ var guideDefaultParams = {
   }
 };
 
-// src/helpers.js
+// src/helpers.ts
 var is = {
   function: (a) => typeof a === "function",
   string: (a) => typeof a === "string",
   boolean: (a) => typeof a === "boolean",
-  object: (a) => a && typeof a === "object" && !(a instanceof Array),
-  inObject: (obj, prop) => is.object(obj) && prop in obj,
+  object: (a) => !!a && typeof a === "object" && a !== null && !(a instanceof Array),
   num: (a) => typeof a === "number",
-  percent: (a) => a && a.includes("%"),
-  pixel: (a) => a && a.includes("px"),
   array: (a) => a instanceof Array,
-  element: (a) => a instanceof HTMLElement || a instanceof Element,
-  doc: (a) => a && a.nodeType === 9,
-  scrollable: (element, dir = null) => dir ? dir === "y" ? element.scrollHeight > element.clientHeight : element.scrollWidth > element.clientWidth : element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth,
+  element: (a) => a instanceof HTMLElement,
+  empty: (a) => Object.keys(a).length === 0,
+  doc: (a) => is.element(a) && a.nodeType === 9,
   anime: (a) => is.object(a) && a.hasOwnProperty("animatables") && !a.hasOwnProperty("add"),
   tl: (a) => is.object(a) && a.hasOwnProperty("add") && is.function(a.add),
-  animeInstance: (a) => is.anime(a) || is.tl(a)
+  animeInstance: (a) => is.anime(a) || is.tl(a),
+  pixel: (a) => a.includes("px"),
+  inObject: (obj, prop) => is.object(obj) && prop in obj,
+  percent: (a) => a.includes("%"),
+  scrollable: (element, dir) => dir ? dir === "y" ? element.scrollHeight > element.clientHeight : element.scrollWidth > element.clientWidth : element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth
 };
 var getParents = (element) => {
   let parents = [];
-  for (element = element.parentNode; element && element !== document && element !== document.documentElement; element = element.parentNode) {
-    parents.push(element);
+  for (let el = element.parentElement; el && !is.doc(el) && el !== document.documentElement; el = el.parentElement) {
+    parents.push(el);
   }
   return parents;
 };
-var mergeOptions = (def, custom) => {
-  const defaultOptions = def;
-  const options = custom;
-  Object.entries(defaultOptions).forEach(([k, v]) => {
-    if (is.object(v)) {
-      mergeOptions(v, options[k] = options[k] || {});
-    } else if (!(k in options)) {
-      options[k] = v;
+var mergeOptions = (defaultOptions, customOptions) => {
+  const options = {...defaultOptions};
+  for (const [key, value] of Object.entries(customOptions)) {
+    if (is.object(options[key]) && !is.empty(options[key])) {
+      if (!is.object(value))
+        continue;
+      options[key] = mergeOptions(options[key], value);
+    } else {
+      options[key] = value;
     }
-  });
+  }
   return options;
 };
 var getMinMax = (n1, n2) => [n1, n2].sort((a, b) => a - b);
@@ -90,9 +92,24 @@ var getScrollBarWidth = () => {
   return width;
 };
 
-// src/plugins/guides.js
+// src/plugins/guides.ts
 var Guides = class {
   constructor(it) {
+    this.removeGuides = () => {
+      this._guides.forEach((guide) => guide && guide.remove());
+      this._guides = [];
+    };
+    this.update = () => {
+      this.removeGuides();
+      this.createGuides();
+    };
+    this.kill = () => {
+      this._removeResizeListener();
+      this.removeGuides();
+      this._it.guides = void 0;
+      this._it = void 0;
+      this._utils = void 0;
+    };
     this._registerIntersectionTrigger(it);
     return this;
   }
@@ -105,7 +122,7 @@ var Guides = class {
     this._guides = [];
     this._scrollBarWidth = getScrollBarWidth();
     this.isVer = this._utils.isVertical();
-    this.rootEl = this._it._root ?? document.body;
+    this.rootEl = this._utils.getRoot();
     this.scrollWidth = {
       x: is.scrollable(this.rootEl, "x") ? this._scrollBarWidth : 0,
       y: is.scrollable(this.rootEl, "y") ? this._scrollBarWidth : 0
@@ -115,12 +132,12 @@ var Guides = class {
   }
   _addResizeListener() {
     this._onResizeHandler = this.update;
-    this._utils.getRoot().addEventListener("resize", this._onResizeHandler, false);
+    addEventListener("resize", this._onResizeHandler, false);
   }
   _removeResizeListener() {
-    this._utils.getRoot().removeEventListener("resize", this._onResizeHandler, false);
+    removeEventListener("resize", this._onResizeHandler, false);
   }
-  _guideCreation(options, triggerEl = null) {
+  _guideCreation(options, triggerEl) {
     const {enter, position, isHigherValue, text, color, backgroundColor} = options;
     const guide = document.createElement("div");
     setElProps(guide, {
@@ -129,7 +146,7 @@ var Guides = class {
       position: "absolute",
       zIndex: "9999",
       backgroundColor,
-      [this.isVer ? "top" : "left"]: position
+      [this.isVer ? "top" : "left"]: position.toString()
     });
     const createText = () => {
       let verticalAlignment = {
@@ -160,13 +177,13 @@ var Guides = class {
     document.body.append(guide);
     const setTranslateProp = (diffX, diffY) => {
       const parts = [...guide.style.transform.matchAll(/(-?\d*\.?\d+)\s*(px|%)?/g)];
-      const translateXInPx = parts.length ? parts[0][1] : 0;
-      const translateYInPx = parts.length > 1 ? parts[1][1] : 0;
-      let x = parseFloat(diffX) + parseFloat(translateXInPx);
-      let y = parseFloat(diffY) + parseFloat(translateYInPx);
+      const translateXInPx = parts.length ? parts[0][1] : "0";
+      const translateYInPx = parts.length > 1 ? parts[1][1] : "0";
+      let x = diffX + parseFloat(translateXInPx);
+      let y = diffY + parseFloat(translateYInPx);
       setElProps(guide, {transform: `translate(${x}px,${y}px)`});
     };
-    const positionGuide = (isTrigger = true) => {
+    const positionGuide = () => {
       const guideBounds = guide.getBoundingClientRect();
       const rDefaultBounds = this.rootEl.getBoundingClientRect();
       let targetBounds = this._utils.getRootRect(this._it.observer.rootMargin);
@@ -174,7 +191,8 @@ var Guides = class {
         x: isHigherValue ? this.scrollWidth.x : 0,
         y: isHigherValue ? this.scrollWidth.y : 0
       };
-      const rootDiffs = this.isVer ? enter ? {
+      let diffs = {x: 0, y: 0};
+      diffs = this.isVer ? enter ? {
         x: rDefaultBounds.right - guideBounds.left - this.scrollWidth.y,
         y: targetBounds.bottom - guideBounds.bottom - scrollWidth.x
       } : {
@@ -184,10 +202,9 @@ var Guides = class {
         x: targetBounds.right - guideBounds.right,
         y: rDefaultBounds.bottom - guideBounds.top - this.scrollWidth.x
       } : {x: targetBounds.left - guideBounds.left, y: rDefaultBounds.bottom - guideBounds.top - this.scrollWidth.x};
-      let triggerDiffs = {};
-      if (isTrigger) {
+      if (triggerEl) {
         targetBounds = triggerEl.getBoundingClientRect();
-        triggerDiffs = this.isVer ? {
+        diffs = this.isVer ? {
           x: targetBounds.right - guideBounds.right,
           y: targetBounds.top + position * targetBounds.height - guideBounds.top
         } : {
@@ -195,17 +212,16 @@ var Guides = class {
           y: targetBounds.top - guideBounds.top
         };
       }
-      const diffs = isTrigger ? triggerDiffs : rootDiffs;
       setTranslateProp(diffs.x, diffs.y);
     };
     if (!triggerEl) {
       setElProps(guide, {
-        [this.isVer ? "width" : "height"]: this._it._isViewport ? this.isVer ? "100vw" : "100vh" : "100px",
-        position: this._it._isViewport ? "fixed" : "absolute"
+        [this.isVer ? "width" : "height"]: !this._it._root ? this.isVer ? "100vw" : "100vh" : "100px",
+        position: !this._it._root ? "fixed" : "absolute"
       });
-      this._it._isViewport && !this.isVer && setElProps(guide, {top: "0px"});
-      if (!this._it._isViewport)
-        positionGuide(false);
+      !this._it._root && !this.isVer && setElProps(guide, {top: "0px"});
+      if (this._it._root)
+        positionGuide();
       return;
     }
     positionGuide();
@@ -216,14 +232,7 @@ var Guides = class {
     });
   }
   createGuides() {
-    const parseGuidesParams = (params) => {
-      let guideParams2 = guideDefaultParams;
-      if (is.object(params)) {
-        guideParams2 = mergeOptions(guideParams2, params);
-      }
-      return guideParams2;
-    };
-    const guideParams = parseGuidesParams(this.options);
+    const guideParams = mergeOptions(guideDefaultConfig, this.options);
     const guideTextPrefix = this._it.name;
     const rEPValue = this._it._positionsData.rEP.value;
     const rLPValue = this._it._positionsData.rLP.value;
@@ -263,21 +272,6 @@ var Guides = class {
       }, trigger);
     });
   }
-  removeGuides = () => {
-    this._guides.forEach((guide) => guide && guide.remove());
-    this._guides = [];
-  };
-  update = () => {
-    this.removeGuides();
-    this.createGuides();
-  };
-  kill = () => {
-    this._removeResizeListener();
-    this.removeGuides();
-    this._it.guides = null;
-    this._it = null;
-    this._utils = null;
-  };
 };
 Guides.pluginName = "guides";
 var guides_default = Guides;
