@@ -1,5 +1,5 @@
 /*
-* IntersectionTrigger v1.0.3 
+* IntersectionTrigger v1.1.0 
 * IntersectionTrigger utilizes the most modern web technology to trigger anything by intersection. Including scroll-based animations.
 * https://sunshine-themes.com/?appID=ss_app_1
 *
@@ -7,7 +7,7 @@
 * @license: Released under the personal 'no charge' license can be viewed at http://sunshine-themes.com/?appID=ss_app_1&tab=license, Licensees of commercial or business license are granted additional rights. See http://sunshine-themes.com/?appID=ss_app_1&tab=license for details..
 * @author: Sherif Magdy, sherifmagdy@sunshine-themes.com
 *
-* Released on: January 2, 2023
+* Released on: February 17, 2023
 */
 
 var __defProp = Object.defineProperty;
@@ -17,13 +17,13 @@ var __export = (target, all) => {
     __defProp(target, name, {get: all[name], enumerable: true});
 };
 
-// src/core/core.js
+// src/core/core.ts
 __markAsModule(exports);
 __export(exports, {
   default: () => core_default
 });
 
-// src/constants.js
+// src/constants.ts
 var fn = () => {
 };
 var defaultInsOptions = {
@@ -35,8 +35,8 @@ var defaultInsOptions = {
     onLeave: fn,
     onEnterBack: fn,
     onLeaveBack: fn,
-    toggleClass: null,
-    animation: null
+    toggleClass: void 0,
+    animation: void 0
   },
   rootEnter: "100%",
   rootLeave: "0%",
@@ -52,27 +52,28 @@ var triggerStates = {
   hasLeft: true,
   hasLeftBack: true,
   hasEnteredOnce: false,
-  onScroll: {backup: null, animate: null},
+  onScroll: {backup: void 0, animate: void 0},
   ids: {snapTimeOutId: 0}
 };
 
-// src/helpers.js
+// src/helpers.ts
 var is = {
   function: (a) => typeof a === "function",
   string: (a) => typeof a === "string",
   boolean: (a) => typeof a === "boolean",
-  object: (a) => a && typeof a === "object" && !(a instanceof Array),
-  inObject: (obj, prop) => is.object(obj) && prop in obj,
+  object: (a) => !!a && typeof a === "object" && a !== null && !(a instanceof Array),
   num: (a) => typeof a === "number",
-  percent: (a) => a && a.includes("%"),
-  pixel: (a) => a && a.includes("px"),
   array: (a) => a instanceof Array,
-  element: (a) => a instanceof HTMLElement || a instanceof Element,
-  doc: (a) => a && a.nodeType === 9,
-  scrollable: (element, dir = null) => dir ? dir === "y" ? element.scrollHeight > element.clientHeight : element.scrollWidth > element.clientWidth : element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth,
+  element: (a) => a instanceof HTMLElement,
+  empty: (a) => Object.keys(a).length === 0,
+  doc: (a) => is.element(a) && a.nodeType === 9,
   anime: (a) => is.object(a) && a.hasOwnProperty("animatables") && !a.hasOwnProperty("add"),
   tl: (a) => is.object(a) && a.hasOwnProperty("add") && is.function(a.add),
-  animeInstance: (a) => is.anime(a) || is.tl(a)
+  animeInstance: (a) => is.anime(a) || is.tl(a),
+  pixel: (a) => a.includes("px"),
+  inObject: (obj, prop) => is.object(obj) && prop in obj,
+  percent: (a) => a.includes("%"),
+  scrollable: (element, dir) => dir ? dir === "y" ? element.scrollHeight > element.clientHeight : element.scrollWidth > element.clientWidth : element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth
 };
 var getBoundsProp = (element, prop) => element && element.getBoundingClientRect()[prop];
 var getScrollValue = (element, dir) => dir === "y" ? element.scrollHeight : element.scrollWidth;
@@ -81,16 +82,18 @@ var roundFloat = (value, precision) => {
   const multiplier = Math.pow(10, precision || 0);
   return Math.round(value * multiplier) / multiplier;
 };
-var mergeOptions = (def, custom) => {
-  const defaultOptions = def;
-  const options = custom;
-  Object.entries(defaultOptions).forEach(([k, v]) => {
-    if (is.object(v)) {
-      mergeOptions(v, options[k] = options[k] || {});
-    } else if (!(k in options)) {
-      options[k] = v;
+var mergeOptions = (defaultOptions, customOptions) => {
+  const options = {...defaultOptions};
+  for (const [key, value] of Object.entries(customOptions)) {
+    const k = key;
+    if (is.object(options[k]) && !is.empty(options[k])) {
+      if (!is.object(value))
+        continue;
+      options[k] = mergeOptions(options[k], value);
+    } else {
+      options[k] = value;
     }
-  });
+  }
   return options;
 };
 var throwError = (message) => {
@@ -98,14 +101,14 @@ var throwError = (message) => {
 };
 var getMinMax = (n1, n2) => [n1, n2].sort((a, b) => a - b);
 var parseValue = (v) => {
+  let output = {value: 0, unit: ""};
   const parts = /^(-?\d*\.?\d+)(px|%)$/.exec(v);
-  return {value: parseFloat(parts[1]), unit: parts[2]};
+  parts && (output = {value: parseFloat(parts[1]), unit: parts[2]});
+  return output;
 };
-var parseString = (string) => {
-  return string.split(/\s+/).map((v) => parseValue(v));
-};
+var parseString = (str) => str.split(/\s+/).map((v) => parseValue(v));
 
-// src/utils.js
+// src/utils/utils.ts
 var Utils = class {
   constructor(intersectionTrigger) {
     this._it = intersectionTrigger;
@@ -114,8 +117,16 @@ var Utils = class {
   }
   setUtils() {
     this.isVertical = () => this._it.axis === "y";
-    this.isViewport = () => !this._it._root;
-    this.getRoot = () => this._it._root ?? window;
+    this.getRoot = (forEvent) => {
+      if (!this._it._root) {
+        if (forEvent === "resize")
+          return window;
+        if (forEvent === "scroll")
+          return document;
+        return document.documentElement;
+      }
+      return this._it._root;
+    };
     this.dirProps = () => this.isVertical() ? {ref: "top", length: "height", refOpposite: "bottom", clientLength: document.documentElement.clientHeight} : {ref: "left", length: "width", refOpposite: "right", clientLength: document.documentElement.clientWidth};
     this.setRootMargin = (rEP, rLP) => {
       const {length, clientLength} = this.dirProps();
@@ -124,52 +135,52 @@ var Utils = class {
         const {value, unit, normal} = pos;
         if (unit === "%")
           return normal * total;
-        if (unit === "px")
-          return value;
+        return value;
       };
       rEP.pixeled = valueToPx(rEP, rootLength);
       rLP.pixeled = valueToPx(rLP, rootLength);
       this._it._isREPGreater = rEP.pixeled >= rLP.pixeled;
-      let rootMargins = {};
-      rootMargins.fromOppRef = `${(this._it._isREPGreater ? rEP.pixeled : rLP.pixeled) - rootLength}px`;
-      rootMargins.fromRef = `${-1 * (this._it._isREPGreater ? rLP.pixeled : rEP.pixeled)}px`;
-      const extendMargin = getScrollValue(this.isViewport() ? document.body : this._it._root, this.isVertical() ? "x" : "y");
+      const rootMargins = {
+        fromRef: `${-1 * (this._it._isREPGreater ? rLP.pixeled : rEP.pixeled)}px`,
+        fromOppRef: `${(this._it._isREPGreater ? rEP.pixeled : rLP.pixeled) - rootLength}px`
+      };
+      const extendMargin = getScrollValue(this.getRoot(), this.isVertical() ? "x" : "y");
       return this.isVertical() ? `${rootMargins.fromRef} ${extendMargin}px ${rootMargins.fromOppRef} ${extendMargin}px` : `${extendMargin}px ${rootMargins.fromOppRef} ${extendMargin}px ${rootMargins.fromRef}`;
     };
     this.setThreshold = () => {
-      const {enter, leave, maxPosition} = this._it._defaultTriggerParams;
-      let threshold = [0, enter, leave, roundFloat(1 - maxPosition, 2), 1];
+      const threshold = [0, 1];
       this._it.triggers.forEach((trigger) => {
-        const {enter: enter2, leave: leave2, maxPosition: maxPosition2} = this.getTriggerData(trigger);
-        threshold.push(enter2, leave2, roundFloat(1 - maxPosition2, 2));
+        const {enter, leave, maxPosition} = this.getTriggerData(trigger);
+        threshold.push(enter, leave, roundFloat(1 - maxPosition, 2));
       });
       return [...new Set(threshold)];
     };
-    this.parseQuery = (q, errLog) => {
-      switch (true) {
-        case is.string(q):
-          return [...document.querySelectorAll(q)];
-        case is.array(q):
-          return q;
-        case is.element(q):
-          return [q];
-        default:
-          throwError(`${errLog} parameter must be a valid selector, an element or array of elements`);
-      }
+    this.parseQuery = (q, errLog = "trigger") => {
+      if (is.string(q))
+        return [...document.querySelectorAll(q)];
+      if (is.array(q))
+        return q;
+      if (is.element(q))
+        return [q];
+      return throwError(`${errLog} parameter must be a valid selector, an element or array of elements`);
     };
-    this.customParseQuery = (query, type = "trigger") => {
-      const isTrigger = type === "trigger";
-      let output = isTrigger ? [] : {};
-      if (!isTrigger) {
-        output = is.string(query) ? document.querySelector(query) : is.element(query) ? query : throwError("root parameter must be a valid selector or an element");
-        return output;
+    this.parseRoot = (query) => {
+      if (!query)
+        return null;
+      if (is.string(query)) {
+        const el = document.querySelector(query);
+        if (!el)
+          return throwError("root parameter must be a valid selector");
+        return el;
       }
-      return this.parseQuery(query, "trigger");
+      if (is.element(query))
+        return query;
+      return throwError("root parameter must be an element");
     };
     this.validatePosition = (pos) => {
       is.function(pos) && (pos = pos(this._it));
       if (!is.string(pos))
-        throwError(`enter, leave, rootEnter and rootLeave parameters must be a string.`);
+        return throwError(`enter, leave, rootEnter and rootLeave parameters must be a string.`);
       return pos;
     };
     this.setPositionData = (pos) => {
@@ -181,7 +192,7 @@ var Utils = class {
         original,
         unit: parsed.unit,
         value: roundedValue,
-        normal: parsed.unit === "%" ? roundedValue / 100 : null
+        normal: parsed.unit === "%" ? roundedValue / 100 : 0
       };
     };
     this.parsePositions = (triggerEnter, triggerLeave, rootEnter, rootLeave) => {
@@ -196,48 +207,44 @@ var Utils = class {
     this.deleteTriggerData = (trigger) => {
       this._it._triggersData.delete(trigger);
     };
-    this.hasTriggerData = (trigger, prop = null) => {
+    this.hasTriggerData = (trigger, prop) => {
       const hasData = this._it._triggersData.has(trigger);
-      if (prop) {
+      if (prop)
         return hasData && prop in this.getTriggerData(trigger);
-      }
       return hasData;
     };
-    this.getTriggerData = (trigger, prop = null) => {
-      if (prop) {
+    this.getTriggerData = (trigger, prop) => {
+      if (prop)
         return this.hasTriggerData(trigger, prop) ? this._it._triggersData.get(trigger)[prop] : {};
-      }
       return this.hasTriggerData(trigger) && this._it._triggersData.get(trigger) || {};
     };
-    this.setTriggerData = (trigger, value, props = null) => {
-      if (props) {
+    this.setTriggerData = (trigger, value, isPartial) => {
+      if (isPartial) {
         const storedValue = this.getTriggerData(trigger);
-        if (is.object(storedValue)) {
-          this._it._triggersData.set(trigger, {...storedValue, ...props});
-        }
+        if ("enter" in storedValue)
+          this._it._triggersData.set(trigger, {...storedValue, ...value});
         return;
       }
       this._it._triggersData.set(trigger, value);
     };
-    this.getTriggerStates = (trigger, prop = null) => {
+    this.getTriggerStates = (trigger, prop) => {
       const triggerStates2 = this.getTriggerData(trigger, "states");
-      const hasEnteredFromOneSide = triggerStates2.hasEntered || triggerStates2.hasEnteredBack;
       if (prop)
         return triggerStates2[prop];
       return {
         ...triggerStates2,
-        hasEnteredFromOneSide
+        hasEnteredFromOneSide: triggerStates2.hasEntered || triggerStates2.hasEnteredBack
       };
     };
-    this.setTriggerStates = (trigger, value = {}) => {
+    this.setTriggerStates = (trigger, value) => {
       const triggerData = this.getTriggerData(trigger);
       const triggerStates2 = triggerData && {...triggerData.states, ...value};
-      this.setTriggerData(trigger, null, {states: triggerStates2});
+      this.setTriggerData(trigger, {states: triggerStates2}, true);
     };
-    this.setTriggerScrollStates = (trigger, prop, value = null) => {
+    this.setTriggerScrollStates = (trigger, prop, value) => {
       const triggerScrollStates = this.getTriggerStates(trigger, "onScroll");
       triggerScrollStates[prop] = value;
-      this.setTriggerStates(trigger, {onscroll: {...triggerScrollStates}});
+      this.setTriggerStates(trigger, {onScroll: {...triggerScrollStates}});
       if (value) {
         if (this._it._states.runningScrollCbs === 0)
           this._it.addScrollListener(this._it._onScrollHandler);
@@ -285,8 +292,8 @@ var Utils = class {
       data.callback(trigger, this._it);
       if (this._it.killed)
         return this.kill();
-      animation && this._it.animation.animate(trigger, animation, data.eventIndex);
       toggleClass && this._it.toggleClass.toggle(trigger, toggleClass, data.eventIndex);
+      animation && this._it.animation.animate(trigger, animation, data.eventIndex);
       this.setTriggerStates(trigger, {
         [data.leaveProp]: true,
         hasEntered: false,
@@ -341,13 +348,15 @@ var Utils = class {
     };
     this.expandRectByRootMargin = (rect, rootMargins) => {
       const margins = this.parseRootMargin(rootMargins).map((margin, i) => {
-        return margin.unit == "px" ? margin.value : margin.value * (i % 2 ? rect.width : rect.height) / 100;
+        return margin.unit === "px" ? margin.value : margin.value * (i % 2 ? rect.width : rect.height) / 100;
       });
       const newRect = {
         top: rect.top - margins[0],
         right: rect.right + margins[1],
         bottom: rect.bottom + margins[2],
-        left: rect.left - margins[3]
+        left: rect.left - margins[3],
+        width: 0,
+        height: 0
       };
       newRect.width = newRect.right - newRect.left;
       newRect.height = newRect.bottom - newRect.top;
@@ -374,183 +383,175 @@ var Utils = class {
     };
   }
   kill() {
-    this._it = null;
+    this._it = void 0;
   }
 };
 var utils_default = Utils;
 
-// src/core/core.js
+// src/core/core.ts
 var registeredPlugins = [];
 var instances = [];
 var instanceID = 0;
 var IntersectionTrigger = class {
-  constructor(configuration = {}) {
-    this._userOptions = configuration;
+  constructor(options) {
+    this._rAFCallback = () => {
+      this.triggers.forEach((trigger) => {
+        const onScrollFuns = this._utils.getTriggerStates(trigger, "onScroll");
+        for (const k in onScrollFuns) {
+          const fnName = k;
+          onScrollFuns[fnName] && onScrollFuns[fnName](trigger);
+        }
+      });
+    };
+    this._onScrollHandler = () => this._rAFID = requestAnimationFrame(this._rAFCallback);
+    this._observerCallback = (entries, observer) => {
+      const {ref, refOpposite, length} = this._utils.dirProps();
+      for (const entry of entries) {
+        const trigger = entry.target, tB = entry.boundingClientRect, isIntersecting = entry.isIntersecting;
+        this.rootBounds = entry.rootBounds || this._utils.getRootRect(observer.rootMargin);
+        const rB = this.rootBounds, rL = rB[length];
+        const {enter, leave} = this._utils.getTriggerData(trigger);
+        const {
+          hasEnteredFromOneSide,
+          onScroll: {backup}
+        } = this._utils.getTriggerStates(trigger);
+        const [tEP, tLP, rEP, rLP] = this._utils.getPositions(tB, rB, {enter, leave, ref, refOpposite, length});
+        const initBackupFun = tB[length] >= rL, isBackupFunRunning = !!backup;
+        switch (true) {
+          case this._states.oCbFirstInvoke:
+            switch (true) {
+              case (!isIntersecting && rLP > tLP):
+                this._utils.onTriggerEnter(trigger);
+                this._utils.onTriggerLeave(trigger);
+                break;
+              case isIntersecting:
+                switch (true) {
+                  case (rEP > tEP && rLP < tLP):
+                    this._utils.onTriggerEnter(trigger);
+                    break;
+                  case rLP > tLP:
+                    this._utils.onTriggerEnter(trigger);
+                    this._utils.onTriggerLeave(trigger);
+                    break;
+                }
+                if (initBackupFun)
+                  this._utils.setTriggerScrollStates(trigger, "backup", this._utils.toggleActions);
+                break;
+            }
+            break;
+          case !isIntersecting:
+            if (isBackupFunRunning)
+              this._utils.setTriggerScrollStates(trigger, "backup");
+            switch (true) {
+              case (hasEnteredFromOneSide && rLP > tLP):
+                this._utils.onTriggerLeave(trigger);
+                break;
+              case (hasEnteredFromOneSide && rEP < tEP):
+                this._utils.onTriggerLeave(trigger, "onLeaveBack");
+                break;
+            }
+            break;
+          case (isIntersecting && !isBackupFunRunning):
+            this._utils.toggleActions(trigger);
+            initBackupFun && this._utils.setTriggerScrollStates(trigger, "backup", this._utils.toggleActions);
+            break;
+        }
+      }
+      this._states.oCbFirstInvoke = false;
+    };
+    this._userOptions = options || {};
     this.triggers = [];
     this._triggersData = new WeakMap();
     this._utils = new utils_default(this);
     this.id = instanceID;
     instanceID++;
     instances.push(this);
-    this.animation = null;
-    this.toggleClass = null;
-    this.guides = null;
-    this._setStates();
+    this.animation = void 0;
+    this.toggleClass = void 0;
+    this.guides = void 0;
+    this._states = {
+      oCbFirstInvoke: true,
+      runningScrollCbs: 0
+    };
     this._setInstance();
   }
-  _setPlugin(propertyName) {
+  _setPlugin(pluginName) {
     const plugins = IntersectionTrigger.getRegisteredPlugins();
-    const Plugin = plugins.find((plg) => propertyName === plg.pluginName);
-    Plugin && (this[propertyName] = new Plugin(this));
+    const Plugin = plugins.find((plg) => pluginName === plg.pluginName);
+    Plugin && (this[pluginName] = new Plugin(this));
   }
   _addResizeListener() {
     this._removeResizeListener();
     this._onResizeHandler = () => this.update();
-    this._utils.getRoot().addEventListener("resize", this._onResizeHandler, false);
+    this._utils.getRoot("resize").addEventListener("resize", this._onResizeHandler, false);
   }
   _removeResizeListener() {
-    this._utils.getRoot().removeEventListener("resize", this._onResizeHandler, false);
+    this._utils.getRoot("resize").removeEventListener("resize", this._onResizeHandler, false);
   }
-  _setStates() {
-    this._states = {};
-    this._states.oCbFirstInvoke = true;
-    this._states.runningScrollCbs = 0;
-  }
-  _rAFCallback = (time) => {
-    this.triggers.forEach((trigger) => {
-      const onScrollFuns = this._utils.getTriggerStates(trigger, "onScroll");
-      for (const key in onScrollFuns) {
-        onScrollFuns[key] && is.function(onScrollFuns[key]) && onScrollFuns[key](trigger, time);
-      }
-    });
-  };
-  _onScrollHandler = () => this._rAFID = requestAnimationFrame(this._rAFCallback);
   addScrollListener(handler) {
-    this._utils.getRoot().addEventListener("scroll", handler, false);
+    this._utils.getRoot("scroll").addEventListener("scroll", handler, false);
   }
   removeScrollListener(handler) {
-    this._utils.getRoot().removeEventListener("scroll", handler, false);
+    this._utils.getRoot("scroll").removeEventListener("scroll", handler, false);
   }
-  _observerCallback = (entries, observer) => {
-    const {ref, refOpposite, length} = this._utils.dirProps();
-    for (const entry of entries) {
-      const trigger = entry.target, tB = entry.boundingClientRect, isIntersecting = entry.isIntersecting;
-      this.rootBounds = entry.rootBounds || this._utils.getRootRect(observer.rootMargin);
-      const rB = this.rootBounds, rL = rB[length];
-      const {enter, leave} = this._utils.getTriggerData(trigger);
-      const {
-        hasEnteredFromOneSide,
-        onScroll: {backup}
-      } = this._utils.getTriggerStates(trigger);
-      const [tEP, tLP, rEP, rLP] = this._utils.getPositions(tB, rB, {enter, leave, ref, refOpposite, length});
-      const initBackupFun = tB[length] >= rL, isBackupFunRunning = !!backup;
-      switch (true) {
-        case this._states.oCbFirstInvoke:
-          switch (true) {
-            case (!isIntersecting && rLP > tLP):
-              this._utils.onTriggerEnter(trigger);
-              this._utils.onTriggerLeave(trigger);
-              break;
-            case isIntersecting:
-              switch (true) {
-                case (rEP > tEP && rLP < tLP):
-                  this._utils.onTriggerEnter(trigger);
-                  break;
-                case rLP > tLP:
-                  this._utils.onTriggerEnter(trigger);
-                  this._utils.onTriggerLeave(trigger);
-                  break;
-              }
-              if (initBackupFun)
-                this._utils.setTriggerScrollStates(trigger, "backup", this._utils.toggleActions);
-              break;
-          }
-          break;
-        case !isIntersecting:
-          if (isBackupFunRunning)
-            this._utils.setTriggerScrollStates(trigger, "backup", null);
-          switch (true) {
-            case (hasEnteredFromOneSide && rLP > tLP):
-              this._utils.onTriggerLeave(trigger);
-              break;
-            case (hasEnteredFromOneSide && rEP < tEP):
-              this._utils.onTriggerLeave(trigger, "onLeaveBack");
-              break;
-          }
-          break;
-        case (isIntersecting && !isBackupFunRunning):
-          this._utils.toggleActions(trigger);
-          initBackupFun && this._utils.setTriggerScrollStates(trigger, "backup", this._utils.toggleActions);
-          break;
-      }
-    }
-    this._states.oCbFirstInvoke = false;
-  };
   _createInstance() {
     this._rootMargin = this._utils.setRootMargin(this._positionsData.rEP, this._positionsData.rLP);
     this._threshold = this._utils.setThreshold();
-    this._observerOptions = {
+    this.observer = new IntersectionObserver(this._observerCallback, {
       root: this._root,
       rootMargin: this._rootMargin,
       threshold: this._threshold
-    };
-    this.observer = new IntersectionObserver(this._observerCallback, this._observerOptions);
+    });
     this._root = this.observer.root;
     this.rootBounds = this._utils.getRootRect(this.observer.rootMargin);
-    this._isViewport = this._utils.isViewport();
   }
   _setInstance() {
     this._defaultOptions = defaultInsOptions;
     this._options = mergeOptions(this._defaultOptions, this._userOptions);
-    this.axis = is.string(this._options.axis) ? this._options.axis : throwError("axis parameter must be a string.");
-    this.name = is.string(this._options.name) ? this._options.name : throwError("name parameter must be a string.");
-    this._root = !!this._options.root && this._utils.customParseQuery(this._options.root, "root") || null;
-    this._positionsData = this._utils.parsePositions(this._options.defaults.enter, this._options.defaults.leave, this._options.rootEnter, this._options.rootLeave);
-    this.customScrollHandler = this._options.onScroll;
-    const {once, onEnter, onLeave, onEnterBack, onLeaveBack, toggleClass, animation} = this._options.defaults, normalizedTEP = this._positionsData.tEP.normal, normalizedTLP = this._positionsData.tLP.normal, [minPosition, maxPosition] = getMinMax(normalizedTEP, normalizedTLP);
-    this._defaultTriggerParams = {
-      enter: normalizedTEP,
-      leave: normalizedTLP,
-      minPosition,
-      maxPosition,
-      once,
-      onEnter,
-      onLeave,
-      onEnterBack,
-      onLeaveBack,
-      toggleClass,
-      animation
-    };
+    const {
+      axis,
+      name,
+      root,
+      defaults: {enter, leave},
+      onScroll,
+      rootEnter,
+      rootLeave,
+      guides
+    } = this._options;
+    this.axis = axis;
+    this.name = name;
+    this._root = this._utils.parseRoot(root);
+    this._positionsData = this._utils.parsePositions(enter, leave, rootEnter, rootLeave);
+    this.customScrollHandler = onScroll;
     this._createInstance();
     this._addResizeListener();
     this.customScrollHandler && this.addScrollListener(this.customScrollHandler);
-    if (this._options.guides) {
+    if (guides) {
       this._setPlugin("guides");
-      this.guides.init(this._options.guides);
+      this.guides.init(guides);
     }
     return this;
   }
-  add(trigger = {}, config = {}) {
-    const toAddTriggers = this._utils.customParseQuery(trigger);
-    "enter" in config && (config.enter = this._utils.setPositionData(config.enter).normal);
-    "leave" in config && (config.leave = this._utils.setPositionData(config.leave).normal);
-    const mergedParams = mergeOptions(this._defaultTriggerParams, config);
-    const [minPosition, maxPosition] = getMinMax(mergedParams.enter, mergedParams.leave);
-    const triggerParams = {
+  add(trigger, options) {
+    const toAddTriggers = this._utils.parseQuery(trigger), {defaults} = this._options, userOpts = options || {};
+    const getPositionNormal = (pos, name = "tEP") => !!pos ? this._utils.setPositionData(pos).normal : this._positionsData[name].normal, getPlugin = (name) => {
+      !this[name] && this._setPlugin(name);
+      return this[name];
+    };
+    const mergedParams = mergeOptions(defaults, userOpts), {enter, leave, toggleClass, animation} = mergedParams, triggerParams = {
       ...mergedParams,
-      minPosition,
-      maxPosition,
+      enter: getPositionNormal(enter),
+      leave: getPositionNormal(leave, "tLP"),
+      toggleClass: toggleClass ? getPlugin("toggleClass").parse(toggleClass) : void 0,
+      animation: animation ? getPlugin("animation").parse(animation) : void 0,
       states: {...triggerStates}
     };
-    const parseProp = (name) => {
-      !this[name] && this._setPlugin(name);
-      triggerParams[name] = this[name].parse(triggerParams[name]);
-    };
-    triggerParams.toggleClass && parseProp("toggleClass");
-    triggerParams.animation && parseProp("animation");
+    const [minPosition, maxPosition] = getMinMax(triggerParams.enter, triggerParams.leave);
+    triggerParams.minPosition = minPosition;
+    triggerParams.maxPosition = maxPosition;
     this.triggers = [...new Set([...this.triggers, ...toAddTriggers])];
     let mustUpdate = false;
-    [config.enter, config.leave].forEach((position) => !this._threshold.some((value) => position === value) && (mustUpdate = true));
+    [triggerParams.enter, triggerParams.leave].forEach((normalizedPos) => !this._threshold.some((value) => normalizedPos === value) && (mustUpdate = true));
     if (mustUpdate) {
       toAddTriggers.forEach((trigger2) => this._utils.setTriggerData(trigger2, triggerParams));
       this.update();
@@ -563,8 +564,8 @@ var IntersectionTrigger = class {
     this.guides && this.guides.update();
     return this;
   }
-  remove(trigger = {}) {
-    let toRemoveTriggers = this._utils.customParseQuery(trigger);
+  remove(trigger) {
+    let toRemoveTriggers = this._utils.parseQuery(trigger);
     toRemoveTriggers.forEach((trigger2) => {
       this._utils.deleteTriggerData(trigger2);
       this.observer.unobserve(trigger2);
@@ -579,12 +580,12 @@ var IntersectionTrigger = class {
   }
   _disconnect() {
     this.observer && this.observer.disconnect();
-    this.observer = null;
+    this.observer = void 0;
   }
   update() {
     this._disconnect();
     this._createInstance();
-    this.triggers.forEach((trigger) => this.observer.observe(trigger));
+    this.triggers.forEach((trigger) => this.observer && this.observer.observe(trigger));
     this.guides && this.guides.update();
   }
   kill() {
@@ -595,10 +596,10 @@ var IntersectionTrigger = class {
     this._removeResizeListener();
     this._rAFID && cancelAnimationFrame(this._rAFID);
     this.guides && this.guides.kill();
-    this.toggleClasss && this.toggleClasss.kill();
+    this.toggleClass && this.toggleClass.kill();
     this.animation && this.animation.kill();
     this.triggers = [];
-    this.animation = this.toggleClass = this.guides = this._utils = null;
+    this.animation = this.toggleClass = this.guides = this._utils = void 0;
     const instanceIndex = instances.indexOf(this);
     ~instanceIndex && instances.splice(instanceIndex, 1);
   }
