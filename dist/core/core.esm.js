@@ -1,5 +1,5 @@
 /*
-* IntersectionTrigger v1.0.4 
+* IntersectionTrigger v1.1.0 
 * IntersectionTrigger utilizes the most modern web technology to trigger anything by intersection. Including scroll-based animations.
 * https://sunshine-themes.com/?appID=ss_app_1
 *
@@ -7,7 +7,7 @@
 * @license: Released under the personal 'no charge' license can be viewed at http://sunshine-themes.com/?appID=ss_app_1&tab=license, Licensees of commercial or business license are granted additional rights. See http://sunshine-themes.com/?appID=ss_app_1&tab=license for details..
 * @author: Sherif Magdy, sherifmagdy@sunshine-themes.com
 *
-* Released on: February 8, 2023
+* Released on: February 17, 2023
 */
 
 // src/constants.ts
@@ -72,12 +72,13 @@ var roundFloat = (value, precision) => {
 var mergeOptions = (defaultOptions, customOptions) => {
   const options = {...defaultOptions};
   for (const [key, value] of Object.entries(customOptions)) {
-    if (is.object(options[key]) && !is.empty(options[key])) {
+    const k = key;
+    if (is.object(options[k]) && !is.empty(options[k])) {
       if (!is.object(value))
         continue;
-      options[key] = mergeOptions(options[key], value);
+      options[k] = mergeOptions(options[k], value);
     } else {
-      options[key] = value;
+      options[k] = value;
     }
   }
   return options;
@@ -94,7 +95,7 @@ var parseValue = (v) => {
 };
 var parseString = (str) => str.split(/\s+/).map((v) => parseValue(v));
 
-// src/core/utils.ts
+// src/utils/utils.ts
 var Utils = class {
   constructor(intersectionTrigger) {
     this._it = intersectionTrigger;
@@ -379,12 +380,13 @@ var registeredPlugins = [];
 var instances = [];
 var instanceID = 0;
 var IntersectionTrigger = class {
-  constructor(configuration = {}) {
-    this._rAFCallback = (time) => {
+  constructor(options) {
+    this._rAFCallback = () => {
       this.triggers.forEach((trigger) => {
         const onScrollFuns = this._utils.getTriggerStates(trigger, "onScroll");
-        for (const key in onScrollFuns) {
-          onScrollFuns[key] && onScrollFuns[key](trigger, time);
+        for (const k in onScrollFuns) {
+          const fnName = k;
+          onScrollFuns[fnName] && onScrollFuns[fnName](trigger);
         }
       });
     };
@@ -396,7 +398,6 @@ var IntersectionTrigger = class {
         this.rootBounds = entry.rootBounds || this._utils.getRootRect(observer.rootMargin);
         const rB = this.rootBounds, rL = rB[length];
         const {enter, leave} = this._utils.getTriggerData(trigger);
-        console.log(this._utils.getTriggerData(trigger));
         const {
           hasEnteredFromOneSide,
           onScroll: {backup}
@@ -445,7 +446,7 @@ var IntersectionTrigger = class {
       }
       this._states.oCbFirstInvoke = false;
     };
-    this._userOptions = configuration;
+    this._userOptions = options || {};
     this.triggers = [];
     this._triggersData = new WeakMap();
     this._utils = new utils_default(this);
@@ -518,13 +519,13 @@ var IntersectionTrigger = class {
     }
     return this;
   }
-  add(trigger, configuration) {
-    const toAddTriggers = this._utils.parseQuery(trigger), {defaults} = this._options, userConfig = configuration || {};
+  add(trigger, options) {
+    const toAddTriggers = this._utils.parseQuery(trigger), {defaults} = this._options, userOpts = options || {};
     const getPositionNormal = (pos, name = "tEP") => !!pos ? this._utils.setPositionData(pos).normal : this._positionsData[name].normal, getPlugin = (name) => {
       !this[name] && this._setPlugin(name);
       return this[name];
     };
-    const mergedParams = mergeOptions(defaults, userConfig), {enter, leave, toggleClass, animation} = mergedParams, triggerParams = {
+    const mergedParams = mergeOptions(defaults, userOpts), {enter, leave, toggleClass, animation} = mergedParams, triggerParams = {
       ...mergedParams,
       enter: getPositionNormal(enter),
       leave: getPositionNormal(leave, "tLP"),

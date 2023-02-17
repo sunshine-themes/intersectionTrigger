@@ -1,75 +1,60 @@
 //Import Types
-import type {
-	TriggerConfiguration,
-	DefaultConfiguration,
-	TriggerStates,
-	Root,
-	Position,
-	ToggleClassParams,
-	AnimationParams,
-} from '../constants';
+import type Animation from '../plugins/animation/animation';
+import type ToggleClass from '../plugins/toggleclass/toggleclass';
+import type Guides from '../plugins/guides/guides';
 import type { DeepRequired } from '../utils/types';
-import type { ModifiedDOMRect, PositionsData } from './utils';
-import type Animation from '../plugins/animation';
-import type ToggleClass from '../plugins/toggleclass';
-import type Guides from '../plugins/guides';
+import type {
+	EventHandler,
+	ModifiedDOMRect,
+	IntersectionTriggerOptions,
+	TriggerData,
+	ObserverConfiguration,
+	PositionsData,
+	Root,
+	PluginName,
+	ScrollCallbacks,
+	Trigger,
+	TriggerOptions,
+	Position,
+	Plugin,
+} from './types';
 
 //Import Modules
 import { defaultInsOptions, triggerStates } from '../constants';
 import { mergeOptions, getMinMax } from '../helpers';
-import Utils from './utils';
-
-//Types
-type Trigger = string | HTMLElement | HTMLElement[] | NodeListOf<HTMLElement>;
-type Plugin = { pluginName: PluginName } & (Animation | ToggleClass | Guides);
-type PluginName = 'animation' | 'toggleClass' | 'guides';
-type EventHandler = (event: Event) => void;
-interface TriggerData extends DeepRequired<Omit<TriggerConfiguration, 'enter' | 'leave' | 'toggleClass' | 'animation'>> {
-	enter: number;
-	leave: number;
-	minPosition: number;
-	maxPosition: number;
-	states: TriggerStates;
-	toggleClass?: ToggleClassParams[];
-	animation?: AnimationParams;
-}
-interface ObserverConfiguration {
-	root: Root;
-	rootMargin: string;
-	threshold: number[];
-}
+import Utils from '../utils/utils';
 
 const registeredPlugins: Plugin[] = [];
 const instances: IntersectionTrigger[] = [];
 let instanceID = 0;
 
 class IntersectionTrigger {
+	id: number;
 	observer: IntersectionObserver | undefined;
 	toggleClass: ToggleClass | undefined;
-	customScrollHandler: EventHandler;
+	customScrollHandler!: EventHandler;
 	animation: Animation | undefined;
 	guides: Guides | undefined;
 	axis: string | undefined;
 	name: string | undefined;
 	triggers: HTMLElement[];
-	rootBounds: DOMRectReadOnly | ModifiedDOMRect;
-	readonly id: number;
-	killed: boolean;
+	rootBounds!: DOMRectReadOnly | ModifiedDOMRect;
+	killed!: boolean;
 	_states: { oCbFirstInvoke: boolean; runningScrollCbs: number };
-	_options: DeepRequired<DefaultConfiguration>;
-	_defaultTriggerParams: Omit<TriggerData, 'states'>;
-	_observerConfig: ObserverConfiguration;
+	_options!: DeepRequired<IntersectionTriggerOptions>;
+	_defaultTriggerParams!: Omit<TriggerData, 'states'>;
+	_observerConfig!: ObserverConfiguration;
 	_triggersData: WeakMap<HTMLElement, TriggerData>;
-	_defaultOptions: DefaultConfiguration;
-	_userOptions: DefaultConfiguration;
-	_onResizeHandler: EventHandler;
-	_positionsData: PositionsData;
+	_defaultOptions!: IntersectionTriggerOptions;
+	_userOptions: IntersectionTriggerOptions;
+	_onResizeHandler!: EventHandler;
+	_positionsData!: PositionsData;
 	_utils: Utils | undefined;
-	_isREPGreater: boolean;
-	_threshold: number[];
-	_rootMargin: string;
-	_rAFID: number;
-	_root: Root;
+	_isREPGreater!: boolean;
+	_threshold!: number[];
+	_rootMargin!: string;
+	_rAFID!: number;
+	_root!: Root;
 	static getInstanceById: (id: number) => IntersectionTrigger | undefined;
 	static registerPlugins: (plugins: Plugin[]) => number;
 	static getInstances: () => IntersectionTrigger[];
@@ -77,8 +62,8 @@ class IntersectionTrigger {
 	static update: () => void;
 	static kill: () => void;
 
-	constructor(configuration: DefaultConfiguration = {}) {
-		this._userOptions = configuration;
+	constructor(options?: IntersectionTriggerOptions) {
+		this._userOptions = options || {};
 		this.triggers = [];
 		this._triggersData = new WeakMap();
 		//
@@ -117,12 +102,13 @@ class IntersectionTrigger {
 		this._utils!.getRoot('resize').removeEventListener('resize', this._onResizeHandler, false);
 	}
 
-	_rAFCallback: FrameRequestCallback = (time) => {
+	_rAFCallback: FrameRequestCallback = () => {
 		//Call all onScroll triggers Functions
 		this.triggers.forEach((trigger) => {
 			const onScrollFuns = this._utils!.getTriggerStates(trigger, 'onScroll');
-			for (const key in onScrollFuns) {
-				onScrollFuns[key] && onScrollFuns[key](trigger, time);
+			for (const k in onScrollFuns) {
+				const fnName = k as keyof ScrollCallbacks;
+				onScrollFuns[fnName] && onScrollFuns[fnName]!(trigger);
 			}
 		});
 	};
@@ -152,8 +138,6 @@ class IntersectionTrigger {
 
 			//Getting needed data
 			const { enter, leave } = this._utils!.getTriggerData(trigger);
-			console.log(this._utils!.getTriggerData(trigger));
-
 			const {
 				hasEnteredFromOneSide,
 				onScroll: { backup },
@@ -262,10 +246,10 @@ class IntersectionTrigger {
 		return this;
 	}
 
-	add(trigger: Trigger, configuration?: TriggerConfiguration) {
+	add(trigger: Trigger, options?: TriggerOptions) {
 		const toAddTriggers = this._utils!.parseQuery(trigger),
 			{ defaults } = this._options,
-			userConfig = configuration || {};
+			userOpts = options || {};
 
 		const getPositionNormal = (pos?: Position, name: 'tEP' | 'tLP' = 'tEP') =>
 				!!pos ? this._utils!.setPositionData(pos).normal : this._positionsData[name].normal,
@@ -274,7 +258,7 @@ class IntersectionTrigger {
 				return this[name] as NonNullable<typeof this[N]>;
 			};
 
-		const mergedParams = mergeOptions(defaults as TriggerConfiguration, userConfig),
+		const mergedParams = mergeOptions(defaults as TriggerOptions, userOpts),
 			{ enter, leave, toggleClass, animation } = mergedParams,
 			triggerParams = {
 				...mergedParams,
@@ -384,4 +368,3 @@ IntersectionTrigger.registerPlugins = (plugins = []) => registeredPlugins.push(.
 IntersectionTrigger.getRegisteredPlugins = () => registeredPlugins;
 
 export default IntersectionTrigger;
-export type { Trigger, TriggerData, Plugin, PluginName, EventHandler, TriggerConfiguration };

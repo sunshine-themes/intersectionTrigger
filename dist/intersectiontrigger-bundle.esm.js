@@ -1,5 +1,5 @@
 /*
-* IntersectionTrigger v1.0.4 
+* IntersectionTrigger v1.1.0 
 * IntersectionTrigger utilizes the most modern web technology to trigger anything by intersection. Including scroll-based animations.
 * https://sunshine-themes.com/?appID=ss_app_1
 *
@@ -7,13 +7,13 @@
 * @license: Released under the personal 'no charge' license can be viewed at http://sunshine-themes.com/?appID=ss_app_1&tab=license, Licensees of commercial or business license are granted additional rights. See http://sunshine-themes.com/?appID=ss_app_1&tab=license for details..
 * @author: Sherif Magdy, sherifmagdy@sunshine-themes.com
 *
-* Released on: February 8, 2023
+* Released on: February 17, 2023
 */
 
 import IntersectionTrigger from "./core/core.esm.js";
-import ToggleClass from "./plugins/toggleclass.esm.js";
-import Guides from "./plugins/guides.esm.js";
-import Animation from "./plugins/animation.esm.js";
+import ToggleClass from "./plugins/toggleclass/toggleclass.esm.js";
+import Guides from "./plugins/guides/guides.esm.js";
+import Animation from "./plugins/animation/animation.esm.js";
 const plugins = [
   ToggleClass,
   Guides,

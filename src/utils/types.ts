@@ -11,4 +11,6 @@ type PickDeepRequired<T, P extends string[]> = T extends object
 			}>
 	: T;
 
-export type { DeepRequired, PickDeepRequired };
+type SplitResult<S extends string> = S extends `${infer A} ${infer B} ${infer C} ${infer D}` ? [A, B, C, D] : string[];
+
+export type { DeepRequired, PickDeepRequired, SplitResult };

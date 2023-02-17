@@ -27,6 +27,9 @@
   <a href="https://www.jsdelivr.com/package/npm/intersectiontrigger">
     <img src="https://data.jsdelivr.com/v1/package/npm/intersectiontrigger/badge?style=rounded" alt="jsDelivr Hits"/>
   </a>
+  <a href="https://npmjs.org/package/intersectiontrigger">
+    <img alt="types included" src="https://badgen.net/npm/types/intersectiontrigger" />
+  </a>
   <a href="https://openbase.com/js/intersectiontrigger?utm_source=embedded&amp;utm_medium=badge&amp;utm_campaign=rate-badge"><img src="https://badges.openbase.com/js/rating/intersectiontrigger.svg?token=fKPUe/O+HyTf9vpGcxPEOqx9SD54yG9T0e/Biw7dk3I=" alt="Rate this package"></a>
 </p>
 

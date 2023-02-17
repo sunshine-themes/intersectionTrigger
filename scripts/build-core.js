@@ -1,4 +1,5 @@
 const { config } = require('./build-config');
+const { buildFormats } = require('./utils/utils');
 
-const buildCore = (build) => build(config.core);
+const buildCore = () => buildFormats(config.core);
 module.exports = buildCore;

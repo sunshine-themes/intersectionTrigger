@@ -1,8 +1,6 @@
 import type anime from 'animejs';
-import { Anime, AnimeInstance } from './constants';
-import type { DeepRequired } from './utils/types';
-
-type SplitResult<S extends string> = S extends `${infer A} ${infer B} ${infer C} ${infer D}` ? [A, B, C, D] : string[];
+import type { Anime, AnimeInstance } from './plugins/animation/types';
+import type { SplitResult, DeepRequired } from './utils/types';
 
 const is = {
 	function: (a: unknown): a is Function => 'function' === typeof a,
@@ -48,11 +46,12 @@ const getParents = (element: HTMLElement) => {
 const mergeOptions = <D extends C, C extends object>(defaultOptions: D, customOptions: C) => {
 	const options = { ...defaultOptions } as DeepRequired<D>;
 	for (const [key, value] of Object.entries(customOptions)) {
-		if (is.object(options[key]) && !is.empty(options[key])) {
+		const k = key as keyof D;
+		if (is.object(options[k]) && !is.empty(options[k])) {
 			if (!is.object(value)) continue;
-			options[key] = mergeOptions(options[key], value);
+			options[k] = mergeOptions(options[k], value) as DeepRequired<D>[keyof D];
 		} else {
-			options[key] = value;
+			options[k] = value;
 		}
 	}
 	return options;

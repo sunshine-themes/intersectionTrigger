@@ -1,8 +1,7 @@
 const fs = require('fs-extra');
-const { config } = require('./build-config');
+const { plugins } = require('./build-config');
 const { outputDir } = require('./utils/output-dir');
 const { banner } = require('./utils/banner');
-const { capitalize } = require('./helpers');
 const exec = require('exec-sh').promise;
 
 const entryFileName = 'intersectiontrigger-bundle';
@@ -21,7 +20,10 @@ async function buildEntry(plugins, format, target = 'esnext', isBrowser = false)
 
 	const content = [
 		`import IntersectionTrigger from './core/core${contentFilePath}.js';`,
-		...plugins.map(({ name, capitalized }) => `import ${capitalized} from './plugins/${capitalized.toLowerCase()}${contentFilePath}.js';`),
+		...plugins.map(
+			({ name, capitalized }) =>
+				`import ${capitalized} from './plugins/${capitalized.toLowerCase()}/${capitalized.toLowerCase()}${contentFilePath}.js';`
+		),
 		'const plugins = [',
 		...plugins.map((mod) => `${mod.capitalized},`),
 		']',
@@ -55,14 +57,6 @@ async function buildEntry(plugins, format, target = 'esnext', isBrowser = false)
 }
 
 async function buildBundle() {
-	const plugins = [];
-	config.plugins.forEach((name) => {
-		const capitalized = capitalize(name);
-		const jsFilePath = `./src/plugins/${capitalized.toLowerCase()}.ts`;
-		if (fs.existsSync(jsFilePath)) {
-			plugins.push({ name, capitalized });
-		}
-	});
 	await buildEntry(plugins, 'esm');
 	await buildEntry(plugins, 'esm', 'es5', true);
 	await buildEntry(plugins, 'iife', 'es5', true);

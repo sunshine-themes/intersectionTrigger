@@ -1,18 +1,13 @@
-const { existsSync } = require('fs-extra');
-const { config } = require('./build-config');
-const { capitalize } = require('./helpers');
+const { plugins } = require('./build-config');
+const { buildFormats } = require('./utils/utils');
 
-const buildPlugins = (buildAll) => {
-	const plugins = [];
-	config.plugins.forEach((name) => {
-		const capitalized = capitalize(name);
-		const jsFilePath = `./src/plugins/${capitalized.toLowerCase()}.ts`;
-		if (existsSync(jsFilePath)) {
-			plugins.push({ name, capitalized });
-		}
-	});
-
-	plugins.forEach(({ name, capitalized }) => buildAll({ path: `plugins/${capitalized.toLowerCase()}`, name: capitalized.toLowerCase() }));
+const buildPlugins = () => {
+	plugins.forEach(({ capitalized }) =>
+		buildFormats({
+			entryPath: `plugins/${capitalized.toLowerCase()}/${capitalized.toLowerCase()}`,
+			name: capitalized.toLowerCase(),
+		})
+	);
 };
 
 module.exports = buildPlugins;
