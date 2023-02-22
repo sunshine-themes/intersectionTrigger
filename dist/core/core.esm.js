@@ -1,5 +1,5 @@
 /*
-* IntersectionTrigger v1.1.0 
+* IntersectionTrigger v1.1.1 
 * IntersectionTrigger utilizes the most modern web technology to trigger anything by intersection. Including scroll-based animations.
 * https://sunshine-themes.com/?appID=ss_app_1
 *
@@ -7,7 +7,7 @@
 * @license: Released under the personal 'no charge' license can be viewed at http://sunshine-themes.com/?appID=ss_app_1&tab=license, Licensees of commercial or business license are granted additional rights. See http://sunshine-themes.com/?appID=ss_app_1&tab=license for details..
 * @author: Sherif Magdy, sherifmagdy@sunshine-themes.com
 *
-* Released on: February 17, 2023
+* Released on: February 22, 2023
 */
 
 // src/constants.ts
@@ -68,6 +68,16 @@ var roundFloat = (value, precision) => {
   is.string(value) && (value = parseFloat(value));
   const multiplier = Math.pow(10, precision || 0);
   return Math.round(value * multiplier) / multiplier;
+};
+var deepClone = (obj) => {
+  if (!is.object(obj) && !is.array(obj) || is.animeInstance(obj) || obj instanceof Element)
+    return obj;
+  let clone = is.array(obj) ? [] : {};
+  for (let k in obj) {
+    if (obj.hasOwnProperty(k))
+      clone[k] = deepClone(obj[k]);
+  }
+  return clone;
 };
 var mergeOptions = (defaultOptions, customOptions) => {
   const options = {...defaultOptions};
@@ -531,7 +541,7 @@ var IntersectionTrigger = class {
       leave: getPositionNormal(leave, "tLP"),
       toggleClass: toggleClass ? getPlugin("toggleClass").parse(toggleClass) : void 0,
       animation: animation ? getPlugin("animation").parse(animation) : void 0,
-      states: {...triggerStates}
+      states: triggerStates
     };
     const [minPosition, maxPosition] = getMinMax(triggerParams.enter, triggerParams.leave);
     triggerParams.minPosition = minPosition;
@@ -540,11 +550,11 @@ var IntersectionTrigger = class {
     let mustUpdate = false;
     [triggerParams.enter, triggerParams.leave].forEach((normalizedPos) => !this._threshold.some((value) => normalizedPos === value) && (mustUpdate = true));
     if (mustUpdate) {
-      toAddTriggers.forEach((trigger2) => this._utils.setTriggerData(trigger2, triggerParams));
+      toAddTriggers.forEach((trigger2) => this._utils.setTriggerData(trigger2, deepClone(triggerParams)));
       this.update();
     } else {
       toAddTriggers.forEach((trigger2) => {
-        this._utils.setTriggerData(trigger2, triggerParams);
+        this._utils.setTriggerData(trigger2, deepClone(triggerParams));
         this.observer.observe(trigger2);
       });
     }

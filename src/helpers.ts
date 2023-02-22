@@ -43,6 +43,18 @@ const getParents = (element: HTMLElement) => {
 	return parents;
 };
 
+const deepClone = <T>(obj: T) => {
+	if ((!is.object(obj) && !is.array(obj)) || is.animeInstance(obj) || obj instanceof Element) return obj;
+
+	let clone = (is.array(obj) ? [] : {}) as T;
+
+	for (let k in obj) {
+		if (obj.hasOwnProperty(k)) clone[k] = deepClone(obj[k]);
+	}
+
+	return clone;
+};
+
 const mergeOptions = <D extends C, C extends object>(defaultOptions: D, customOptions: C) => {
 	const options = { ...defaultOptions } as DeepRequired<D>;
 	for (const [key, value] of Object.entries(customOptions)) {
@@ -101,4 +113,5 @@ export {
 	getMinMax,
 	setElProps,
 	getScrollBarWidth,
+	deepClone,
 };

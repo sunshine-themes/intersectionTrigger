@@ -21,7 +21,7 @@ import type {
 
 //Import Modules
 import { defaultInsOptions, triggerStates } from '../constants';
-import { mergeOptions, getMinMax } from '../helpers';
+import { mergeOptions, getMinMax, deepClone } from '../helpers';
 import Utils from '../utils/utils';
 
 const registeredPlugins: Plugin[] = [];
@@ -266,7 +266,7 @@ class IntersectionTrigger {
 				leave: getPositionNormal(leave, 'tLP'),
 				toggleClass: toggleClass ? getPlugin('toggleClass').parse(toggleClass) : undefined,
 				animation: animation ? getPlugin('animation').parse(animation) : undefined,
-				states: { ...triggerStates },
+				states: triggerStates,
 			} as TriggerData;
 
 		const [minPosition, maxPosition] = getMinMax(triggerParams.enter, triggerParams.leave);
@@ -283,11 +283,11 @@ class IntersectionTrigger {
 
 		if (mustUpdate) {
 			//set new triggers data
-			toAddTriggers.forEach((trigger) => this._utils!.setTriggerData(trigger, triggerParams));
+			toAddTriggers.forEach((trigger) => this._utils!.setTriggerData(trigger, deepClone(triggerParams)));
 			this.update();
 		} else {
 			toAddTriggers.forEach((trigger) => {
-				this._utils!.setTriggerData(trigger, triggerParams);
+				this._utils!.setTriggerData(trigger, deepClone(triggerParams));
 				this.observer!.observe(trigger);
 			});
 		}
