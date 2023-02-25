@@ -11,12 +11,15 @@ import type {
 	ScrollCallbacks,
 	ModifiedDOMRect,
 	ToggleActions,
+	EventParams,
 } from '../core/types.js';
 
 import { getBoundsProp, getScrollValue, is, parseString, parseValue, roundFloat, throwError } from '../helpers.js';
 
 export default class Utils {
 	_it: IntersectionTrigger | undefined;
+	tD: WeakMap<HTMLElement, TriggerData>;
+	states: { oCbFirstInvoke: boolean; runningScrollCbs: number };
 	isVertical!: () => boolean;
 	getRoot!: {
 		(): Exclude<Root, null>;
@@ -41,14 +44,9 @@ export default class Utils {
 		(trigger: HTMLElement, value: TriggerData): void;
 		(trigger: HTMLElement, value: Partial<TriggerData>, isPartial: boolean): void;
 	};
-	getTriggerStates!: {
-		(trigger: HTMLElement): Required<TriggerStates>;
-		<K extends keyof TriggerStates>(trigger: HTMLElement, prop: K): TriggerStates[K];
-	};
 	setTriggerStates!: (trigger: HTMLElement, value: Partial<TriggerStates>) => void;
 	setTriggerScrollStates!: <P extends keyof ScrollCallbacks>(trigger: HTMLElement, prop: P, value?: ScrollCallbacks[P]) => void;
-	onTriggerEnter!: (trigger: HTMLElement, event?: string) => void;
-	onTriggerLeave!: (trigger: HTMLElement, event?: string) => void;
+	triggerEvent!: (trigger: HTMLElement, eventParams: EventParams) => void;
 	getPositions!: (
 		tB: DOMRect | ModifiedDOMRect,
 		rB: DOMRect | ModifiedDOMRect,
@@ -61,6 +59,8 @@ export default class Utils {
 
 	constructor(intersectionTrigger: IntersectionTrigger) {
 		this._it = intersectionTrigger;
+		this.tD = this._it!._triggersData;
+		this.states = this._it!._states;
 
 		this.setUtils();
 		return this;
@@ -163,125 +163,81 @@ export default class Utils {
 		};
 
 		//Trigger Data actions
-		this.deleteTriggerData = (trigger) => {
-			//Reset data of a trigger
-			this._it!._triggersData.delete(trigger);
-		};
-		this.hasTriggerData = (trigger, prop) => {
-			const hasData = this._it!._triggersData.has(trigger);
-			if (prop) return hasData && prop in this.getTriggerData(trigger);
-			return hasData;
-		};
+		this.deleteTriggerData = (trigger) => this.tD.delete(trigger);
 		this.getTriggerData = <K extends keyof TriggerData>(trigger: HTMLElement, prop?: K) => {
-			if (prop)
-				//Get data property of a trigger
-				return this.hasTriggerData(trigger, prop) ? this._it!._triggersData.get(trigger)![prop] : {};
-
-			//Get data of a trigger
-			return (this.hasTriggerData(trigger) && this._it!._triggersData.get(trigger)) || {};
+			const triggerData = this.tD.get(trigger) || ({} as TriggerData);
+			if (prop) return triggerData[prop];
+			return triggerData;
 		};
 		this.setTriggerData = (trigger: HTMLElement, value: TriggerData | Partial<TriggerData>, isPartial?: boolean) => {
-			if (isPartial) {
-				//Set data property of a trigger
-				const storedValue = this.getTriggerData(trigger);
-				if ('enter' in storedValue) this._it!._triggersData.set(trigger, { ...storedValue, ...value });
-				return;
-			}
-			//Set data of a trigger
-			this._it!._triggersData.set(trigger, value as TriggerData);
-		};
-		this.getTriggerStates = <K extends keyof TriggerStates>(trigger: HTMLElement, prop?: K) => {
-			const triggerStates = this.getTriggerData(trigger, 'states');
-
-			if (prop) return triggerStates[prop]; //Get a property of a trigger states
-
-			return {
-				...triggerStates,
-				hasEnteredFromOneSide: triggerStates.hasEntered || triggerStates.hasEnteredBack,
-			};
+			const storedValue = this.getTriggerData(trigger);
+			const newValue = isPartial ? { ...storedValue, ...value } : value;
+			this.tD.set(trigger, newValue as TriggerData);
 		};
 		this.setTriggerStates = (trigger, value) => {
-			const triggerData = this.getTriggerData(trigger);
-			const triggerStates = triggerData && { ...triggerData.states, ...value };
-
-			this.setTriggerData(trigger, { states: triggerStates }, true);
+			const triggerStates = this.getTriggerData(trigger, 'states');
+			this.setTriggerData(trigger, { states: { ...triggerStates, ...value } }, true);
 		};
 		this.setTriggerScrollStates = (trigger, prop, value) => {
-			const triggerScrollStates = this.getTriggerStates(trigger, 'onScroll');
+			const triggerScrollStates = this.getTriggerData(trigger, 'states').onScroll;
 			triggerScrollStates[prop] = value;
 
-			this.setTriggerStates(trigger, { onScroll: { ...triggerScrollStates } });
+			this.setTriggerStates(trigger, { onScroll: triggerScrollStates });
 
 			//Update
 			if (value) {
-				if (0 === this._it!._states.runningScrollCbs) this._it!.addScrollListener(this._it!._onScrollHandler);
-				this._it!._states.runningScrollCbs++;
+				if (0 === this.states.runningScrollCbs) this._it!.addScrollListener(this._it!._onScrollHandler);
+				this.states.runningScrollCbs++;
 				return;
 			}
 
-			if (0 < this._it!._states.runningScrollCbs) this._it!._states.runningScrollCbs--;
-			if (0 === this._it!._states.runningScrollCbs) this._it!.removeScrollListener(this._it!._onScrollHandler);
+			if (0 < this.states.runningScrollCbs) this.states.runningScrollCbs--;
+			if (0 === this.states.runningScrollCbs) this._it!.removeScrollListener(this._it!._onScrollHandler);
 		};
 		//
-		this.onTriggerEnter = (trigger, event = 'Enter') => {
+		this.triggerEvent = (trigger, [name, callback, enterState, leaveState, index]) => {
 			//Get Stored trigger data
-			const { hasEnteredOnce } = this.getTriggerStates(trigger);
-			const { onEnter, onEnterBack, toggleClass, animation } = this.getTriggerData(trigger);
-			//
-			const isEnterEvent = 'Enter' === event;
-			const data = {
-				callback: isEnterEvent ? onEnter : onEnterBack,
-				enterProp: isEnterEvent ? 'hasEntered' : 'hasEnteredBack',
-				leaveProp: isEnterEvent ? 'hasLeftBack' : 'hasLeft',
-				eventIndex: isEnterEvent ? 0 : 2,
-			};
+			const {
+				once,
+				toggleClass,
+				animation,
+				states: { hasEnteredOnce },
+			} = this.getTriggerData(trigger);
 
-			//Invoke Enter Functions
-			data.callback(trigger, this._it as IntersectionTrigger);
-			if (this._it!.killed) return this.kill(); //Located after the callback to make sure that the IntersectionTrigger instance not killed, because the instance is parameter of it.
+			callback(trigger, this._it as IntersectionTrigger); //Invoke Callback
 
-			toggleClass && this._it!.toggleClass!.toggle(trigger, toggleClass, data.eventIndex);
-			animation && this._it!.animation!.animate(trigger, animation, data.eventIndex);
+			if (this._it!.killed) return this.kill(); //Located after the callback to make sure that the IntersectionTrigger instance not killed while executing.
 
-			const triggerProps = hasEnteredOnce
-				? {
-						[data.enterProp]: true,
-						[data.leaveProp]: false,
-				  }
-				: { [data.enterProp]: true, hasLeft: false, hasLeftBack: false };
+			toggleClass && this._it!.toggleClass!.toggle(trigger, toggleClass, index);
+			animation && this._it!.animation!.animate(trigger, animation, index);
+
+			const isEnterEvent = 'Enter' === name || 'EnterBack' === name;
+
+			let triggerStates = {} as Partial<TriggerStates>;
+			if (isEnterEvent) {
+				triggerStates = {
+					[enterState as keyof TriggerStates]: true,
+					[leaveState]: false,
+				};
+
+				if (!hasEnteredOnce)
+					triggerStates = { [enterState as keyof TriggerStates]: true, hasLeft: false, hasLeftBack: false, hasEnteredOnce: true };
+			} else {
+				//Remove the instance if 'once' is true
+				if (once && hasEnteredOnce) {
+					this._it!.remove(trigger);
+					return;
+				}
+
+				triggerStates = {
+					[leaveState]: true,
+					hasEntered: false,
+					hasEnteredBack: false,
+				};
+			}
 
 			//Reset trigger data props
-			this.setTriggerStates(trigger, triggerProps);
-			//Reset hasEnteredOnce state
-			if (!hasEnteredOnce) this.setTriggerStates(trigger, { hasEnteredOnce: true });
-		};
-		this.onTriggerLeave = (trigger, event = 'Leave') => {
-			//Get Stored trigger data
-			const { once } = this.getTriggerData(trigger);
-			const { hasEnteredOnce } = this.getTriggerStates(trigger);
-			const { onLeave, onLeaveBack, toggleClass, animation } = this.getTriggerData(trigger);
-			//
-			const isLeaveEvent = 'Leave' === event;
-			const data = {
-				callback: isLeaveEvent ? onLeave : onLeaveBack,
-				leaveProp: isLeaveEvent ? 'hasLeft' : 'hasLeftBack',
-				eventIndex: isLeaveEvent ? 1 : 3,
-			};
-			//Invoke leave functions
-			data.callback(trigger, this._it as IntersectionTrigger);
-			if (this._it!.killed) return this.kill(); //Located after the callback to make sure that the IntersectionTrigger instance not killed, because the instance is a parameter of it.
-
-			toggleClass && this._it!.toggleClass!.toggle(trigger, toggleClass, data.eventIndex);
-			animation && this._it!.animation!.animate(trigger, animation, data.eventIndex);
-
-			//Reset trigger data props
-			this.setTriggerStates(trigger, {
-				[data.leaveProp]: true,
-				hasEntered: false,
-				hasEnteredBack: false,
-			});
-			//Remove the instance if once is true
-			once && hasEnteredOnce && this._it!.remove(trigger);
+			this.setTriggerStates(trigger, triggerStates);
 		};
 
 		this.getPositions = (tB, rB, { enter, leave, ref, refOpposite, length }) => {
@@ -295,32 +251,39 @@ export default class Utils {
 		};
 
 		this.toggleActions = (trigger) => {
+			const {
+				enter,
+				leave,
+				onEnter,
+				onLeave,
+				onEnterBack,
+				onLeaveBack,
+				states: { hasEntered, hasEnteredBack, hasLeft, hasLeftBack, hasEnteredOnce },
+			} = this.getTriggerData(trigger);
 			const tB = trigger.getBoundingClientRect(); //trigger Bounds
-			this._it!.rootBounds = this.getRootRect(this._it!.observer!.rootMargin);
-			const rB = this._it!.rootBounds; //root Bounds
-
-			const { hasEnteredFromOneSide, hasLeft, hasLeftBack, hasEnteredOnce } = this.getTriggerStates(trigger);
-			const { enter, leave } = this.getTriggerData(trigger);
+			const rB = (this._it!.rootBounds = this.getRootRect(this._it!.observer!.rootMargin)); //root Bounds
 			const { ref, refOpposite, length } = this.dirProps();
 			const [tEP, tLP, rEP, rLP] = this.getPositions(tB, rB, { enter, leave, ref, refOpposite, length });
-			let hasCaseMet = true;
+
+			let hasCaseMet = true,
+				hasEnteredFromOneSide = hasEntered || hasEnteredBack;
 
 			switch (true) {
 				case hasLeftBack && rEP > tEP:
 					//Enter case
-					this.onTriggerEnter(trigger);
+					this.triggerEvent(trigger, ['Enter', onEnter, 'hasEntered', 'hasLeftBack', 0]);
 					break;
 				case hasEnteredFromOneSide && rLP > tLP:
 					//Leave case
-					this.onTriggerLeave(trigger);
+					this.triggerEvent(trigger, ['Leave', onLeave, null, 'hasLeft', 1]);
 					break;
 				case hasLeft && hasEnteredOnce && rLP < tLP:
 					//EnterBack case
-					this.onTriggerEnter(trigger, 'EnterBack');
+					this.triggerEvent(trigger, ['EnterBack', onEnterBack, 'hasEnteredBack', 'hasLeft', 2]);
 					break;
 				case hasEnteredFromOneSide && rEP < tEP:
 					//LeaveBack case
-					this.onTriggerLeave(trigger, 'hasLeftBack');
+					this.triggerEvent(trigger, ['LeaveBack', onLeaveBack, null, 'hasLeftBack', 3]);
 					break;
 				default:
 					hasCaseMet = false;

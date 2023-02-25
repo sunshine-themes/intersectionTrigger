@@ -1,5 +1,5 @@
 /*
-* IntersectionTrigger v1.1.1 
+* IntersectionTrigger v1.1.2 
 * IntersectionTrigger utilizes the most modern web technology to trigger anything by intersection. Including scroll-based animations.
 * https://sunshine-themes.com/?appID=ss_app_1
 *
@@ -7,7 +7,7 @@
 * @license: Released under the personal 'no charge' license can be viewed at http://sunshine-themes.com/?appID=ss_app_1&tab=license, Licensees of commercial or business license are granted additional rights. See http://sunshine-themes.com/?appID=ss_app_1&tab=license for details..
 * @author: Sherif Magdy, sherifmagdy@sunshine-themes.com
 *
-* Released on: February 22, 2023
+* Released on: February 25, 2023
 */
 
 var __defProp = Object.defineProperty;
@@ -181,15 +181,10 @@ var Animation = class {
     this.animateHandler = (trigger, {enter, leave, tIL, instance, snap, step, link}) => {
       if (this.killed)
         return;
-      const tB = trigger.getBoundingClientRect();
-      const ids = this._utils.getTriggerStates(trigger, "ids");
-      this._it.rootBounds = this._utils.getRootRect(this._it.observer.rootMargin);
-      const rB = this._it.rootBounds;
-      const scrollLength = tIL + (this._it._isREPGreater ? rB[length] : -rB[length]);
-      const duration = instance.duration;
-      let seekTo = 0;
+      const tB = trigger.getBoundingClientRect(), ids = this._utils.getTriggerData(trigger, "states").ids, rB = this._it.rootBounds = this._utils.getRootRect(this._it.observer.rootMargin), scrollLength = tIL + (this._it._isREPGreater ? rB[length] : -rB[length]), duration = instance.duration;
       const pos = this._utils.getPositions(tB, rB, {enter, leave, ref, refOpposite, length});
       const diff = pos[2] - pos[0];
+      let seekTo = 0;
       if (diff > 0) {
         seekTo = duration * diff / scrollLength;
         this.seek(instance, seekTo, link);
@@ -215,9 +210,16 @@ var Animation = class {
   animate(trigger, animation, eventIndex) {
     const {instance, toggleActions, link, snap} = animation;
     if (link) {
-      const {animate} = this._utils.getTriggerStates(trigger, "onScroll");
-      const ids = this._utils.getTriggerStates(trigger, "ids");
-      const {enter, leave, minPosition, maxPosition} = this._utils.getTriggerData(trigger);
+      const {
+        enter,
+        leave,
+        minPosition,
+        maxPosition,
+        states: {
+          onScroll: {animate},
+          ids
+        }
+      } = this._utils.getTriggerData(trigger);
       const tIL = this.getTIL(trigger, minPosition, maxPosition);
       const step = this.getSnapStep(snap);
       const animateData = {enter, leave, tIL, instance, snap, link: is.boolean(link) ? link : Math.abs(link), step};
@@ -308,7 +310,7 @@ var Animation = class {
       let {enter, leave, minPosition, maxPosition, animation} = this._utils.getTriggerData(trigger);
       animation = animation && this.parse(animation, true);
       this._utils.setTriggerData(trigger, {animation}, true);
-      const {animate} = this._utils.getTriggerStates(trigger, "onScroll");
+      const {animate} = this._utils.getTriggerData(trigger, "states").onScroll;
       if (animate && !!animation) {
         const {instance, snap, link} = animation;
         const tIL = this.getTIL(trigger, minPosition, maxPosition);

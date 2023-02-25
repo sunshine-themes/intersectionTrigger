@@ -71,11 +71,11 @@ class Guides {
 		const createText = () => {
 			let verticalAlignment = {
 				dir: this.isVer ? (isHigherValue ? 'bottom' : 'top') : 'bottom',
-				value: this.isVer ? '5px' : '25px',
+				value: this.isVer ? '5px' : '15px',
 			};
 			let horizontalAlignment = {
 				dir: this.isVer ? 'right' : isHigherValue ? 'right' : 'left',
-				value: this.isVer ? (triggerEl ? '0px' : !this._it!._root ? '25px' : '0px') : '5px',
+				value: this.isVer ? (triggerEl ? '0px' : !this._it!._root ? '15px' : '0px') : '5px',
 			};
 
 			const textElement = document.createElement('span');
@@ -160,10 +160,10 @@ class Guides {
 		//Root Guide
 		if (!triggerEl) {
 			setElProps(guide, {
-				[this.isVer ? 'width' : 'height']: !this._it!._root ? (this.isVer ? '100vw' : '100vh') : '100px',
+				[this.isVer ? 'width' : 'height']: !this._it!._root ? '100%' : '100px',
 				position: !this._it!._root ? 'fixed' : 'absolute',
 			});
-			!this._it!._root && !this.isVer && setElProps(guide, { top: '0px' });
+			!this._it!._root && setElProps(guide, { [this.isVer ? 'right' : 'top']: '0px' });
 
 			//the root is not the viewport and it is an element
 			if (this._it!._root) positionGuide();

@@ -17,6 +17,7 @@ import type {
 	TriggerOptions,
 	Position,
 	Plugin,
+	EventParams,
 } from './types';
 
 //Import Modules
@@ -67,8 +68,6 @@ class IntersectionTrigger {
 		this.triggers = [];
 		this._triggersData = new WeakMap();
 		//
-		this._utils = new Utils(this);
-		//
 		this.id = instanceID;
 		instanceID++;
 		instances.push(this);
@@ -81,6 +80,8 @@ class IntersectionTrigger {
 			oCbFirstInvoke: true, //observer callback first call
 			runningScrollCbs: 0, //Running scroll functions
 		};
+		//
+		this._utils = new Utils(this);
 		//
 		this._setInstance();
 	}
@@ -105,7 +106,7 @@ class IntersectionTrigger {
 	_rAFCallback: FrameRequestCallback = () => {
 		//Call all onScroll triggers Functions
 		this.triggers.forEach((trigger) => {
-			const onScrollFuns = this._utils!.getTriggerStates(trigger, 'onScroll');
+			const onScrollFuns = this._utils!.getTriggerData(trigger, 'states').onScroll;
 			for (const k in onScrollFuns) {
 				const fnName = k as keyof ScrollCallbacks;
 				onScrollFuns[fnName] && onScrollFuns[fnName]!(trigger);
@@ -132,53 +133,56 @@ class IntersectionTrigger {
 			// intersectionRatio = entry.intersectionRatio;
 
 			//Root Data
-			this.rootBounds = entry.rootBounds || this._utils!.getRootRect(observer.rootMargin);
-			const rB = this.rootBounds, //root Bounds;
+			const rB = (this.rootBounds = entry.rootBounds || this._utils!.getRootRect(observer.rootMargin)), //root Bounds
 				rL = rB[length];
 
 			//Getting needed data
-			const { enter, leave } = this._utils!.getTriggerData(trigger);
 			const {
-				hasEnteredFromOneSide,
-				onScroll: { backup },
-			} = this._utils!.getTriggerStates(trigger);
+				enter,
+				leave,
+				onEnter,
+				onLeave,
+				onLeaveBack,
+				states: {
+					hasEntered,
+					hasEnteredBack,
+					onScroll: { backup },
+				},
+			} = this._utils!.getTriggerData(trigger);
 			const [tEP, tLP, rEP, rLP] = this._utils!.getPositions(tB, rB, { enter, leave, ref, refOpposite, length });
 
 			//States
 			const initBackupFun = tB[length] >= rL,
-				isBackupFunRunning = !!backup;
+				isBackupFunRunning = !!backup,
+				hasEnteredFromOneSide = hasEntered || hasEnteredBack,
+				enterEventParams: EventParams = ['Enter', onEnter, 'hasEntered', 'hasLeftBack', 0],
+				leaveEventParams: EventParams = ['Leave', onLeave, null, 'hasLeft', 1];
+
+			//Event Handler
+			const onEnterLeave = () => {
+				this._utils!.triggerEvent(trigger, enterEventParams);
+				this._utils!.triggerEvent(trigger, leaveEventParams);
+			};
 
 			switch (true) {
 				case this._states.oCbFirstInvoke:
-					switch (true) {
-						case !isIntersecting && rLP > tLP:
-							this._utils!.onTriggerEnter(trigger);
-							this._utils!.onTriggerLeave(trigger);
-							break;
-						case isIntersecting:
-							switch (true) {
-								case rEP > tEP && rLP < tLP:
-									this._utils!.onTriggerEnter(trigger);
-									break;
-								case rLP > tLP:
-									this._utils!.onTriggerEnter(trigger);
-									this._utils!.onTriggerLeave(trigger);
-									break;
-							}
-							if (initBackupFun) this._utils!.setTriggerScrollStates(trigger, 'backup', this._utils!.toggleActions);
-							break;
+					if ((!isIntersecting && rLP > tLP) || (isIntersecting && rLP > tLP)) {
+						onEnterLeave();
+					} else if (isIntersecting && rEP > tEP && rLP < tLP) {
+						this._utils!.triggerEvent(trigger, enterEventParams);
 					}
+
+					if (isIntersecting && initBackupFun) this._utils!.setTriggerScrollStates(trigger, 'backup', this._utils!.toggleActions);
 					break;
 				case !isIntersecting:
 					if (isBackupFunRunning) this._utils!.setTriggerScrollStates(trigger, 'backup');
 
-					switch (true) {
-						case hasEnteredFromOneSide && rLP > tLP:
-							this._utils!.onTriggerLeave(trigger);
-							break;
-						case hasEnteredFromOneSide && rEP < tEP:
-							this._utils!.onTriggerLeave(trigger, 'onLeaveBack');
-							break;
+					if (hasEnteredFromOneSide) {
+						if (rLP > tLP) {
+							this._utils!.triggerEvent(trigger, leaveEventParams);
+						} else if (rEP < tEP) {
+							this._utils!.triggerEvent(trigger, ['LeaveBack', onLeaveBack, null, 'hasLeftBack', 3]);
+						}
 					}
 					break;
 				case isIntersecting && !isBackupFunRunning:
@@ -192,10 +196,8 @@ class IntersectionTrigger {
 	};
 
 	_createInstance() {
-		//Create root margin
-		this._rootMargin = this._utils!.setRootMargin(this._positionsData.rEP, this._positionsData.rLP);
-		//Create observer threshold
-		this._threshold = this._utils!.setThreshold();
+		this._rootMargin = this._utils!.setRootMargin(this._positionsData.rEP, this._positionsData.rLP); //Create root margin
+		this._threshold = this._utils!.setThreshold(); //Create observer threshold
 
 		this.observer = new IntersectionObserver(this._observerCallback, {
 			root: this._root,

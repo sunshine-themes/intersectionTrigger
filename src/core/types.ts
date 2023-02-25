@@ -12,6 +12,13 @@ type Root = HTMLElement | null;
 type Plugin = { pluginName: PluginName } & (Animation | ToggleClass | Guides);
 type PluginName = 'animation' | 'toggleClass' | 'guides';
 type EventHandler = (event: Event) => void;
+type EventParams = [
+	'Enter' | 'EnterBack' | 'Leave' | 'LeaveBack',
+	ItCallbackFunction,
+	keyof TriggerStates | null,
+	keyof TriggerStates,
+	number
+];
 type ModifiedDOMRect = Omit<DOMRect, 'x' | 'y' | 'toJSON'>;
 type PositionsData = {
 	tEP: PositionData;
@@ -77,7 +84,6 @@ interface TriggerStates {
 	hasLeft: boolean;
 	hasLeftBack: boolean;
 	hasEnteredOnce: boolean;
-	hasEnteredFromOneSide?: boolean;
 	onScroll: ScrollCallbacks;
 	ids: { snapTimeOutId: number };
 }
@@ -101,4 +107,5 @@ export type {
 	Position,
 	ScrollCallbacks,
 	ObserverConfiguration,
+	EventParams,
 };
