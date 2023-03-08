@@ -1,29 +1,50 @@
 {
+	"root": true,
 	"env": {
 		"browser": true,
 		"node": true,
-		"es2022": true
+		"es2022": true,
+		"jest": true
 	},
-	"extends": ["eslint:recommended", "plugin:import/errors", "plugin:import/warnings"],
-	"parser": "@babel/eslint-parser",
+	"parser": "@typescript-eslint/parser",
 	"parserOptions": {
+		"project": "./tsconfig.json",
 		"ecmaVersion": "latest",
-		"sourceType": "module",
-		"requireConfigFile": false
+		"sourceType": "module"
 	},
-	"plugins": ["@babel/eslint-plugin", "import"],
+	"plugins": ["@typescript-eslint", "import", "prettier", "jest"],
+	"extends": [
+		"eslint:recommended",
+		"plugin:@typescript-eslint/eslint-recommended",
+		"plugin:@typescript-eslint/recommended",
+		"plugin:import/errors",
+		"plugin:import/warnings",
+		"plugin:jest/recommended",
+		"prettier"
+	],
 	"rules": {
-		"no-unused-vars": "warn",
-		"no-extra-boolean-cast": "warn",
 		"new-cap": "error",
 		"no-invalid-this": "error",
 		"no-unused-expressions": "off",
+		"no-empty-function": "off",
 		"react/prop-types": "off",
 		"import/no-unresolved": "off",
 		"import/namespace": "warn",
 		"import/named": "warn",
 		"no-prototype-builtins": "warn",
-		"no-mixed-spaces-and-tabs": "off"
+		"no-mixed-spaces-and-tabs": "off",
+		"@typescript-eslint/ban-ts-comment": "warn",
+		"@typescript-eslint/no-non-null-assertion": "off",
+		"@typescript-eslint/no-empty-function": "warn",
+		"@typescript-eslint/explicit-module-boundary-types": "off",
+		"prettier/prettier": [
+			"error",
+			{
+				"endOfLine": "auto"
+			}
+		],
+		"arrow-body-style": "off",
+		"prefer-arrow-callback": "off"
 	},
 	"globals": {},
 	"overrides": []
