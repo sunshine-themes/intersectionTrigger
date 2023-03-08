@@ -1,4 +1,7 @@
-test
-node_modules
-package-lock.json
-.vscode
+/.github
+/.vscode
+/coverage
+/dist
+/test/assets
+/test/visual
+/node_modules
