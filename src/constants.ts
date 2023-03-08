@@ -18,7 +18,7 @@ const defaultInsOptions: IntersectionTriggerOptions = {
 		onEnterBack: fn,
 		onLeaveBack: fn,
 		toggleClass: undefined,
-		animation: undefined,
+		animation: undefined
 	},
 	rootEnter: '100%',
 	rootLeave: '0%',
@@ -26,20 +26,20 @@ const defaultInsOptions: IntersectionTriggerOptions = {
 	name: '',
 	root: null,
 	guides: false,
-	onScroll: fn,
+	onScroll: fn
 };
 
 const defaultToggleClassConfig: ToggleClassOptions = {
 	targets: [],
 	toggleActions: 'add remove add remove',
-	classNames: '',
+	classNames: ''
 };
 
 const defaultAnimationConfig: AnimationOptions = {
 	instance: {} as Anime<AnimeInstance>,
 	toggleActions: 'play complete reverse complete',
 	link: false,
-	snap: false,
+	snap: false
 };
 
 const triggerStates: TriggerStates = {
@@ -49,7 +49,7 @@ const triggerStates: TriggerStates = {
 	hasLeftBack: true,
 	hasEnteredOnce: false,
 	onScroll: { backup: undefined, animate: undefined },
-	ids: { snapTimeOutId: 0 },
+	ids: { snapTimeOutId: 0 }
 };
 
 const guideDefaultConfig: GuidesOptions = {
@@ -57,26 +57,26 @@ const guideDefaultConfig: GuidesOptions = {
 		trigger: {
 			backgroundColor: 'rgb(0, 149, 0)',
 			color: '#000',
-			text: 'Enter',
+			text: 'Enter'
 		},
 		root: {
 			backgroundColor: 'rgb(0, 149, 0)',
 			color: '#000',
-			text: 'Root Enter',
-		},
+			text: 'Root Enter'
+		}
 	},
 	leave: {
 		trigger: {
 			backgroundColor: '#ff0000',
 			color: '#000',
-			text: 'Leave',
+			text: 'Leave'
 		},
 		root: {
 			backgroundColor: '#ff0000',
 			color: '#000',
-			text: 'Root Leave',
-		},
-	},
+			text: 'Root Leave'
+		}
+	}
 };
 
 export { defaultInsOptions, triggerStates, guideDefaultConfig, defaultAnimationConfig, defaultToggleClassConfig, snapDefaultConfig };

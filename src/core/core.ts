@@ -17,7 +17,7 @@ import type {
 	TriggerOptions,
 	Position,
 	Plugin,
-	EventParams,
+	EventParams
 } from './types';
 
 //Import Modules
@@ -78,7 +78,7 @@ class IntersectionTrigger {
 		//
 		this._states = {
 			oCbFirstInvoke: true, //observer callback first call
-			runningScrollCbs: 0, //Running scroll functions
+			runningScrollCbs: 0 //Running scroll functions
 		};
 		//
 		this._utils = new Utils(this);
@@ -88,7 +88,7 @@ class IntersectionTrigger {
 
 	_setPlugin(pluginName: PluginName) {
 		const plugins = IntersectionTrigger.getRegisteredPlugins();
-		const Plugin = plugins.find((plg) => pluginName === plg.pluginName);
+		const Plugin = plugins.find(plg => pluginName === plg.pluginName);
 		// @ts-ignore
 		Plugin && (this[pluginName] = new Plugin(this));
 	}
@@ -105,7 +105,7 @@ class IntersectionTrigger {
 
 	_rAFCallback: FrameRequestCallback = () => {
 		//Call all onScroll triggers Functions
-		this.triggers.forEach((trigger) => {
+		this.triggers.forEach(trigger => {
 			const onScrollFuns = this._utils!.getTriggerData(trigger, 'states').onScroll;
 			for (const k in onScrollFuns) {
 				const fnName = k as keyof ScrollCallbacks;
@@ -146,8 +146,8 @@ class IntersectionTrigger {
 				states: {
 					hasEntered,
 					hasEnteredBack,
-					onScroll: { backup },
-				},
+					onScroll: { backup }
+				}
 			} = this._utils!.getTriggerData(trigger);
 			const [tEP, tLP, rEP, rLP] = this._utils!.getPositions(tB, rB, { enter, leave, ref, refOpposite, length });
 
@@ -202,7 +202,7 @@ class IntersectionTrigger {
 		this.observer = new IntersectionObserver(this._observerCallback, {
 			root: this._root,
 			rootMargin: this._rootMargin,
-			threshold: this._threshold,
+			threshold: this._threshold
 		});
 
 		this._root = this.observer.root as HTMLElement | null;
@@ -221,7 +221,7 @@ class IntersectionTrigger {
 			onScroll,
 			rootEnter,
 			rootLeave,
-			guides,
+			guides
 		} = this._options;
 
 		this.axis = axis; //Scroll Axis
@@ -254,10 +254,10 @@ class IntersectionTrigger {
 			userOpts = options || {};
 
 		const getPositionNormal = (pos?: Position, name: 'tEP' | 'tLP' = 'tEP') =>
-				!!pos ? this._utils!.setPositionData(pos).normal : this._positionsData[name].normal,
+				pos ? this._utils!.setPositionData(pos).normal : this._positionsData[name].normal,
 			getPlugin = <N extends Exclude<PluginName, 'guides'>>(name: N) => {
 				!this[name] && this._setPlugin(name);
-				return this[name] as NonNullable<typeof this[N]>;
+				return this[name] as NonNullable<(typeof this)[N]>;
 			};
 
 		const mergedParams = mergeOptions(defaults as TriggerOptions, userOpts),
@@ -268,7 +268,7 @@ class IntersectionTrigger {
 				leave: getPositionNormal(leave, 'tLP'),
 				toggleClass: toggleClass ? getPlugin('toggleClass').parse(toggleClass) : undefined,
 				animation: animation ? getPlugin('animation').parse(animation) : undefined,
-				states: triggerStates,
+				states: triggerStates
 			} as TriggerData;
 
 		const [minPosition, maxPosition] = getMinMax(triggerParams.enter, triggerParams.leave);
@@ -280,15 +280,15 @@ class IntersectionTrigger {
 		//
 		let mustUpdate = false;
 		[triggerParams.enter, triggerParams.leave].forEach(
-			(normalizedPos) => !this._threshold.some((value) => normalizedPos === value) && (mustUpdate = true)
+			normalizedPos => !this._threshold.some(value => normalizedPos === value) && (mustUpdate = true)
 		);
 
 		if (mustUpdate) {
 			//set new triggers data
-			toAddTriggers.forEach((trigger) => this._utils!.setTriggerData(trigger, deepClone(triggerParams)));
+			toAddTriggers.forEach(trigger => this._utils!.setTriggerData(trigger, deepClone(triggerParams)));
 			this.update();
 		} else {
-			toAddTriggers.forEach((trigger) => {
+			toAddTriggers.forEach(trigger => {
 				this._utils!.setTriggerData(trigger, deepClone(triggerParams));
 				this.observer!.observe(trigger);
 			});
@@ -301,15 +301,15 @@ class IntersectionTrigger {
 	}
 
 	remove(trigger: Trigger) {
-		let toRemoveTriggers = this._utils!.parseQuery(trigger);
+		const toRemoveTriggers = this._utils!.parseQuery(trigger);
 
-		toRemoveTriggers.forEach((trigger) => {
+		toRemoveTriggers.forEach(trigger => {
 			this._utils!.deleteTriggerData(trigger);
 			this.observer!.unobserve(trigger);
 		});
 
-		const updatedStoredTriggers = this.triggers.filter((storedTrigger) => {
-			const isInRemoveTriggers = toRemoveTriggers.some((toRemoveTrigger) => storedTrigger === toRemoveTrigger);
+		const updatedStoredTriggers = this.triggers.filter(storedTrigger => {
+			const isInRemoveTriggers = toRemoveTriggers.some(toRemoveTrigger => storedTrigger === toRemoveTrigger);
 
 			return !isInRemoveTriggers;
 		});
@@ -332,8 +332,8 @@ class IntersectionTrigger {
 		this._disconnect();
 		//recreate the observer
 		this._createInstance();
-		//reobserve the triggers
-		this.triggers.forEach((trigger) => this.observer && this.observer.observe(trigger));
+		//re-observe the triggers
+		this.triggers.forEach(trigger => this.observer && this.observer.observe(trigger));
 		//Update guides
 		this.guides && this.guides.update();
 	}
@@ -364,8 +364,8 @@ class IntersectionTrigger {
 
 IntersectionTrigger.getInstances = () => instances;
 IntersectionTrigger.getInstanceById = (id: number) => instances.find((ins: IntersectionTrigger) => ins.id === id);
-IntersectionTrigger.update = () => instances.forEach((ins) => ins.update());
-IntersectionTrigger.kill = () => instances.forEach((ins) => ins.kill());
+IntersectionTrigger.update = () => instances.forEach(ins => ins.update());
+IntersectionTrigger.kill = () => instances.forEach(ins => ins.kill());
 IntersectionTrigger.registerPlugins = (plugins = []) => registeredPlugins.push(...plugins);
 IntersectionTrigger.getRegisteredPlugins = () => registeredPlugins;
 

@@ -50,7 +50,7 @@ interface PositionData {
 	value: number;
 	unit: string;
 	normal: number;
-	pixeled?: number;
+	pixels?: number;
 }
 
 interface TriggerOptions {
@@ -107,5 +107,5 @@ export type {
 	Position,
 	ScrollCallbacks,
 	ObserverConfiguration,
-	EventParams,
+	EventParams
 };

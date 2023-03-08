@@ -26,9 +26,9 @@ class ToggleClass {
 		for (const { targets, toggleActions, classNames } of toggleClass) {
 			const action = toggleActions[eventIndex];
 			if ('none' === action) continue;
-			classNames!.forEach((className) => {
+			classNames!.forEach(className => {
 				if (!targets.length) return trigger.classList[action](className);
-				targets.forEach((target) => target.classList[action](className));
+				targets.forEach(target => target.classList[action](className));
 			});
 		}
 	}
@@ -39,16 +39,16 @@ class ToggleClass {
 		if (is.string(params))
 			mergedParams = [
 				mergeOptions(defaultToggleClassConfig, {
-					classNames: params,
-				}),
+					classNames: params
+				})
 			];
 
 		if (is.array(params)) mergedParams = params.map((obj: ToggleClassOptions) => mergeOptions(defaultToggleClassConfig, obj));
 
-		return mergedParams.map((obj) => ({
+		return mergedParams.map(obj => ({
 			targets: this._utils!.parseQuery(obj.targets, 'targets'),
 			toggleActions: splitStr(obj.toggleActions),
-			classNames: splitStr(obj.classNames),
+			classNames: splitStr(obj.classNames)
 		}));
 	}
 

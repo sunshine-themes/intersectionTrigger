@@ -3,7 +3,7 @@ import type { Anime, AnimeInstance } from './plugins/animation/types';
 import type { SplitResult, DeepRequired } from './utils/types';
 
 const is = {
-	function: (a: unknown): a is Function => 'function' === typeof a,
+	function: <T>(a: unknown): a is (...args: unknown[]) => T => typeof a === 'function',
 	string: (a: unknown): a is string => 'string' === typeof a,
 	boolean: (a: unknown): a is boolean => 'boolean' === typeof a,
 	object: (a: unknown): a is object => !!a && 'object' === typeof a && a !== null && !(a instanceof Array),
@@ -24,7 +24,7 @@ const is = {
 			? 'y' === dir
 				? element.scrollHeight > element.clientHeight
 				: element.scrollWidth > element.clientWidth
-			: element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth,
+			: element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth
 };
 const clamp = (a: number, min: number, max: number) => Math.min(Math.max(a, min), max);
 const splitStr = <S extends string>(st: S) => st.split(/\s+/) as SplitResult<S>;
@@ -36,7 +36,7 @@ const roundFloat = (value: string | number, precision?: number) => {
 	return Math.round(value * multiplier) / multiplier;
 };
 const getParents = (element: HTMLElement) => {
-	let parents: HTMLElement[] = [];
+	const parents: HTMLElement[] = [];
 	for (let el = element.parentElement; el && !is.doc(el) && el !== document.documentElement; el = el.parentElement) {
 		parents.push(el);
 	}
@@ -46,9 +46,9 @@ const getParents = (element: HTMLElement) => {
 const deepClone = <T>(obj: T) => {
 	if ((!is.object(obj) && !is.array(obj)) || is.animeInstance(obj) || obj instanceof Element) return obj;
 
-	let clone = (is.array(obj) ? [] : {}) as T;
+	const clone = (is.array(obj) ? [] : {}) as T;
 
-	for (let k in obj) {
+	for (const k in obj) {
 		if (obj.hasOwnProperty(k)) clone[k] = deepClone(obj[k]);
 	}
 
@@ -81,7 +81,7 @@ const parseValue = (v: string) => {
 	return output;
 };
 
-const parseString = (str: string) => str.split(/\s+/).map((v) => parseValue(v));
+const parseString = (str: string) => str.split(/\s+/).map(v => parseValue(v));
 
 const setElProps = (el: HTMLElement, props: Partial<CSSStyleDeclaration>) => {
 	for (const propName in props) {
@@ -90,10 +90,10 @@ const setElProps = (el: HTMLElement, props: Partial<CSSStyleDeclaration>) => {
 };
 
 const getScrollBarWidth = () => {
-	let el = document.createElement('div');
+	const el = document.createElement('div');
 	el.style.cssText = 'overflow:scroll; visibility:hidden; position:absolute;';
 	document.body.appendChild(el);
-	let width = el.offsetWidth - el.clientWidth;
+	const width = el.offsetWidth - el.clientWidth;
 	el.remove();
 	return width;
 };
@@ -113,5 +113,5 @@ export {
 	getMinMax,
 	setElProps,
 	getScrollBarWidth,
-	deepClone,
+	deepClone
 };

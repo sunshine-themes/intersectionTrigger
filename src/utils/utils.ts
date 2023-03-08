@@ -11,7 +11,7 @@ import type {
 	ScrollCallbacks,
 	ModifiedDOMRect,
 	ToggleActions,
-	EventParams,
+	EventParams
 } from '../core/types.js';
 
 import { getBoundsProp, getScrollValue, is, parseString, parseValue, roundFloat, throwError } from '../helpers.js';
@@ -88,13 +88,13 @@ export default class Utils {
 				if ('%' === unit) return normal * total;
 				return value;
 			};
-			rEP.pixeled = valueToPx(rEP, rootLength);
-			rLP.pixeled = valueToPx(rLP, rootLength);
-			this._it!._isREPGreater = rEP.pixeled >= rLP.pixeled;
+			rEP.pixels = valueToPx(rEP, rootLength);
+			rLP.pixels = valueToPx(rLP, rootLength);
+			this._it!._isREPGreater = rEP.pixels >= rLP.pixels;
 			//Set root margins
 			const rootMargins = {
-				fromRef: `${-1 * (this._it!._isREPGreater ? rLP.pixeled : rEP.pixeled)}px`, //root margin from direction Reference (top|left)
-				fromOppRef: `${(this._it!._isREPGreater ? rEP.pixeled : rLP.pixeled) - rootLength}px`, //root margin from the direction Reference's opposite (bottom|right)
+				fromRef: `${-1 * (this._it!._isREPGreater ? rLP.pixels : rEP.pixels)}px`, //root margin from direction Reference (top|left)
+				fromOppRef: `${(this._it!._isREPGreater ? rEP.pixels : rLP.pixels) - rootLength}px` //root margin from the direction Reference's opposite (bottom|right)
 			};
 
 			const extendMargin = getScrollValue(this.getRoot(), this.isVertical() ? 'x' : 'y');
@@ -105,7 +105,7 @@ export default class Utils {
 		this.setThreshold = () => {
 			const threshold = [0, 1];
 
-			this._it!.triggers.forEach((trigger) => {
+			this._it!.triggers.forEach(trigger => {
 				const { enter, leave, maxPosition } = this.getTriggerData(trigger);
 				threshold.push(enter, leave, roundFloat(1 - maxPosition, 2));
 			});
@@ -118,7 +118,7 @@ export default class Utils {
 			if (is.element(q)) return [q];
 			return throwError(`${errLog} parameter must be a valid selector, an element or array of elements`);
 		};
-		this.parseRoot = (query) => {
+		this.parseRoot = query => {
 			if (!query) return null;
 			if (is.string(query)) {
 				const el = document.querySelector<HTMLElement>(query);
@@ -131,12 +131,12 @@ export default class Utils {
 		};
 
 		// Positions parsing
-		this.validatePosition = (pos) => {
-			is.function(pos) && (pos = pos(this._it as IntersectionTrigger));
+		this.validatePosition = pos => {
+			is.function<string>(pos) && (pos = pos(this._it as IntersectionTrigger));
 			if (!is.string(pos)) return throwError(`enter, leave, rootEnter and rootLeave parameters must be a string.`);
 			return pos;
 		};
-		this.setPositionData = (pos) => {
+		this.setPositionData = pos => {
 			pos = this.validatePosition(pos);
 
 			const original = pos.trim();
@@ -147,23 +147,23 @@ export default class Utils {
 				original,
 				unit: parsed.unit,
 				value: roundedValue,
-				normal: parsed.unit === '%' ? roundedValue / 100 : 0,
+				normal: parsed.unit === '%' ? roundedValue / 100 : 0
 			};
 		};
 		this.parsePositions = (triggerEnter, triggerLeave, rootEnter, rootLeave) => {
-			const positionsData = [triggerEnter, rootEnter, triggerLeave, rootLeave].map((pos) =>
+			const positionsData = [triggerEnter, rootEnter, triggerLeave, rootLeave].map(pos =>
 				this.setPositionData(this.validatePosition(pos).trim())
 			);
 			return {
 				tEP: positionsData[0], //trigger enter position
 				rEP: positionsData[1], //root enter position
 				tLP: positionsData[2], //trigger leave position
-				rLP: positionsData[3], //root leave position
+				rLP: positionsData[3] //root leave position
 			};
 		};
 
 		//Trigger Data actions
-		this.deleteTriggerData = (trigger) => this.tD.delete(trigger);
+		this.deleteTriggerData = trigger => this.tD.delete(trigger);
 		this.getTriggerData = <K extends keyof TriggerData>(trigger: HTMLElement, prop?: K) => {
 			const triggerData = this.tD.get(trigger) || ({} as TriggerData);
 			if (prop) return triggerData[prop];
@@ -201,7 +201,7 @@ export default class Utils {
 				once,
 				toggleClass,
 				animation,
-				states: { hasEnteredOnce },
+				states: { hasEnteredOnce }
 			} = this.getTriggerData(trigger);
 
 			callback(trigger, this._it as IntersectionTrigger); //Invoke Callback
@@ -217,7 +217,7 @@ export default class Utils {
 			if (isEnterEvent) {
 				triggerStates = {
 					[enterState as keyof TriggerStates]: true,
-					[leaveState]: false,
+					[leaveState]: false
 				};
 
 				if (!hasEnteredOnce)
@@ -232,7 +232,7 @@ export default class Utils {
 				triggerStates = {
 					[leaveState]: true,
 					hasEntered: false,
-					hasEnteredBack: false,
+					hasEnteredBack: false
 				};
 			}
 
@@ -246,27 +246,27 @@ export default class Utils {
 				tB[ref] + enter * tB[length], //tEP
 				tB[ref] + leave * tB[length], //tLP
 				isREPGreater ? rB[refOpposite] : rB[ref], //rEP
-				isREPGreater ? rB[ref] : rB[refOpposite], //rLP
+				isREPGreater ? rB[ref] : rB[refOpposite] //rLP
 			];
 		};
 
-		this.toggleActions = (trigger) => {
+		this.toggleActions = trigger => {
 			const {
-				enter,
-				leave,
-				onEnter,
-				onLeave,
-				onEnterBack,
-				onLeaveBack,
-				states: { hasEntered, hasEnteredBack, hasLeft, hasLeftBack, hasEnteredOnce },
-			} = this.getTriggerData(trigger);
-			const tB = trigger.getBoundingClientRect(); //trigger Bounds
-			const rB = (this._it!.rootBounds = this.getRootRect(this._it!.observer!.rootMargin)); //root Bounds
-			const { ref, refOpposite, length } = this.dirProps();
-			const [tEP, tLP, rEP, rLP] = this.getPositions(tB, rB, { enter, leave, ref, refOpposite, length });
-
-			let hasCaseMet = true,
+					enter,
+					leave,
+					onEnter,
+					onLeave,
+					onEnterBack,
+					onLeaveBack,
+					states: { hasEntered, hasEnteredBack, hasLeft, hasLeftBack, hasEnteredOnce }
+				} = this.getTriggerData(trigger),
+				tB = trigger.getBoundingClientRect(), //trigger Bounds
+				rB = (this._it!.rootBounds = this.getRootRect(this._it!.observer!.rootMargin)), //root Bounds
+				{ ref, refOpposite, length } = this.dirProps(),
+				[tEP, tLP, rEP, rLP] = this.getPositions(tB, rB, { enter, leave, ref, refOpposite, length }),
 				hasEnteredFromOneSide = hasEntered || hasEnteredBack;
+
+			let hasCaseMet = true;
 
 			switch (true) {
 				case hasLeftBack && rEP > tEP:
@@ -293,11 +293,11 @@ export default class Utils {
 			return hasCaseMet;
 		};
 
-		//  upcoming code is based on IntersectionObserver calculations of the root bounds. All rights reseved (https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document).
+		//  upcoming code is based on IntersectionObserver calculations of the root bounds. All rights reserved (https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document).
 
-		this.parseRootMargin = (rootMargins) => {
-			var marginString = rootMargins || '0px';
-			var margins = parseString(marginString);
+		this.parseRootMargin = rootMargins => {
+			const marginString = rootMargins || '0px';
+			const margins = parseString(marginString);
 			// Handles shorthand.
 			margins[1] = margins[1] || margins[0];
 			margins[2] = margins[2] || margins[0];
@@ -315,14 +315,14 @@ export default class Utils {
 				bottom: rect.bottom + margins[2],
 				left: rect.left - margins[3],
 				width: 0,
-				height: 0,
+				height: 0
 			};
 			newRect.width = newRect.right - newRect.left;
 			newRect.height = newRect.bottom - newRect.top;
 
 			return newRect;
 		};
-		this.getRootRect = (rootMargins) => {
+		this.getRootRect = rootMargins => {
 			let rootRect: ModifiedDOMRect;
 			if (this._it!._root && !is.doc(this._it!._root)) {
 				rootRect = this._it!._root.getBoundingClientRect();
@@ -337,7 +337,7 @@ export default class Utils {
 				right: html.clientWidth || body.clientWidth,
 				width: html.clientWidth || body.clientWidth,
 				bottom: html.clientHeight || body.clientHeight,
-				height: html.clientHeight || body.clientHeight,
+				height: html.clientHeight || body.clientHeight
 			};
 
 			return this.expandRectByRootMargin(rootRect, rootMargins);

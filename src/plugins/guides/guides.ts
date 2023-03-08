@@ -37,7 +37,7 @@ class Guides {
 		this.rootEl = this._utils!.getRoot();
 		this.scrollWidth = {
 			x: is.scrollable(this.rootEl, 'x') ? this._scrollBarWidth : 0,
-			y: is.scrollable(this.rootEl, 'y') ? this._scrollBarWidth : 0,
+			y: is.scrollable(this.rootEl, 'y') ? this._scrollBarWidth : 0
 		};
 
 		this._addResizeListener();
@@ -65,17 +65,17 @@ class Guides {
 			position: 'absolute',
 			zIndex: '9999',
 			backgroundColor: backgroundColor,
-			[this.isVer ? 'top' : 'left']: position.toString(),
+			[this.isVer ? 'top' : 'left']: position.toString()
 		});
 		//Create the text element
 		const createText = () => {
-			let verticalAlignment = {
+			const verticalAlignment = {
 				dir: this.isVer ? (isHigherValue ? 'bottom' : 'top') : 'bottom',
-				value: this.isVer ? '5px' : '15px',
+				value: this.isVer ? '5px' : '15px'
 			};
-			let horizontalAlignment = {
+			const horizontalAlignment = {
 				dir: this.isVer ? 'right' : isHigherValue ? 'right' : 'left',
-				value: this.isVer ? (triggerEl ? '0px' : !this._it!._root ? '15px' : '0px') : '5px',
+				value: this.isVer ? (triggerEl ? '0px' : !this._it!._root ? '15px' : '0px') : '5px'
 			};
 
 			const textElement = document.createElement('span');
@@ -91,7 +91,7 @@ class Guides {
 				padding: '5px',
 				width: 'max-content',
 				[verticalAlignment.dir]: verticalAlignment.value,
-				[horizontalAlignment.dir]: horizontalAlignment.value,
+				[horizontalAlignment.dir]: horizontalAlignment.value
 			});
 		};
 		createText();
@@ -105,8 +105,8 @@ class Guides {
 			const translateXInPx = parts.length ? parts[0][1] : '0';
 			const translateYInPx = parts.length > 1 ? parts[1][1] : '0';
 
-			let x = diffX + parseFloat(translateXInPx);
-			let y = diffY + parseFloat(translateYInPx);
+			const x = diffX + parseFloat(translateXInPx);
+			const y = diffY + parseFloat(translateYInPx);
 
 			setElProps(guide, { transform: `translate(${x}px,${y}px)` });
 		};
@@ -116,9 +116,9 @@ class Guides {
 
 			const rDefaultBounds = this.rootEl.getBoundingClientRect(); //root Bounds regardless the root margins
 			let targetBounds = this._utils!.getRootRect(this._it!.observer!.rootMargin);
-			let scrollWidth = {
+			const scrollWidth = {
 				x: isHigherValue ? this.scrollWidth.x : 0,
-				y: isHigherValue ? this.scrollWidth.y : 0,
+				y: isHigherValue ? this.scrollWidth.y : 0
 			};
 			let diffs = { x: 0, y: 0 };
 
@@ -127,16 +127,16 @@ class Guides {
 				? enter
 					? {
 							x: rDefaultBounds.right - guideBounds.left - this.scrollWidth.y,
-							y: targetBounds.bottom - guideBounds.bottom - scrollWidth.x,
+							y: targetBounds.bottom - guideBounds.bottom - scrollWidth.x
 					  }
 					: {
 							x: rDefaultBounds.right - guideBounds.left - this.scrollWidth.y,
-							y: targetBounds.top - guideBounds.top - scrollWidth.x,
+							y: targetBounds.top - guideBounds.top - scrollWidth.x
 					  }
 				: enter
 				? {
 						x: targetBounds.right - guideBounds.right,
-						y: rDefaultBounds.bottom - guideBounds.top - this.scrollWidth.x,
+						y: rDefaultBounds.bottom - guideBounds.top - this.scrollWidth.x
 				  }
 				: { x: targetBounds.left - guideBounds.left, y: rDefaultBounds.bottom - guideBounds.top - this.scrollWidth.x };
 
@@ -146,11 +146,11 @@ class Guides {
 				diffs = this.isVer
 					? {
 							x: targetBounds.right - guideBounds.right,
-							y: targetBounds.top + (position as number) * targetBounds.height - guideBounds.top,
+							y: targetBounds.top + (position as number) * targetBounds.height - guideBounds.top
 					  }
 					: {
 							x: targetBounds.left + (position as number) * targetBounds.width - guideBounds.left,
-							y: targetBounds.top - guideBounds.top,
+							y: targetBounds.top - guideBounds.top
 					  };
 			}
 
@@ -161,7 +161,7 @@ class Guides {
 		if (!triggerEl) {
 			setElProps(guide, {
 				[this.isVer ? 'width' : 'height']: !this._it!._root ? '100%' : '100px',
-				position: !this._it!._root ? 'fixed' : 'absolute',
+				position: !this._it!._root ? 'fixed' : 'absolute'
 			});
 			!this._it!._root && setElProps(guide, { [this.isVer ? 'right' : 'top']: '0px' });
 
@@ -172,7 +172,7 @@ class Guides {
 		//Trigger guide
 		positionGuide();
 		//RePosition the guide on every parent on scroll
-		getParents(triggerEl).forEach((parent) => {
+		getParents(triggerEl).forEach(parent => {
 			if (!is.scrollable(parent)) return;
 
 			parent.addEventListener('scroll', positionGuide, false);
@@ -194,7 +194,7 @@ class Guides {
 			isHigherValue: getMinMax(rEPValue, rLPValue)[1] === rEPValue,
 			text: `${guideTextPrefix} ${guideParams.enter.root.text}`,
 			color: guideParams.enter.root.color,
-			backgroundColor: guideParams.enter.root.backgroundColor,
+			backgroundColor: guideParams.enter.root.backgroundColor
 		});
 		this._guideCreation({
 			enter: false,
@@ -202,11 +202,11 @@ class Guides {
 			isHigherValue: getMinMax(rEPValue, rLPValue)[1] === rLPValue,
 			text: `${guideTextPrefix} ${guideParams.leave.root.text}`,
 			color: guideParams.leave.root.color,
-			backgroundColor: guideParams.leave.root.backgroundColor,
+			backgroundColor: guideParams.leave.root.backgroundColor
 		});
 
 		//Create Triggers Guides
-		this._it!.triggers.forEach((trigger) => {
+		this._it!.triggers.forEach(trigger => {
 			const { enter, leave, maxPosition } = this._utils!.getTriggerData(trigger);
 			this._guideCreation(
 				{
@@ -215,7 +215,7 @@ class Guides {
 					isHigherValue: enter === maxPosition,
 					text: `${guideTextPrefix} ${guideParams.enter.trigger.text}`,
 					color: guideParams.enter.trigger.color,
-					backgroundColor: guideParams.enter.trigger.backgroundColor,
+					backgroundColor: guideParams.enter.trigger.backgroundColor
 				},
 				trigger
 			);
@@ -226,7 +226,7 @@ class Guides {
 					isHigherValue: leave === maxPosition,
 					text: `${guideTextPrefix} ${guideParams.leave.trigger.text}`,
 					color: guideParams.leave.trigger.color,
-					backgroundColor: guideParams.leave.trigger.backgroundColor,
+					backgroundColor: guideParams.leave.trigger.backgroundColor
 				},
 				trigger
 			);
@@ -234,7 +234,7 @@ class Guides {
 	}
 
 	removeGuides = () => {
-		this._guides.forEach((guide) => guide && guide.remove());
+		this._guides.forEach(guide => guide && guide.remove());
 		this._guides = [];
 	};
 

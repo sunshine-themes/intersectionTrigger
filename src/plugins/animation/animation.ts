@@ -13,21 +13,21 @@ class Animation {
 	killed!: boolean;
 	seekSmoothly!: (ins: Anime<AnimeInstance>, seekTo: number, link: number, isSeekToGreater: boolean) => void;
 	seek!: (ins: Anime<AnimeInstance>, seekTo: number, link: boolean | number) => void;
-	startSnaping!: ({
+	getTIL!: (trigger: HTMLElement, minPosition: number, maxPosition: number) => number;
+	getSnapStep!: (snap: SnapParams | boolean) => number;
+	startSnapping!: ({
 		snapDistance,
 		currentDis,
 		snap,
 		step,
-		toRef,
+		toRef
 	}: {
-		snapDistance: any;
-		currentDis: any;
-		snap: any;
-		step: any;
+		snapDistance: number;
+		currentDis: number;
+		snap: SnapParams;
+		step: number;
 		toRef?: boolean | undefined;
 	}) => void;
-	getTIL!: (trigger: HTMLElement, minPosition: number, maxPosition: number) => number;
-	getSnapStep!: (snap: SnapParams | boolean) => number;
 	animateHandler!: (
 		trigger: HTMLElement,
 		{
@@ -37,7 +37,7 @@ class Animation {
 			instance,
 			snap,
 			step,
-			link,
+			link
 		}: {
 			enter: number;
 			leave: number;
@@ -69,7 +69,7 @@ class Animation {
 		const isVer = this._utils!.isVertical();
 		const root = this._utils!.getRoot();
 
-		let rAFIDs = new WeakMap();
+		const rAFIDs = new WeakMap();
 		this.seekSmoothly = (ins, seekTo, link, isSeekToGreater) => {
 			if (this.killed) return;
 
@@ -96,28 +96,28 @@ class Animation {
 			ins.seek(seekTo);
 		};
 
-		this.startSnaping = ({ snapDistance, currentDis, snap, step, toRef = false }) => {
+		this.startSnapping = ({ snapDistance, currentDis, snap, step, toRef = false }) => {
 			if (this.killed) return;
 
 			const direction = toRef ? -1 : 1;
 			if (isVer) {
 				root.scrollBy({
 					top: step * direction,
-					behavior: 'instant' as ScrollBehavior,
+					behavior: 'instant' as ScrollBehavior
 				});
 			} else {
 				root.scrollBy({
 					left: step * direction,
-					behavior: 'instant' as ScrollBehavior,
+					behavior: 'instant' as ScrollBehavior
 				});
 			}
 			currentDis += step;
 			if (currentDis >= snapDistance) {
 				currentDis = 0;
-				snap.onComplete(this._it);
+				snap.onComplete(this._it as IntersectionTrigger);
 				return;
 			}
-			requestAnimationFrame(() => this.startSnaping({ snapDistance, currentDis, snap, step, toRef }));
+			requestAnimationFrame(() => this.startSnapping({ snapDistance, currentDis, snap, step, toRef }));
 		};
 
 		this.parseSnap = ({ instance, snap }: { instance: Anime<AnimeInstance>; snap: SnapConfiguration | SnapParams }, update?: boolean) => {
@@ -128,7 +128,7 @@ class Animation {
 					arr.push(clamp(progress, 0, 1));
 					progress = progress + n;
 				}
-				return arr.map((v) => Math.round(v * instance.duration));
+				return arr.map(v => Math.round(v * instance.duration));
 			};
 			const parseMarks = (): number[] => {
 				if (!is.inObject(instance, 'marks')) return throwError('"marks" feature is not available in the provided anime instance');
@@ -163,7 +163,7 @@ class Animation {
 			return tB[length] - (minPosition * tB[length] + (1 - maxPosition) * tB[length]);
 		};
 
-		this.getSnapStep = (snap) => (is.object(snap) ? Math.round(Math.max((snap.speed * 17) / 1000, 1)) : 0);
+		this.getSnapStep = snap => (is.object(snap) ? Math.round(Math.max((snap.speed * 17) / 1000, 1)) : 0);
 
 		this.animateHandler = (trigger, { enter, leave, tIL, instance, snap, step, link }) => {
 			if (this.killed) return;
@@ -186,13 +186,13 @@ class Animation {
 
 			//Snap
 			if (!is.boolean(snap)) {
-				let dis = 0;
+				const dis = 0;
 				// Clear timeout
 				clearTimeout(ids.snapTimeOutId);
 				// Set a timeout to run after scrolling stops
 				const snapTimeOutId = setTimeout(() => {
-					const directionalDiff = snap.to.map((n) => seekTo - n),
-						diff = directionalDiff.map((n) => Math.abs(n)),
+					const directionalDiff = snap.to.map(n => seekTo - n),
+						diff = directionalDiff.map(n => Math.abs(n)),
 						closest = Math.min(...diff),
 						closestWithDirection = directionalDiff[diff.indexOf(closest)],
 						snapDistance = (scrollLength * closest) / duration,
@@ -203,11 +203,11 @@ class Animation {
 					snap.onStart(this._it as IntersectionTrigger);
 
 					if (closestWithDirection < 0) {
-						this.startSnaping(snapData);
+						this.startSnapping(snapData);
 						return;
 					}
 
-					this.startSnaping({ ...snapData, toRef: true });
+					this.startSnapping({ ...snapData, toRef: true });
 				}, snap.after * 1000);
 
 				//Update the id of Timeout
@@ -227,8 +227,8 @@ class Animation {
 				maxPosition,
 				states: {
 					onScroll: { animate },
-					ids,
-				},
+					ids
+				}
 			} = this._utils!.getTriggerData(trigger);
 			const tIL = this.getTIL(trigger, minPosition, maxPosition); //trigger Intersection length
 			const step = this.getSnapStep(snap);
@@ -237,14 +237,14 @@ class Animation {
 			switch (eventIndex) {
 				case 0:
 				case 2:
-					this._it!._states.oCbFirstInvoke && this.animateHandler(trigger, animateData); //to update the animation if the root intersects trigger at begining
+					this._it!._states.oCbFirstInvoke && this.animateHandler(trigger, animateData); //to update the animation if the root intersects trigger at beginning
 
 					if (animate) break;
 					this._utils!.setTriggerScrollStates(trigger, 'animate', () => this.animateHandler(trigger, animateData));
 					break;
 				case 1:
 				case 3:
-					// Clear snaping
+					// Clear snapping
 					clearTimeout(ids.snapTimeOutId);
 					this._utils!.setTriggerScrollStates(trigger, 'animate');
 
@@ -308,7 +308,7 @@ class Animation {
 
 			if (is.animeInstance(params)) {
 				mergedParams = mergeOptions(defaultAnimationConfig, {
-					instance: params,
+					instance: params
 				});
 			} else if (params.instance && is.animeInstance(params.instance)) {
 				mergedParams = mergeOptions(defaultAnimationConfig, params);
@@ -322,7 +322,7 @@ class Animation {
 				instance,
 				toggleActions: splitStr(toggleActions),
 				snap: !!snap && this.parseSnap({ instance, snap }),
-				link,
+				link
 			};
 		}
 
@@ -333,16 +333,16 @@ class Animation {
 	}
 
 	update() {
-		this._it!.triggers.forEach((trigger) => {
+		this._it!.triggers.forEach(trigger => {
 			//update the animation data
-			let { enter, leave, minPosition, maxPosition, animation } = this._utils!.getTriggerData(trigger);
-			animation = animation && this.parse(animation, true); //parsed animation data
-			this._utils!.setTriggerData(trigger, { animation }, true);
+			const { enter, leave, minPosition, maxPosition, animation } = this._utils!.getTriggerData(trigger),
+				anim = animation && this.parse(animation, true); //parsed animation data
+			this._utils!.setTriggerData(trigger, { animation: anim }, true);
 
 			//update the animation handler data
 			const { animate } = this._utils!.getTriggerData(trigger, 'states').onScroll;
-			if (animate && !!animation) {
-				const { instance, snap, link } = animation;
+			if (animate && !!anim) {
+				const { instance, snap, link } = anim;
 				const tIL = this.getTIL(trigger, minPosition, maxPosition);
 				const step = this.getSnapStep(snap);
 				//reassign an animate handler
