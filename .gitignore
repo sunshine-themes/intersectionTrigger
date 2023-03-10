@@ -1,6 +1,5 @@
-/.vscode
 /coverage
 /dist
-/test/assets
-/test/visual
+/tests/assets
+/tests/visual
 /node_modules
