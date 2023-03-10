@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 const { copy, unlink } = require('fs-extra');
-const { outputDir } = require('./utils/output-dir');
+const { outputDir, createOutputDir } = require('./utils/output-dir');
 const buildCore = require('./build-core');
 const buildPlugins = require('./build-plugins');
 const buildMain = require('./build-main');
 const buildBundle = require('./build-bundle');
+
+//make distribution dir
+createOutputDir();
 
 //Copy required files
 const mainFileTypeName = 'intersectiontrigger.d.ts';
