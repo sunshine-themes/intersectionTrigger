@@ -25,10 +25,10 @@ async function buildEntry(plugins, format, target = 'esnext', isBrowser = false)
 				`import ${capitalized} from './plugins/${capitalized.toLowerCase()}/${capitalized.toLowerCase()}${contentFilePath}.js';`
 		),
 		'const plugins = [',
-		...plugins.map((mod) => `${mod.capitalized},`),
+		...plugins.map(mod => `${mod.capitalized},`),
 		']',
 		'IntersectionTrigger.registerPlugins(plugins);',
-		'export default IntersectionTrigger',
+		'export default IntersectionTrigger'
 	].join('\n');
 
 	const buildContent = [
@@ -48,7 +48,7 @@ async function buildEntry(plugins, format, target = 'esnext', isBrowser = false)
             plugins: ${isES5 ? `[babel(babelConfig)]` : '[]'},
         };
         build(buildConfig);`,
-		isES5 ? `})` : '',
+		isES5 ? `})` : ''
 	].join('\n');
 
 	await Promise.all([fs.writeFile(`./src/temp-${entryFileName}.js`, content), fs.writeFile(`./src/temp-esbuild.js`, buildContent)]);

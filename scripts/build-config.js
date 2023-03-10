@@ -6,10 +6,10 @@ const { capitalize } = require('./helpers');
 
 const config = {
 	core: { entryPath: 'core/core', name: 'core' },
-	plugins: ['toggle-class', 'guides', 'animation'],
+	plugins: ['toggle-class', 'guides', 'animation']
 };
 
-const plugins = config.plugins.map((name) => {
+const plugins = config.plugins.map(name => {
 	const capitalized = capitalize(name);
 	const jsFilePath = `./src/plugins/${capitalized.toLowerCase()}/${capitalized.toLowerCase()}.ts`;
 	if (existsSync(jsFilePath)) {
@@ -37,7 +37,7 @@ const buildConfig = ({ data, babel = null, format = 'esm', target = 'esnext', bu
 		sourcemap,
 		banner: { js: banner() },
 		target: [target],
-		plugins,
+		plugins
 	};
 };
 

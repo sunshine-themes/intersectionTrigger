@@ -1,7 +1,7 @@
 const { build } = require('estrella');
 const { buildConfig } = require('../build-config');
 
-const buildFormats = async (data) => {
+const buildFormats = async data => {
 	const { default: babel } = await import('esbuild-plugin-babel');
 	//IIF
 	// build(buildConfig({ data, format: 'iife', target: 'es5', babel }));

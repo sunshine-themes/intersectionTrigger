@@ -5,7 +5,7 @@ const buildPlugins = () => {
 	plugins.forEach(({ capitalized }) =>
 		buildFormats({
 			entryPath: `plugins/${capitalized.toLowerCase()}/${capitalized.toLowerCase()}`,
-			name: capitalized.toLowerCase(),
+			name: capitalized.toLowerCase()
 		})
 	);
 };

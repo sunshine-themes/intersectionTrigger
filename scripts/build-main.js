@@ -11,7 +11,7 @@ async function buildMain() {
 		...plugins.map(
 			({ name, capitalized }) =>
 				`export { default as ${capitalized} } from './plugins/${capitalized.toLowerCase()}/${capitalized.toLowerCase()}.esm.js';`
-		),
+		)
 	].join('\n');
 
 	await Promise.all([fs.writeFile(`./${outputDir}/${filename}.js`, coreContent)]);

@@ -9,11 +9,11 @@ module.exports = {
 					useBuiltIns: 'entry',
 					corejs: 3.22,
 					targets: {
-						browsers: ['> 0.25%, not dead'],
-					},
-				},
+						browsers: ['> 0.25%, not dead']
+					}
+				}
 			],
-			'@babel/preset-typescript',
-		],
-	},
+			'@babel/preset-typescript'
+		]
+	}
 };
