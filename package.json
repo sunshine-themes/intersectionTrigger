@@ -46,7 +46,7 @@
 		"format": "prettier --config .prettierrc 'src/**/*.ts' --write",
 		"lint": "eslint . --ext .ts",
 		"test": "jest",
-		"test:coverage": "npm test -- --coverage --coverageReporters=text-lcov | tee coverage.lcov",
+		"test:coverage": "npm test -- --coverage",
 		"test:dev": "jest --watchAll",
 		"validate": "npm run lint && npm test && npm run build"
 	},

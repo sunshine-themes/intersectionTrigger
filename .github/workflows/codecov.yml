@@ -4,12 +4,12 @@ on:
   # Run on master changes to track test coverage over time
   push:
     branches:
-      - 'master'
+      - 'test'
   # Leave a PR comment to surface test coverage changes
   pull_request: ~
 
 jobs:
-  main:
+  test-coverage:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,6 +29,5 @@ jobs:
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
           flags: unittests
-          files: coverage.lcov
+          fail_ci_if_error: true
