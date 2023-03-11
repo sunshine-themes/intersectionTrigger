@@ -26,4 +26,4 @@ jobs:
         run: npm run build
 
       - name: Check if 'dist' folder exists
-        run: test -d /path/to/directory && echo "Directory exists" || echo "Directory does not exist"
+        run: test -d ./dist && echo "Directory exists" || echo "Directory does not exist"
