@@ -23,7 +23,12 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build
+        run: npm run validate
 
-      - name: Check if 'dist' folder exists
-        run: test -d ./dist && echo "Directory exists" || echo "Directory does not exist"
+      - uses: google-github-actions/release-please-action@v3
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-type: node
+          default-branch: test
+          pull-request-title-pattern: 'chore: release ${version}'
