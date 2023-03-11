@@ -37,11 +37,11 @@ jobs:
           release-type: node
           pull-request-title-pattern: 'chore: release ${version}'
 
-      # If the above action creates a GitHub release, then also publish to npm
-      # This must be attached to this workflow, as one workflow cannot trigger another (e.g. on release create)
       - name: Change directory to dist
         run: cd dist
 
+      # If the above action creates a GitHub release, then also publish to npm
+      # This must be attached to this workflow, as one workflow cannot trigger another (e.g. on release create)
       - name: Publish to npm
         if: ${{ steps.release.outputs.release_created }}
         run: npm publish --access public
