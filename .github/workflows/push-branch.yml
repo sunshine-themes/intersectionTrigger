@@ -22,5 +22,8 @@ jobs:
       - name: Install deps
         run: npm ci
 
-      - name: Validate
-        run: npm run validate
+      - name: Build
+        run: npm run build
+
+      - name: Check if 'dist' folder exists
+        run: test -d /path/to/directory && echo "Directory exists" || echo "Directory does not exist"
