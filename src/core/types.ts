@@ -85,7 +85,7 @@ interface TriggerStates {
 	hasLeftBack: boolean;
 	hasEnteredOnce: boolean;
 	onScroll: ScrollCallbacks;
-	ids: { snapTimeOutId: number };
+	ids: { snapTimeOutId: number | NodeJS.Timeout };
 }
 
 export type {
