@@ -4,7 +4,7 @@ import type Utils from '../../utils/utils';
 import type { GuidesOptions, GuidesParams } from './types';
 
 import { guideDefaultConfig } from '../../constants';
-import { getMinMax, getParents, getScrollBarWidth, is, mergeOptions, setElProps } from '../../helpers.js';
+import { getMinMax, getParents, getScrollBarWidth, is, mergeOptions, setElProps } from '../../helpers';
 
 class Guides {
 	_it: IntersectionTrigger | undefined;

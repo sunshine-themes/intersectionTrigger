@@ -1,4 +1,4 @@
-import type IntersectionTrigger from '../core/core.js';
+import type IntersectionTrigger from '../core/core';
 import type {
 	Root,
 	DirectionProps,
@@ -12,9 +12,9 @@ import type {
 	ModifiedDOMRect,
 	ToggleActions,
 	EventParams
-} from '../core/types.js';
+} from '../core/types';
 
-import { getBoundsProp, getScrollValue, is, parseString, parseValue, roundFloat, throwError } from '../helpers.js';
+import { getBoundsProp, getScrollValue, is, parseString, parseValue, roundFloat, throwError } from '../helpers';
 
 export default class Utils {
 	_it: IntersectionTrigger | undefined;
