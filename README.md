@@ -66,7 +66,7 @@ By default  IntersectionTrigger exports only the core version without any Plugi
 ```javascript
 import IntersectionTrigger, { Animation, ToggleClass } from 'intersectiontrigger';
 
-//Reigster plugins right after importing them
+//Register plugins right after importing them
 IntersectionTrigger.registerPlugins([Animation, ToggleClass]);
 ```
 
