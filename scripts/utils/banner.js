@@ -2,13 +2,13 @@ const fs = require('fs-extra');
 const pkg = require('../../package.json');
 
 const date = {
-  day: new Date().getDate(),
-  month: 'January February March April May June July August September October November December'.split(' ')[new Date().getMonth()],
-  year: new Date().getFullYear(),
+	day: new Date().getDate(),
+	month: 'January February March April May June July August September October November December'.split(' ')[new Date().getMonth()],
+	year: new Date().getFullYear()
 };
 
 function banner(name = null) {
-  return `${`
+	return `${`
 /*
 * IntersectionTrigger v${pkg.version} ${name ? `\n* @subpackage ${name}\n` : ''}
 * ${pkg.description}
@@ -24,8 +24,8 @@ function banner(name = null) {
 }
 
 async function addBannerToFile(file, name) {
-  const content = await fs.readFile(file, 'utf-8');
-  await fs.writeFile(file, `${banner(name)}\n${content}`);
+	const content = await fs.readFile(file, 'utf-8');
+	await fs.writeFile(file, `${banner(name)}\n${content}`);
 }
 
 module.exports = { banner, addBannerToFile };
