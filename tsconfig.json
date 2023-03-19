@@ -2,7 +2,7 @@
 	"compilerOptions": {
 		"target": "ESNext",
 		"module": "commonjs",
-		"rootDirs": ["./src", "./tests/**/*.test.ts"],
+		"rootDirs": ["./src"],
 		"removeComments": false,
 		"noEmit": true,
 		"isolatedModules": true,
@@ -21,5 +21,5 @@
 		"resolveJsonModule": true,
 		"skipLibCheck": true
 	},
-	"exclude": ["node_modules", "dist", "coverage", "scripts"]
+	"exclude": ["node_modules", "dist", "coverage", "scripts", "tests/**/*.ts"]
 }
