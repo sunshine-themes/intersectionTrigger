@@ -11,7 +11,7 @@ const is = {
 	array: (a: unknown): a is [] => a instanceof Array,
 	element: (a: unknown): a is HTMLElement => a instanceof HTMLElement,
 	empty: (a: object) => Object.keys(a).length === 0,
-	doc: (a: unknown): a is Document => is.element(a) && a.nodeType === 9,
+	doc: (a: unknown): a is Document => a instanceof Document,
 	anime: (a: unknown): a is Anime<anime.AnimeInstance> => is.object(a) && a.hasOwnProperty('animatables') && !a.hasOwnProperty('add'),
 	tl: (a: unknown): a is Anime<anime.AnimeTimelineInstance> =>
 		is.object(a) && a.hasOwnProperty('add') && is.function((a as Anime<anime.AnimeTimelineInstance>).add),
