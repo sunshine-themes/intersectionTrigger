@@ -1,5 +1,4 @@
 /coverage
 /dist
-/tests/assets
-/tests/visual
+/tests
 /node_modules
