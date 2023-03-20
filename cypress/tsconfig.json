@@ -2,7 +2,22 @@
 	"compilerOptions": {
 		"target": "es5",
 		"lib": ["es5", "dom"],
-		"types": ["cypress", "node"]
+		"esModuleInterop": true,
+		"types": ["cypress", "node"],
+		"removeComments": false,
+		"forceConsistentCasingInFileNames": true,
+		"strict": true,
+		"noImplicitAny": true,
+		"strictNullChecks": true,
+		"strictFunctionTypes": true,
+		"noImplicitThis": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noImplicitReturns": true,
+		"noFallthroughCasesInSwitch": true,
+		"allowUnreachableCode": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true
 	},
 	"include": ["**/*.ts"]
 }
