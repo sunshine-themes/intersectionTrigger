@@ -27,8 +27,7 @@ const is = {
 			: element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth
 };
 const clamp = (a: number, min: number, max: number) => Math.min(Math.max(a, min), max);
-const splitStr = <S extends string>(st: S) => st.split(/\s+/) as SplitResult<S>;
-const getBoundsProp = (element: HTMLElement, prop: 'height' | 'width') => element && element.getBoundingClientRect()[prop];
+const splitStr = <S extends string>(st: S) => st.trim().split(/\s+/) as SplitResult<S>;
 const getScrollValue = (element: HTMLElement, dir: 'y' | 'x') => ('y' === dir ? element.scrollHeight : element.scrollWidth);
 const roundFloat = (value: string | number, precision?: number) => {
 	is.string(value) && (value = parseFloat(value));
@@ -101,7 +100,6 @@ const getScrollBarWidth = () => {
 export {
 	is,
 	splitStr,
-	getBoundsProp,
 	getScrollValue,
 	roundFloat,
 	getParents,
