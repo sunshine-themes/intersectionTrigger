@@ -14,7 +14,7 @@ import type {
 	EventParams
 } from '../core/types';
 
-import { getBoundsProp, getScrollValue, is, parseString, parseValue, roundFloat, throwError } from '../helpers';
+import { getScrollValue, is, parseString, parseValue, roundFloat, throwError } from '../helpers';
 
 export default class Utils {
 	_it: IntersectionTrigger | undefined;
@@ -59,8 +59,8 @@ export default class Utils {
 
 	constructor(intersectionTrigger: IntersectionTrigger) {
 		this._it = intersectionTrigger;
-		this.tD = this._it!._triggersData;
-		this.states = this._it!._states;
+		this.tD = this._it._triggersData;
+		this.states = this._it._states;
 
 		this.setUtils();
 		return this;
@@ -82,7 +82,7 @@ export default class Utils {
 				: { ref: 'left', length: 'width', refOpposite: 'right', clientLength: document.documentElement.clientWidth };
 		this.setRootMargin = (rEP, rLP) => {
 			const { length, clientLength } = this.dirProps();
-			const rootLength = this._it!._root ? getBoundsProp(this._it!._root, length) : clientLength;
+			const rootLength = this._it!._root ? this._it!._root.getBoundingClientRect()[length] : clientLength;
 			const valueToPx = (pos: PositionData, total: number) => {
 				const { value, unit, normal } = pos;
 				if ('%' === unit) return normal * total;
