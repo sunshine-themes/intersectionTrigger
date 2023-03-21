@@ -14,7 +14,7 @@ import type {
 	EventParams
 } from '../core/types';
 
-import { getScrollValue, is, parseString, parseValue, roundFloat, throwError } from '../helpers';
+import { is, parseString, parseValue, roundFloat, throwError } from '../helpers';
 
 export default class Utils {
 	_it: IntersectionTrigger | undefined;
@@ -97,7 +97,8 @@ export default class Utils {
 				fromOppRef: `${(this._it!._isREPGreater ? rEP.pixels : rLP.pixels) - rootLength}px` //root margin from the direction Reference's opposite (bottom|right)
 			};
 
-			const extendMargin = getScrollValue(this.getRoot(), this.isVertical() ? 'x' : 'y');
+			const root = this.getRoot();
+			const extendMargin = this.isVertical() ? root.scrollWidth : root.scrollHeight; //adding margin to intersect if the trigger is out of the root viewport
 			return this.isVertical()
 				? `${rootMargins.fromRef} ${extendMargin}px ${rootMargins.fromOppRef} ${extendMargin}px`
 				: `${extendMargin}px ${rootMargins.fromOppRef} ${extendMargin}px ${rootMargins.fromRef}`;

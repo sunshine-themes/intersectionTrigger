@@ -28,7 +28,6 @@ const is = {
 };
 const clamp = (a: number, min: number, max: number) => Math.min(Math.max(a, min), max);
 const splitStr = <S extends string>(st: S) => st.trim().split(/\s+/) as SplitResult<S>;
-const getScrollValue = (element: HTMLElement, dir: 'y' | 'x') => ('y' === dir ? element.scrollHeight : element.scrollWidth);
 const roundFloat = (value: string | number, precision?: number) => {
 	is.string(value) && (value = parseFloat(value));
 	const multiplier = Math.pow(10, precision || 0);
@@ -100,7 +99,6 @@ const getScrollBarWidth = () => {
 export {
 	is,
 	splitStr,
-	getScrollValue,
 	roundFloat,
 	getParents,
 	mergeOptions,
