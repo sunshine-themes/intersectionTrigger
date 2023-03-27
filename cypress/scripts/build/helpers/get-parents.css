@@ -1,0 +1,6 @@
+/* cypress/scripts/src/scss/get-parents.scss */
+body {
+  padding: 0;
+  margin: 0;
+  overflow: auto;
+}
