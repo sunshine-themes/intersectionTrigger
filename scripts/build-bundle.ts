@@ -1,8 +1,8 @@
-const fs = require('fs-extra');
-const { plugins } = require('./build-config');
-const { outputDir } = require('./utils/output-dir');
-const { banner } = require('./utils/banner');
-const exec = require('exec-sh').promise;
+import fs from 'fs-extra';
+import { plugins } from './build-config';
+import { outputDir } from './utils/output-dir';
+import { banner } from './utils/banner';
+import exec from 'exec-sh';
 
 const entryFileName = 'intersectiontrigger-bundle';
 
@@ -21,7 +21,7 @@ async function buildEntry(plugins, format, target = 'esnext', isBrowser = false)
 	const content = [
 		`import IntersectionTrigger from './core/core${contentFilePath}.js';`,
 		...plugins.map(
-			({ name, capitalized }) =>
+			({ capitalized }) =>
 				`import ${capitalized} from './plugins/${capitalized.toLowerCase()}/${capitalized.toLowerCase()}${contentFilePath}.js';`
 		),
 		'const plugins = [',
@@ -32,10 +32,10 @@ async function buildEntry(plugins, format, target = 'esnext', isBrowser = false)
 	].join('\n');
 
 	const buildContent = [
-		`const { build } = require('estrella');`,
-		`const babelConfig = require('../scripts/babel-config');`,
-		isES5 ? `import('esbuild-plugin-babel').then(({default: babel}) => {` : '',
-		`const buildConfig = {
+		`import { BuildOptions, build } from 'esbuild';`,
+		isES5 ? `import babelConfig from '../scripts/babel-config';` : '',
+		isES5 ? `import babel from 'esbuild-plugin-babel';` : '',
+		`const buildConfig: BuildOptions = {
             globalName: '${isIIFE ? 'intersectiontrigger' : ''}',
             entryPoints: ['src/temp-${entryFileName}.js'],
             outfile: '${outfilePath}',
@@ -47,13 +47,12 @@ async function buildEntry(plugins, format, target = 'esnext', isBrowser = false)
             target: ['${target}'],
             plugins: ${isES5 ? `[babel(babelConfig)]` : '[]'},
         };
-        build(buildConfig);`,
-		isES5 ? `})` : ''
+        build(buildConfig);`
 	].join('\n');
 
-	await Promise.all([fs.writeFile(`./src/temp-${entryFileName}.js`, content), fs.writeFile(`./src/temp-esbuild.js`, buildContent)]);
+	await Promise.all([fs.writeFile(`./src/temp-${entryFileName}.js`, content), fs.writeFile(`./src/temp-esbuild.ts`, buildContent)]);
 
-	await exec(`node src/temp-esbuild.js`);
+	await exec.promise(`ts-node src/temp-esbuild.ts`);
 }
 
 async function buildBundle() {
@@ -62,7 +61,7 @@ async function buildBundle() {
 	await buildEntry(plugins, 'iife', 'es5', true);
 
 	fs.unlink(`./src/temp-${entryFileName}.js`);
-	fs.unlink(`./src/temp-esbuild.js`);
+	fs.unlink(`./src/temp-esbuild.ts`);
 }
 
-module.exports = buildBundle;
+export default buildBundle;

@@ -1,7 +1,7 @@
-const fs = require('fs-extra');
-const { plugins } = require('./build-config');
-const { banner } = require('./utils/banner');
-const { outputDir } = require('./utils/output-dir');
+import fs from 'fs-extra';
+import { plugins } from './build-config';
+import { banner } from './utils/banner';
+import { outputDir } from './utils/output-dir';
 
 async function buildMain() {
 	const filename = `intersectiontrigger.esm`;
@@ -9,7 +9,7 @@ async function buildMain() {
 		banner(),
 		`export { default as IntersectionTrigger, default } from './core/core.esm.js';`,
 		...plugins.map(
-			({ name, capitalized }) =>
+			({ capitalized }) =>
 				`export { default as ${capitalized} } from './plugins/${capitalized.toLowerCase()}/${capitalized.toLowerCase()}.esm.js';`
 		)
 	].join('\n');
@@ -17,4 +17,4 @@ async function buildMain() {
 	await Promise.all([fs.writeFile(`./${outputDir}/${filename}.js`, coreContent)]);
 }
 
-module.exports = buildMain;
+export default buildMain;

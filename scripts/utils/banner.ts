@@ -1,5 +1,5 @@
-const fs = require('fs-extra');
-const pkg = require('../../package.json');
+import fs from 'fs-extra';
+import pkg from '../../package.json' assert { type: 'json' };
 
 const date = {
 	day: new Date().getDate(),
@@ -28,4 +28,4 @@ async function addBannerToFile(file, name) {
 	await fs.writeFile(file, `${banner(name)}\n${content}`);
 }
 
-module.exports = { banner, addBannerToFile };
+export { banner, addBannerToFile };

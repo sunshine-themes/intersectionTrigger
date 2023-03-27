@@ -1,4 +1,4 @@
-const capitalize = name => {
+const capitalize = (name: string) => {
 	return name
 		.split('-')
 		.map(word => {
@@ -13,4 +13,4 @@ const capitalize = name => {
 		.join('');
 };
 
-module.exports = { capitalize };
+export { capitalize };

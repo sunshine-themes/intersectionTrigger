@@ -1,5 +1,5 @@
-const { plugins } = require('./build-config');
-const { buildFormats } = require('./utils/utils');
+import { plugins } from './build-config';
+import { buildFormats } from './utils/utils';
 
 const buildPlugins = () => {
 	plugins.forEach(({ capitalized }) =>
@@ -10,4 +10,4 @@ const buildPlugins = () => {
 	);
 };
 
-module.exports = buildPlugins;
+export default buildPlugins;
