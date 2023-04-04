@@ -1,7 +1,16 @@
 {
+	"ts-node": {
+		"esm": true,
+		"experimentalSpecifierResolution": "node",
+		"compilerOptions": {
+			"moduleResolution": "node",
+			"noImplicitAny": false,
+			"resolveJsonModule": true
+		}
+	},
 	"compilerOptions": {
 		"target": "ESNext",
-		"module": "commonjs",
+		"module": "ESNext",
 		"rootDirs": ["./src"],
 		"removeComments": false,
 		"noEmit": true,
@@ -18,8 +27,7 @@
 		"noImplicitReturns": true,
 		"noFallthroughCasesInSwitch": true,
 		"allowUnreachableCode": true,
-		"resolveJsonModule": true,
 		"skipLibCheck": true
 	},
-	"exclude": ["node_modules", "dist", "coverage", "scripts", "tests/**/*.ts"]
+	"exclude": ["node_modules", "dist", "coverage", "scripts", "tests/**/*.ts", "cypress", "cypress.config.ts"]
 }
