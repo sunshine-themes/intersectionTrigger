@@ -1,7 +1,12 @@
 {
+	"ts-node": {
+		"esm": true,
+		"experimentalSpecifierResolution": "node"
+	},
 	"compilerOptions": {
-		"target": "es5",
-		"lib": ["es5", "dom"],
+		"target": "ESNext",
+		"module": "ESNext",
+		"lib": ["DOM.Iterable", "DOM"],
 		"esModuleInterop": true,
 		"types": ["cypress", "node"],
 		"removeComments": false,
@@ -15,9 +20,9 @@
 		"noUnusedParameters": true,
 		"noImplicitReturns": true,
 		"noFallthroughCasesInSwitch": true,
-		"allowUnreachableCode": true,
-		"resolveJsonModule": true,
-		"skipLibCheck": true
+		"skipLibCheck": true,
+		"moduleResolution": "node"
 	},
-	"include": ["**/*.ts"]
+	"include": ["**/*.ts"],
+	"exclude": ["scripts"]
 }
