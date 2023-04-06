@@ -1,13 +1,11 @@
-import { getParents } from '../../../../../src/helpers';
+import { getParents } from '../../../../../instrumented/helpers';
 import '../../scss/get-parents.scss';
 
-// Declare the `storedParents` property on the Window interface
+// Declare the `__test__` property on the Window interface
 declare global {
 	interface Window {
-		storedParents?: HTMLElement[];
+		__test__?(element: HTMLElement): HTMLElement[];
 	}
 }
 
-const target = document.querySelector<HTMLElement>('#target');
-
-if (target) window.storedParents = getParents(target);
+window.__test__ = getParents;
