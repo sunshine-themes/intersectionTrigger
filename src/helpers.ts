@@ -7,17 +7,17 @@ const is = {
 	string: (a: unknown): a is string => 'string' === typeof a,
 	boolean: (a: unknown): a is boolean => 'boolean' === typeof a,
 	object: (a: unknown): a is object => !!a && 'object' === typeof a && a !== null && !(a instanceof Array),
+	inObject: <O extends object>(obj: O, prop: PropertyKey): prop is keyof O => Object.prototype.hasOwnProperty.call(obj, prop),
 	num: (a: unknown): a is number => typeof a === 'number',
 	array: (a: unknown): a is [] => a instanceof Array,
 	element: (a: unknown): a is HTMLElement => a instanceof HTMLElement,
 	empty: (a: object) => Object.keys(a).length === 0,
 	doc: (a: unknown): a is Document => a instanceof Document,
-	anime: (a: unknown): a is Anime<anime.AnimeInstance> => is.object(a) && a.hasOwnProperty('animatables') && !a.hasOwnProperty('add'),
+	anime: (a: unknown): a is Anime<anime.AnimeInstance> => is.object(a) && is.inObject(a, 'animatables') && !is.inObject(a, 'add'),
 	tl: (a: unknown): a is Anime<anime.AnimeTimelineInstance> =>
-		is.object(a) && a.hasOwnProperty('add') && is.function((a as Anime<anime.AnimeTimelineInstance>).add),
+		is.object(a) && is.inObject(a, 'add') && is.function((a as Anime<anime.AnimeTimelineInstance>).add),
 	animeInstance: (a: unknown): a is Anime<AnimeInstance> => is.anime(a) || is.tl(a),
 	pixel: (a: string) => a.includes('px'),
-	inObject: <O extends object>(obj: O, prop: PropertyKey): prop is keyof O => is.object(obj) && prop in obj,
 	percent: (a: string) => a.includes('%'),
 	scrollable: (element: HTMLElement, dir?: 'x' | 'y') =>
 		dir
@@ -40,14 +40,13 @@ const getParents = (element: HTMLElement) => {
 	}
 	return parents;
 };
-
 const deepClone = <T>(obj: T) => {
 	if ((!is.object(obj) && !is.array(obj)) || is.animeInstance(obj) || obj instanceof Element) return obj;
 
 	const clone = (is.array(obj) ? [] : {}) as T;
 
 	for (const k in obj) {
-		if (obj.hasOwnProperty(k)) clone[k] = deepClone(obj[k]);
+		if (is.inObject(obj, k)) clone[k] = deepClone(obj[k]);
 	}
 
 	return clone;
