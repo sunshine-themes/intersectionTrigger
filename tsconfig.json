@@ -29,5 +29,5 @@
 		"allowUnreachableCode": true,
 		"skipLibCheck": true
 	},
-	"exclude": ["node_modules", "dist", "coverage", "scripts", "tests/**/*.ts", "cypress", "cypress.config.ts"]
+	"exclude": ["node_modules", "dist", "coverage", "scripts", "tests/**/*.ts", "cypress", "cypress.config.ts", "instrumented"]
 }
