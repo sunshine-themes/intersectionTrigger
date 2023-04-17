@@ -1,0 +1,65 @@
+body {
+    padding: 0;
+    margin: 0;
+    overflow: auto;
+}
+
+#trigger {
+    display: inline-block;
+    margin: auto;
+    width: 300px;
+    height: 700px;
+    margin: 100px;
+    overflow: auto;
+    background-color: #f1f1f1;
+}
+
+#child {
+    display: inline-block;
+    width: 200px;
+    height: 50px;
+    background-color: rgb(136, 136, 136);
+    color: white;
+}
+
+.bg-red {
+    background-color: rgb(66, 0, 0) !important;
+}
+
+.bg-blue {
+    background-color: rgb(43, 61, 226) !important;
+}
+
+.of-visible {
+    overflow: scroll !important;
+}
+
+.dir-x {
+    width: 400px;
+    height: 300px;
+    margin-left: 1500px;
+}
+
+.with-scroll-x {
+    margin-right: 1000px;
+    margin-left: 1000px;
+}
+
+.with-scroll-y {
+    margin-top: 2000px;
+    margin-bottom: 250px;
+}
+
+@for $i from 1 through 5 {
+    .mt-#{$i}00 {
+        margin-top: #{$i}00px !important;
+    }
+
+    .h-#{$i}00 {
+        height: #{$i}00px !important;
+    }
+
+    .w-#{$i}00 {
+        width: #{$i}00px !important;
+    }
+}
