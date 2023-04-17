@@ -8,7 +8,6 @@ import type {
 	ModifiedDOMRect,
 	IntersectionTriggerOptions,
 	TriggerData,
-	ObserverConfiguration,
 	PositionsData,
 	Root,
 	PluginName,
@@ -43,8 +42,6 @@ class IntersectionTrigger {
 	killed!: boolean;
 	_states: { oCbFirstInvoke: boolean; runningScrollCbs: number };
 	_options!: DeepRequired<IntersectionTriggerOptions>;
-	_defaultTriggerParams!: Omit<TriggerData, 'states'>;
-	_observerConfig!: ObserverConfiguration;
 	_triggersData: WeakMap<HTMLElement, TriggerData>;
 	_defaultOptions!: IntersectionTriggerOptions;
 	_userOptions: IntersectionTriggerOptions;

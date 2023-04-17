@@ -39,11 +39,6 @@ interface TriggerData extends DeepRequired<Omit<TriggerOptions, 'enter' | 'leave
 	toggleClass?: ToggleClassParams[];
 	animation?: AnimationParams;
 }
-interface ObserverConfiguration {
-	root: Root;
-	rootMargin: string;
-	threshold: number[];
-}
 
 interface PositionData {
 	original: string;
@@ -106,6 +101,5 @@ export type {
 	TriggerStates,
 	Position,
 	ScrollCallbacks,
-	ObserverConfiguration,
 	EventParams
 };
