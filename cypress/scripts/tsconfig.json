@@ -1,6 +1,8 @@
 {
 	"compilerOptions": {
 		"target": "ESNext",
+		"module": "ESNext",
+		"noEmit": true,
 		"esModuleInterop": true,
 		"removeComments": false,
 		"forceConsistentCasingInFileNames": true,
