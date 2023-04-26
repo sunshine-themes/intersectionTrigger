@@ -163,7 +163,7 @@ class IntersectionTrigger {
 
 			switch (true) {
 				case this._states.oCbFirstInvoke:
-					if ((!isIntersecting && rLP > tLP) || (isIntersecting && rLP > tLP)) {
+					if (rEP > tEP && rLP > tLP) {
 						onEnterLeave();
 					} else if (isIntersecting && rEP > tEP && rLP < tLP) {
 						this._utils!.triggerEvent(trigger, enterEventParams);
