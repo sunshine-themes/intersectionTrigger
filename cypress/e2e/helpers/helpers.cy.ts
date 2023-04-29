@@ -12,7 +12,7 @@ import {
 	setElProps,
 	getScrollBarWidth,
 	deepClone
-} from '../../../instrumented/helpers';
+} from '../../../src/helpers';
 
 // Test "is" object
 describe('is object helper', () => {

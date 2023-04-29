@@ -2,6 +2,7 @@ import { sassPlugin } from 'esbuild-sass-plugin';
 import fs from 'fs-extra';
 import path from 'path';
 import { BuildOptions, context, build } from 'esbuild';
+import babel from 'esbuild-plugin-babel';
 
 const host = 'http://localhost:3000/';
 const pathToScripts = `cypress/scripts`;
@@ -15,7 +16,14 @@ const buildConfig: BuildOptions = {
 	bundle: true,
 	outbase: `${pathToScripts}/src/js`,
 	tsconfig: `${pathToScripts}/tsconfig.json`,
-	plugins: [sassPlugin()]
+	plugins: [
+		sassPlugin(),
+		babel({
+			filter: /.*/,
+			namespace: '',
+			config: { presets: ['@babel/preset-typescript'], plugins: ['istanbul'] }
+		})
+	]
 };
 
 const buildScripts = () => {
