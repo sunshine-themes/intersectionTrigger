@@ -1,4 +1,13 @@
 {
+	"ts-node": {
+		"esm": true,
+		"experimentalSpecifierResolution": "node",
+		"compilerOptions": {
+			"moduleResolution": "node",
+			"noImplicitAny": false
+		},
+		"include": ["esbuild.ts"]
+	},
 	"compilerOptions": {
 		"target": "ESNext",
 		"module": "ESNext",
@@ -18,5 +27,6 @@
 		"allowUnreachableCode": true,
 		"skipLibCheck": true
 	},
-	"include": ["**/*.ts"]
+	"include": ["**/*.ts"],
+	"exclude": ["esbuild.ts"]
 }
