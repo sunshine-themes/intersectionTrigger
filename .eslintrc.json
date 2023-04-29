@@ -36,6 +36,12 @@
 		"@typescript-eslint/no-empty-function": "warn",
 		"@typescript-eslint/explicit-module-boundary-types": "off",
 		"@typescript-eslint/no-var-requires": "off",
+		"@typescript-eslint/no-namespace": [
+			"error",
+			{
+				"allowDeclarations": true
+			}
+		],
 		"prettier/prettier": [
 			"error",
 			{
@@ -44,7 +50,8 @@
 		],
 		"arrow-body-style": "off",
 		"prefer-arrow-callback": "off",
-		"cypress/no-unnecessary-waiting": "warn"
+		"cypress/no-unnecessary-waiting": "warn",
+		"cypress/no-assigning-return-values": "warn"
 	},
 	"globals": {},
 	"overrides": []
