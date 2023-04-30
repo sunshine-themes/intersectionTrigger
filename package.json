@@ -55,7 +55,7 @@
 		"test:build": "ts-node cypress/scripts/esbuild.ts",
 		"test:build:watch": "npm run test:build -- -w",
 		"test:coverage": "npm test -- --coverage",
-		"validate": "conc -g -c \"auto\" format lint build"
+		"validate": "npm run format && npm run lint && npm run build"
 	},
 	"license": "personal 'no charge' license, Licensees of commercial or business license are granted additional rights. See http://sunshine-themes.com/?appID=ss_app_1&tab=license for details.",
 	"bugs": {
