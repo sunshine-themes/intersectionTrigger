@@ -15,8 +15,7 @@ import type {
 	Trigger,
 	TriggerOptions,
 	Position,
-	Plugin,
-	EventParams
+	Plugin
 } from './types';
 
 //Import Modules
@@ -86,7 +85,7 @@ class IntersectionTrigger {
 	_setPlugin(pluginName: PluginName) {
 		const plugins = IntersectionTrigger.getRegisteredPlugins();
 		const Plugin = plugins.find(plg => pluginName === plg.pluginName);
-		// @ts-ignore
+		//@ts-ignore
 		Plugin && (this[pluginName] = new Plugin(this));
 	}
 
@@ -120,7 +119,7 @@ class IntersectionTrigger {
 	}
 
 	_observerCallback: IntersectionObserverCallback = (entries, observer) => {
-		const { ref, refOpposite, length } = this._utils!.dirProps();
+		const { length } = this._utils!.dirProps();
 
 		for (const entry of entries) {
 			//Trigger data
@@ -132,60 +131,27 @@ class IntersectionTrigger {
 			//Root Data
 			const rB = (this.rootBounds = entry.rootBounds || this._utils!.getRootRect(observer.rootMargin)), //root Bounds
 				rL = rB[length];
-
 			//Getting needed data
 			const {
-				enter,
-				leave,
-				onEnter,
-				onLeave,
-				onLeaveBack,
-				states: {
-					hasEntered,
-					hasEnteredBack,
 					onScroll: { backup }
-				}
-			} = this._utils!.getTriggerData(trigger);
-			const [tEP, tLP, rEP, rLP] = this._utils!.getPositions(tB, rB, { enter, leave, ref, refOpposite, length });
+				} = this._utils!.getTriggerData(trigger, 'states'),
+				initBackupFun = tB[length] >= rL,
+				isBackupFunRunning = !!backup;
 
-			//States
-			const initBackupFun = tB[length] >= rL,
-				isBackupFunRunning = !!backup,
-				hasEnteredFromOneSide = hasEntered || hasEnteredBack,
-				enterEventParams: EventParams = ['Enter', onEnter, 'hasEntered', 'hasLeftBack', 0],
-				leaveEventParams: EventParams = ['Leave', onLeave, null, 'hasLeft', 1];
+			const toggleActions = this._utils!.toggleActions;
+			const setStates = this._utils!.setTriggerScrollStates;
 
-			//Event Handler
-			const onEnterLeave = () => {
-				this._utils!.triggerEvent(trigger, enterEventParams);
-				this._utils!.triggerEvent(trigger, leaveEventParams);
-			};
+			toggleActions(trigger);
 
-			switch (true) {
-				case this._states.oCbFirstInvoke:
-					if (rEP > tEP && rLP > tLP) {
-						onEnterLeave();
-					} else if (isIntersecting && rEP > tEP && rLP < tLP) {
-						this._utils!.triggerEvent(trigger, enterEventParams);
-					}
+			if (this._states.oCbFirstInvoke) {
+				isIntersecting && initBackupFun && setStates(trigger, 'backup', toggleActions);
+				continue;
+			}
 
-					if (isIntersecting && initBackupFun) this._utils!.setTriggerScrollStates(trigger, 'backup', this._utils!.toggleActions);
-					break;
-				case !isIntersecting:
-					if (isBackupFunRunning) this._utils!.setTriggerScrollStates(trigger, 'backup');
-
-					if (hasEnteredFromOneSide) {
-						if (rLP > tLP) {
-							this._utils!.triggerEvent(trigger, leaveEventParams);
-						} else if (rEP < tEP) {
-							this._utils!.triggerEvent(trigger, ['LeaveBack', onLeaveBack, null, 'hasLeftBack', 3]);
-						}
-					}
-					break;
-				case isIntersecting && !isBackupFunRunning:
-					this._utils!.toggleActions(trigger);
-					initBackupFun && this._utils!.setTriggerScrollStates(trigger, 'backup', this._utils!.toggleActions);
-					break;
+			if (isIntersecting) {
+				!isBackupFunRunning && initBackupFun && setStates(trigger, 'backup', toggleActions);
+			} else {
+				isBackupFunRunning && setStates(trigger, 'backup');
 			}
 		}
 		//Reset oCbFirstInvoke state

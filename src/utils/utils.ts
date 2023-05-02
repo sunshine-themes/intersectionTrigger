@@ -252,46 +252,39 @@ export default class Utils {
 		};
 
 		this.toggleActions = trigger => {
-			const {
-					enter,
-					leave,
-					onEnter,
-					onLeave,
-					onEnterBack,
-					onLeaveBack,
-					states: { hasEntered, hasEnteredBack, hasLeft, hasLeftBack, hasEnteredOnce }
-				} = this.getTriggerData(trigger),
+			const { enter, leave, onEnter, onLeave, onEnterBack, onLeaveBack, states } = this.getTriggerData(trigger),
 				tB = trigger.getBoundingClientRect(), //trigger Bounds
 				rB = (this._it!.rootBounds = this.getRootRect(this._it!.observer!.rootMargin)), //root Bounds
 				{ ref, refOpposite, length } = this.dirProps(),
-				[tEP, tLP, rEP, rLP] = this.getPositions(tB, rB, { enter, leave, ref, refOpposite, length }),
-				hasEnteredFromOneSide = hasEntered || hasEnteredBack;
+				[tEP, tLP, rEP, rLP] = this.getPositions(tB, rB, { enter, leave, ref, refOpposite, length });
 
-			let hasCaseMet = true;
+			let modStates = { ...states, hasEnteredFromOneSide: states.hasEntered || states.hasEnteredBack };
 
-			switch (true) {
-				case hasLeftBack && rEP > tEP:
-					//Enter case
-					this.triggerEvent(trigger, ['Enter', onEnter, 'hasEntered', 'hasLeftBack', 0]);
-					break;
-				case hasEnteredFromOneSide && rLP > tLP:
-					//Leave case
-					this.triggerEvent(trigger, ['Leave', onLeave, null, 'hasLeft', 1]);
-					break;
-				case hasLeft && hasEnteredOnce && rLP < tLP:
-					//EnterBack case
-					this.triggerEvent(trigger, ['EnterBack', onEnterBack, 'hasEnteredBack', 'hasLeft', 2]);
-					break;
-				case hasEnteredFromOneSide && rEP < tEP:
-					//LeaveBack case
-					this.triggerEvent(trigger, ['LeaveBack', onLeaveBack, null, 'hasLeftBack', 3]);
-					break;
-				default:
-					hasCaseMet = false;
-					break;
+			const updateStates = () => {
+				const states = this.getTriggerData(trigger, 'states');
+				modStates = { ...states, hasEnteredFromOneSide: states.hasEntered || states.hasEnteredBack };
+			};
+
+			//Enter case
+			if (modStates.hasLeftBack && rEP > tEP) {
+				this.triggerEvent(trigger, ['Enter', onEnter, 'hasEntered', 'hasLeftBack', 0]);
+				updateStates();
 			}
-
-			return hasCaseMet;
+			//Leave case
+			if (modStates.hasEnteredFromOneSide && rLP > tLP) {
+				this.triggerEvent(trigger, ['Leave', onLeave, null, 'hasLeft', 1]);
+				updateStates();
+			}
+			//EnterBack case
+			if (modStates.hasLeft && modStates.hasEnteredOnce && rLP < tLP) {
+				this.triggerEvent(trigger, ['EnterBack', onEnterBack, 'hasEnteredBack', 'hasLeft', 2]);
+				updateStates();
+			}
+			//LeaveBack case
+			if (modStates.hasEnteredFromOneSide && rEP < tEP) {
+				this.triggerEvent(trigger, ['LeaveBack', onLeaveBack, null, 'hasLeftBack', 3]);
+				updateStates();
+			}
 		};
 
 		//  upcoming code is based on IntersectionObserver calculations of the root bounds. All rights reserved (https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document).
