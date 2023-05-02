@@ -9,7 +9,7 @@ import type { AnimationParams, Anime, AnimeInstance, AnimationOptions } from '..
 
 type Trigger = string | HTMLElement | HTMLElement[] | NodeListOf<HTMLElement>;
 type Root = HTMLElement | null;
-type Plugin = { pluginName: PluginName } & (Animation | ToggleClass | Guides);
+type Plugin = typeof Animation | typeof ToggleClass | typeof Guides;
 type PluginName = 'animation' | 'toggleClass' | 'guides';
 type EventHandler = (event: Event) => void;
 type EventParams = [
@@ -27,7 +27,7 @@ type PositionsData = {
 	rLP: PositionData;
 };
 type DirectionProps = { ref: 'top' | 'left'; length: 'height' | 'width'; refOpposite: 'bottom' | 'right' };
-type ToggleActions = (trigger: HTMLElement) => boolean;
+type ToggleActions = (trigger: HTMLElement) => void;
 type ItCallbackFunction = (trigger: HTMLElement, it: IntersectionTrigger) => void;
 type Position = string | ((it: IntersectionTrigger) => string);
 interface TriggerData extends DeepRequired<Omit<TriggerOptions, 'enter' | 'leave' | 'toggleClass' | 'animation'>> {
