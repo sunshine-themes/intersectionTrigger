@@ -224,7 +224,7 @@ export default class Utils {
 				if (!hasEnteredOnce)
 					triggerStates = { [enterState as keyof TriggerStates]: true, hasLeft: false, hasLeftBack: false, hasEnteredOnce: true };
 			} else {
-				//Remove the instance if 'once' is true
+				//Remove the trigger if 'once' is true
 				if (once && hasEnteredOnce) {
 					this._it!.remove(trigger);
 					return;
@@ -270,21 +270,15 @@ export default class Utils {
 				this.triggerEvent(trigger, ['Enter', onEnter, 'hasEntered', 'hasLeftBack', 0]);
 				updateStates();
 			}
-			//Leave case
-			if (modStates.hasEnteredFromOneSide && rLP > tLP) {
-				this.triggerEvent(trigger, ['Leave', onLeave, null, 'hasLeft', 1]);
-				updateStates();
-			}
 			//EnterBack case
 			if (modStates.hasLeft && modStates.hasEnteredOnce && rLP < tLP) {
 				this.triggerEvent(trigger, ['EnterBack', onEnterBack, 'hasEnteredBack', 'hasLeft', 2]);
 				updateStates();
 			}
+			//Leave case
+			if (modStates.hasEnteredFromOneSide && rLP > tLP) this.triggerEvent(trigger, ['Leave', onLeave, null, 'hasLeft', 1]);
 			//LeaveBack case
-			if (modStates.hasEnteredFromOneSide && rEP < tEP) {
-				this.triggerEvent(trigger, ['LeaveBack', onLeaveBack, null, 'hasLeftBack', 3]);
-				updateStates();
-			}
+			if (modStates.hasEnteredFromOneSide && rEP < tEP) this.triggerEvent(trigger, ['LeaveBack', onLeaveBack, null, 'hasLeftBack', 3]);
 		};
 
 		//  upcoming code is based on IntersectionObserver calculations of the root bounds. All rights reserved (https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document).
