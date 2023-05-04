@@ -328,7 +328,9 @@ class IntersectionTrigger {
 IntersectionTrigger.getInstances = () => instances;
 IntersectionTrigger.getInstanceById = (id: number) => instances.find((ins: IntersectionTrigger) => ins.id === id);
 IntersectionTrigger.update = () => instances.forEach(ins => ins.update());
-IntersectionTrigger.kill = () => instances.forEach(ins => ins.kill());
+IntersectionTrigger.kill = () => {
+	while (instances.length) instances[0].kill();
+};
 IntersectionTrigger.registerPlugins = (plugins = []) => registeredPlugins.push(...plugins);
 IntersectionTrigger.getRegisteredPlugins = () => registeredPlugins;
 
