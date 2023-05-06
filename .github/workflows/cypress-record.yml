@@ -5,10 +5,15 @@ on:
     branches:
       - dev-cypress
 
+permissions:
+  contents: write
+
 jobs:
   install:
     runs-on: ubuntu-latest
-    container: cypress/browsers:node16.16.0-chrome105-ff104-edge
+    container:
+      image: cypress/browsers:node16.16.0-chrome105-ff104-edge
+      options: --user 1001
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -52,14 +57,16 @@ jobs:
       - name: Save build folder
         uses: actions/upload-artifact@v3
         with:
-          name: build
+          name: test build
           if-no-files-found: error
           path: cypress/scripts/build
 
   chrome-tests:
     timeout-minutes: 15
     runs-on: ubuntu-latest
-    container: cypress/browsers:node16.16.0-chrome105-ff104-edge
+    container:
+      image: cypress/browsers:node16.16.0-chrome105-ff104-edge
+      options: --user 1001
     needs: install
     strategy:
       # when one test fails, DO NOT cancel the other
@@ -103,7 +110,9 @@ jobs:
   firefox-tests:
     timeout-minutes: 15
     runs-on: ubuntu-latest
-    container: cypress/browsers:node16.16.0-chrome105-ff104-edge
+    container:
+      image: cypress/browsers:node16.16.0-chrome105-ff104-edge
+      options: --user 1001
     needs: install
     strategy:
       # when one test fails, DO NOT cancel the other
