@@ -316,6 +316,8 @@ class IntersectionTrigger {
 		this.toggleClass && this.toggleClass.kill(); //Kill toggleClass instance
 		this.animation && this.animation.kill(); //Kill animation instance
 
+		this._utils!.kill(); //Kill utils instance
+
 		this.triggers = []; //Remove all triggers
 		this.animation = this.toggleClass = this.guides = this._utils = undefined;
 
