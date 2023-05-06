@@ -101,6 +101,7 @@ jobs:
           browser: chrome
           record: true
           parallel: true
+          group: 'Chrome Tests'
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           # Recommended: pass the GitHub token lets this action correctly
@@ -141,6 +142,7 @@ jobs:
           browser: firefox
           record: true
           parallel: true
+          group: 'Firefox Tests'
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           # Recommended: pass the GitHub token lets this action correctly
@@ -177,6 +179,7 @@ jobs:
           wait-on-timeout: 120
           record: true
           parallel: true
+          group: 'Electron Tests'
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           # Recommended: pass the GitHub token lets this action correctly
@@ -214,6 +217,7 @@ jobs:
           browser: edge
           record: true
           parallel: true
+          group: 'Edge Tests'
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           # Recommended: pass the GitHub token lets this action correctly
