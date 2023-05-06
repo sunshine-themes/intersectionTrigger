@@ -14,5 +14,9 @@ export default defineConfig({
 			// with any changed environment variables
 			return config;
 		}
+	},
+	retries: {
+		runMode: 2,
+		openMode: 1
 	}
 });
