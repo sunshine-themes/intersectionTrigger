@@ -1,8 +1,4 @@
 {
-	"ts-node": {
-		"esm": true,
-		"experimentalSpecifierResolution": "node"
-	},
 	"compilerOptions": {
 		"target": "ESNext",
 		"module": "ESNext",
@@ -20,9 +16,8 @@
 		"noUnusedParameters": true,
 		"noImplicitReturns": true,
 		"noFallthroughCasesInSwitch": true,
-		"skipLibCheck": true,
-		"moduleResolution": "node"
+		"skipLibCheck": true
 	},
 	"include": ["**/*.ts"],
-	"exclude": ["scripts"]
+	"exclude": ["scripts", "plugins"]
 }
