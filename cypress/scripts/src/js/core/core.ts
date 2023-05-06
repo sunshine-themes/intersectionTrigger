@@ -1,5 +1,8 @@
 import '../../scss/core.scss';
-import IntersectionTrigger from '../../../../../instrumented/core/core';
+import IntersectionTrigger from '../../../../../src/core/core';
+// import Guides from '../../../../../src/plugins/guides/guides';
+
+// IntersectionTrigger.registerPlugins([Guides]);
 
 declare global {
 	interface Window {
