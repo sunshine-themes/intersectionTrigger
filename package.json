@@ -51,7 +51,7 @@
 		"cy:open": "npx cypress open",
 		"cy:run": "npx cypress run",
 		"cy:record": "npx cypress run --record",
-		"test": "start-test server http://localhost:3000 'run-s test:build cy:run",
+		"test": "start-test server http://localhost:3000 'run-s test:build cy:run'",
 		"test:build": "ts-node cypress/scripts/esbuild.ts",
 		"test:build:watch": "npm run test:build -- -w",
 		"validate": "run-s format lint test build"
