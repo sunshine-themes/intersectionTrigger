@@ -45,17 +45,16 @@
 		"build": "ts-node scripts/build",
 		"build:watch": "ts-node scripts/build -- -w",
 		"dev": "start-test server http://localhost:3000 'conc --kill-others-on-fail -c \"auto\" \"npm:build:watch\" \"npm:test:build:watch\" \"npm:cy:open\"'",
-		"format": "prettier --config .prettierrc.json \"{src,tests,cypress,mocks}/**/*.{js,ts}\" --write",
+		"format": "prettier --config .prettierrc.json \"{src,cypress}/**/*.{js,ts}\" --write",
 		"lint": "eslint . --ext .ts",
 		"server": "http-server -p 3000",
 		"cy:open": "npx cypress open",
 		"cy:run": "npx cypress run",
 		"cy:record": "npx cypress run --record",
-		"test": "start-test server http://localhost:3000 'conc -g -c \"auto\" \"npm:test:build\" \"npm:cy:run\"'",
+		"test": "start-test server http://localhost:3000 'run-s test:build cy:run",
 		"test:build": "ts-node cypress/scripts/esbuild.ts",
 		"test:build:watch": "npm run test:build -- -w",
-		"test:coverage": "npm test -- --coverage",
-		"validate": "npm run format && npm run lint && npm run build"
+		"validate": "run-s format lint test build"
 	},
 	"license": "personal 'no charge' license, Licensees of commercial or business license are granted additional rights. See http://sunshine-themes.com/?appID=ss_app_1&tab=license for details.",
 	"bugs": {
@@ -93,6 +92,7 @@
 		"exec-sh": "^0.4.0",
 		"fs-extra": "^10.1.0",
 		"http-server": "^14.1.1",
+		"npm-run-all": "^4.1.5",
 		"nyc": "^15.1.0",
 		"prettier": "^2.8.4",
 		"source-map-support": "^0.5.21",
