@@ -3,6 +3,7 @@
 /tests
 /node_modules
 /cypress/videos
+/cypress/screenshots
 /cypress/scripts/build
 /instrumented
 /.nyc_output
