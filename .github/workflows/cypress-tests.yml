@@ -1,9 +1,6 @@
 name: Cypress Tests
 
-on:
-  push:
-    branches:
-      - dev-cypress
+on: push
 
 permissions:
   contents: write
