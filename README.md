@@ -24,7 +24,6 @@
   <a href="https://codecov.io/gh/sunshine-themes/intersectionTrigger" > 
     <img src="https://codecov.io/gh/sunshine-themes/intersectionTrigger/branch/master/graph/badge.svg?token=IBPVH4BTBY"/> 
   </a>
-  <a href="https://openbase.com/js/intersectiontrigger?utm_source=embedded&amp;utm_medium=badge&amp;utm_campaign=rate-badge"><img src="https://badges.openbase.com/js/rating/intersectiontrigger.svg?token=fKPUe/O+HyTf9vpGcxPEOqx9SD54yG9T0e/Biw7dk3I=" alt="Rate this package"></a>
 </p>
 
 # IntersectionTrigger
