@@ -1,4 +1,3 @@
-/// <reference types="cypress" />
 // ***********************************************
 // This example commands.ts shows you how to
 // create various custom commands and overwrite
@@ -25,13 +24,22 @@
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 //
-// declare global {
-//   namespace Cypress {
-//     interface Chainable {
-//       login(email: string, password: string): Chainable<void>
-//       drag(subject: string, options?: Partial<TypeOptions>): Chainable<Element>
-//       dismiss(subject: string, options?: Partial<TypeOptions>): Chainable<Element>
-//       visit(originalFn: CommandOriginalFn, url: string, options: Partial<VisitOptions>): Chainable<Element>
-//     }
-//   }
+// type Callbacks = {
+// 	enterCallback(): void;
+// 	leaveCallback(): void;
+// 	enterBackCallback(): void;
+// 	leaveBackCallback(): void;
+// };
+// declare namespace Cypress {
+// 	interface Chainable {
+// 		spyOnCallbacks(callbacks: Callbacks): void;
+// 	}
 // }
+
+// // Add 'spyOnCallbacks'
+// Cypress.Commands.add('spyOnCallbacks', (callbacks: Callbacks) => {
+// 	cy.spy(callbacks, 'enterCallback').as('Enter');
+// 	cy.spy(callbacks, 'leaveCallback').as('Leave');
+// 	cy.spy(callbacks, 'enterBackCallback').as('EnterBack');
+// 	cy.spy(callbacks, 'leaveBackCallback').as('LeaveBack');
+// });
