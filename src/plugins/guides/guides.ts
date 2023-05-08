@@ -58,6 +58,7 @@ class Guides {
 		const { enter, position, isHigherValue, text, color, backgroundColor } = options;
 
 		const guide = document.createElement('div');
+		guide.id = triggerEl ? (enter ? 'trigger-enter' : 'trigger-leave') : enter ? 'root-enter' : 'root-leave';
 
 		setElProps(guide, {
 			width: this.isVer ? '100px' : '1px',
