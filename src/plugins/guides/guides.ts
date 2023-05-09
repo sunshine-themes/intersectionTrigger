@@ -61,8 +61,8 @@ class Guides {
 		guide.id = triggerEl ? (enter ? 'trigger-enter' : 'trigger-leave') : enter ? 'root-enter' : 'root-leave';
 
 		setElProps(guide, {
-			width: this.isVer ? '100px' : '1px',
-			height: this.isVer ? '1px' : '100px',
+			width: this.isVer ? '100px' : '2px',
+			height: this.isVer ? '2px' : '100px',
 			position: 'absolute',
 			zIndex: '9999',
 			backgroundColor: backgroundColor,
