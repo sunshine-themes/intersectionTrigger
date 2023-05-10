@@ -57,16 +57,18 @@ class Guides {
 	_guideCreation(options: GuidesParams & { position: string | number }, triggerEl?: HTMLElement) {
 		const { enter, position, isHigherValue, text, color, backgroundColor } = options;
 
-		const guide = document.createElement('div');
+		const guide = document.createElement('div'),
+			guideThickness = 2;
+
 		guide.id = triggerEl ? (enter ? 'trigger-enter' : 'trigger-leave') : enter ? 'root-enter' : 'root-leave';
 
 		setElProps(guide, {
-			width: this.isVer ? '100px' : '2px',
-			height: this.isVer ? '2px' : '100px',
+			width: this.isVer ? '100px' : `${guideThickness}px`,
+			height: this.isVer ? `${guideThickness}px` : '100px',
 			position: 'absolute',
 			zIndex: '9999',
 			backgroundColor: backgroundColor,
-			[this.isVer ? 'top' : 'left']: position.toString()
+			[this.isVer ? 'top' : 'left']: isHigherValue ? `calc( ${position.toString()} - ${guideThickness}px )` : position.toString()
 		});
 		//Create the text element
 		const createText = () => {
