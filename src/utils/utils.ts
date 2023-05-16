@@ -13,13 +13,14 @@ import type {
 	ToggleActions,
 	EventParams
 } from '../core/types';
-
-import { is, parseString, parseValue, roundFloat, throwError } from '../helpers';
+import { getScrollBarWidth, is, parseString, parseValue, roundFloat, throwError } from '../helpers';
 
 export default class Utils {
 	_it: IntersectionTrigger | undefined;
 	tD: WeakMap<HTMLElement, TriggerData>;
 	states: { oCbFirstInvoke: boolean; runningScrollCbs: number };
+	scrollbarThickness!: { x: number; y: number } | undefined;
+	setScrollbarThickness!: (rootElement: HTMLElement) => void;
 	isVertical!: () => boolean;
 	getRoot!: {
 		(): Exclude<Root, null>;
@@ -75,6 +76,14 @@ export default class Utils {
 				return document.documentElement;
 			}
 			return this._it!._root;
+		};
+		this.setScrollbarThickness = root => {
+			if (this.scrollbarThickness) return;
+			const sBWidth = getScrollBarWidth();
+			this.scrollbarThickness = {
+				x: is.scrollable(root, 'x') ? sBWidth : 0,
+				y: is.scrollable(root, 'y') ? sBWidth : 0
+			};
 		};
 		this.dirProps = () =>
 			this.isVertical()
@@ -294,9 +303,10 @@ export default class Utils {
 			return margins;
 		};
 		this.expandRectByRootMargin = (rect, rootMargins) => {
-			const margins = this.parseRootMargin(rootMargins).map((margin, i) => {
-				return margin.unit === 'px' ? margin.value : (margin.value * (i % 2 ? rect.width : rect.height)) / 100;
-			});
+			const margins = this.parseRootMargin(rootMargins).map((margin, i) =>
+				margin.unit === 'px' ? margin.value : (margin.value * (i % 2 ? rect.width : rect.height)) / 100
+			);
+
 			const newRect: ModifiedDOMRect = {
 				top: rect.top - margins[0],
 				right: rect.right + margins[1],
@@ -311,24 +321,21 @@ export default class Utils {
 			return newRect;
 		};
 		this.getRootRect = rootMargins => {
-			let rootRect: ModifiedDOMRect;
-			if (this._it!._root && !is.doc(this._it!._root)) {
-				rootRect = this._it!._root.getBoundingClientRect();
-				return this.expandRectByRootMargin(rootRect, rootMargins);
-			}
-			const doc = is.doc(this._it!._root) ? this._it!._root : document;
-			const html = doc.documentElement;
-			const body = doc.body;
-			rootRect = {
-				top: 0,
-				left: 0,
-				right: html.clientWidth || body.clientWidth,
-				width: html.clientWidth || body.clientWidth,
-				bottom: html.clientHeight || body.clientHeight,
-				height: html.clientHeight || body.clientHeight
-			};
+			const hasRoot = this._it!._root && !is.doc(this._it!._root);
+			const rootEl = this.getRoot();
 
-			return this.expandRectByRootMargin(rootRect, rootMargins);
+			this.setScrollbarThickness(rootEl);
+
+			const rootRect = rootEl.getBoundingClientRect();
+			const modRootRect: ModifiedDOMRect = {
+				top: hasRoot ? rootRect.top : 0,
+				left: hasRoot ? rootRect.left : 0,
+				bottom: hasRoot ? rootRect.bottom - this.scrollbarThickness!.x : rootEl.clientHeight,
+				right: hasRoot ? rootRect.right - this.scrollbarThickness!.y : rootEl.clientWidth,
+				width: 0,
+				height: 0
+			};
+			return this.expandRectByRootMargin(modRootRect, rootMargins);
 		};
 	}
 

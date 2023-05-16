@@ -11,10 +11,8 @@ class Guides {
 	_utils: Utils | undefined;
 	options!: GuidesOptions;
 	_guides!: HTMLElement[];
-	_scrollBarWidth!: number;
 	isVer!: boolean;
 	rootEl!: Exclude<Root, null>;
-	scrollbarThickness!: { x: number; y: number };
 	_onResizeHandler!: EventHandler;
 	static pluginName: PluginName;
 
@@ -32,13 +30,8 @@ class Guides {
 		this.options = is.object(options) ? options : {};
 		this._guides = [];
 
-		this._scrollBarWidth = getScrollBarWidth();
 		this.isVer = this._utils!.isVertical();
 		this.rootEl = this._utils!.getRoot();
-		this.scrollbarThickness = {
-			x: is.scrollable(this.rootEl, 'x') ? this._scrollBarWidth : 0,
-			y: is.scrollable(this.rootEl, 'y') ? this._scrollBarWidth : 0
-		};
 
 		this._addResizeListener();
 		this.update();
@@ -119,29 +112,25 @@ class Guides {
 
 			const rDefaultBounds = this.rootEl.getBoundingClientRect(); //root Bounds regardless the root margins
 			let targetBounds = this._utils!.getRootRect(this._it!.observer!.rootMargin);
-			const scrollbarThickness = {
-				x: isHigherValue ? this.scrollbarThickness.x : 0,
-				y: isHigherValue ? this.scrollbarThickness.y : 0
-			};
 			let diffs = { x: 0, y: 0 };
 
 			//Root Difference
 			diffs = this.isVer
 				? enter
 					? {
-							x: rDefaultBounds.right - guideBounds.left - this.scrollbarThickness.y,
-							y: targetBounds.bottom - guideBounds.bottom - scrollbarThickness.x
+							x: rDefaultBounds.right - guideBounds.left,
+							y: targetBounds.bottom - guideBounds.bottom
 					  }
 					: {
-							x: rDefaultBounds.right - guideBounds.left - this.scrollbarThickness.y,
-							y: targetBounds.top - guideBounds.top - scrollbarThickness.x
+							x: rDefaultBounds.right - guideBounds.left,
+							y: targetBounds.top - guideBounds.top
 					  }
 				: enter
 				? {
 						x: targetBounds.right - guideBounds.right,
-						y: rDefaultBounds.bottom - guideBounds.top - this.scrollbarThickness.x
+						y: rDefaultBounds.bottom - guideBounds.top
 				  }
-				: { x: targetBounds.left - guideBounds.left, y: rDefaultBounds.bottom - guideBounds.top - this.scrollbarThickness.x };
+				: { x: targetBounds.left - guideBounds.left, y: rDefaultBounds.bottom - guideBounds.top };
 
 			if (triggerEl) {
 				targetBounds = triggerEl!.getBoundingClientRect();
@@ -177,7 +166,6 @@ class Guides {
 		//RePosition the guide on every parent on scroll
 		getParents(triggerEl).forEach(parent => {
 			if (!is.scrollable(parent)) return;
-
 			parent.addEventListener('scroll', positionGuide, false);
 		});
 	}
