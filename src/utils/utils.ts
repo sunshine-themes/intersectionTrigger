@@ -323,10 +323,10 @@ export default class Utils {
 		this.getRootRect = rootMargins => {
 			const hasRoot = this._it!._root && !is.doc(this._it!._root);
 			const rootEl = this.getRoot();
+			const rootRect = rootEl.getBoundingClientRect();
 
 			this.setScrollbarThickness(rootEl);
 
-			const rootRect = rootEl.getBoundingClientRect();
 			const modRootRect: ModifiedDOMRect = {
 				top: hasRoot ? rootRect.top : 0,
 				left: hasRoot ? rootRect.left : 0,
