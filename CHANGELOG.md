@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.1.5](https://github.com/sunshine-themes/intersectionTrigger/compare/v1.1.4...v1.1.5) (2023-05-18)
+
+
+### Bug Fixes
+
+* **core:** 'enter' & 'enterBack' events is Not triggered if root is custom element ([7170e24](https://github.com/sunshine-themes/intersectionTrigger/commit/7170e24935e17fe105ea156106f3df208acd443f))
+* **core:** 'getRootRect' is now getting the root bounding correctly when the root is an element ([74103cb](https://github.com/sunshine-themes/intersectionTrigger/commit/74103cb7a9aab5d6bcc25002388008ade4de96ab))
+* **guides:** fixed the root guides are not positioned correctly ([e8e2be0](https://github.com/sunshine-themes/intersectionTrigger/commit/e8e2be03224cf8aa5c338721bed3b905e642b9c7))
+* **guides:** root guides is not positioned correctly if the root is custom element ([49c16e8](https://github.com/sunshine-themes/intersectionTrigger/commit/49c16e8d8da3a78b02bfd1a38da96c59f1405ece))
+* **guides:** the guides are not visible when instantiated in an iframe in firefox ([f971c3b](https://github.com/sunshine-themes/intersectionTrigger/commit/f971c3b873337f0839372d4e8e03fb8af8d456a3))
+
 ## [1.1.4](https://github.com/sunshine-themes/intersectionTrigger/compare/v1.1.3...v1.1.4) (2023-05-07)
 
 
