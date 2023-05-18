@@ -275,12 +275,12 @@ export default class Utils {
 			};
 
 			//Enter case
-			if (modStates.hasLeftBack && rEP > tEP) {
+			if (modStates.hasLeftBack && rEP >= tEP) {
 				this.triggerEvent(trigger, ['Enter', onEnter, 'hasEntered', 'hasLeftBack', 0]);
 				updateStates();
 			}
 			//EnterBack case
-			if (modStates.hasLeft && modStates.hasEnteredOnce && rLP < tLP) {
+			if (modStates.hasLeft && modStates.hasEnteredOnce && rLP <= tLP) {
 				this.triggerEvent(trigger, ['EnterBack', onEnterBack, 'hasEnteredBack', 'hasLeft', 2]);
 				updateStates();
 			}
