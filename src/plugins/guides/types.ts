@@ -18,5 +18,10 @@ interface GuidesOptions {
 	enter?: GuideElements;
 	leave?: GuideElements;
 }
+interface PositionGuideOptions {
+	position: number;
+	enter: boolean;
+	isHigherValue: boolean;
+}
 
-export type { GuidesParams, GuidesOptions };
+export type { GuidesParams, GuidesOptions, PositionGuideOptions };
