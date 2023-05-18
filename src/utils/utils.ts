@@ -116,8 +116,8 @@ export default class Utils {
 			const threshold = [0, 1];
 
 			this._it!.triggers.forEach(trigger => {
-				const { enter, leave, maxPosition } = this.getTriggerData(trigger);
-				threshold.push(enter, leave, roundFloat(1 - maxPosition, 2));
+				const { enter, leave, higherPosition } = this.getTriggerData(trigger);
+				threshold.push(enter, leave, roundFloat(1 - higherPosition, 2));
 			});
 
 			return [...new Set(threshold)]; //to remove duplicates

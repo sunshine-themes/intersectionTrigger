@@ -234,9 +234,9 @@ class IntersectionTrigger {
 				states: triggerStates
 			} as TriggerData;
 
-		const [minPosition, maxPosition] = getMinMax(triggerParams.enter, triggerParams.leave);
-		triggerParams.minPosition = minPosition;
-		triggerParams.maxPosition = maxPosition;
+		const [lowerPosition, higherPosition] = getMinMax(triggerParams.enter, triggerParams.leave);
+		triggerParams.lowerPosition = lowerPosition;
+		triggerParams.higherPosition = higherPosition;
 
 		//Add new Triggers
 		this.triggers = [...new Set([...this.triggers, ...toAddTriggers])]; //new Set to remove any duplicates

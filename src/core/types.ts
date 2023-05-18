@@ -33,8 +33,8 @@ type Position = string | ((it: IntersectionTrigger) => string);
 interface TriggerData extends DeepRequired<Omit<TriggerOptions, 'enter' | 'leave' | 'toggleClass' | 'animation'>> {
 	enter: number;
 	leave: number;
-	minPosition: number;
-	maxPosition: number;
+	lowerPosition: number;
+	higherPosition: number;
 	states: TriggerStates;
 	toggleClass?: ToggleClassParams[];
 	animation?: AnimationParams;
