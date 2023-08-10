@@ -64,7 +64,7 @@ interface IntersectionTriggerOptions {
 
 interface TriggerOptions {
 	/**
-	 * it Describes a place on the trigger that must meet with a place on the root ( rootEnterproperty ) in order to start the IntersectionTrigger.
+	 * it Describes a place on the trigger that must meet with a place on the root ( rootEnterProperty ) in order to start the IntersectionTrigger.
 	 *
 	 * @default '0%' the top of the trigger
 	 */

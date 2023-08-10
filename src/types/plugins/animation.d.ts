@@ -74,12 +74,12 @@ interface AnimationOptions {
 }
 interface AnimationMethods {
 	/**
-	 * Updats the Animation insatance, which is necessary in case of changing the anime instance, e.g., adding to the timeline.
+	 * Updates the Animation instance, which is necessary in case of changing the anime instance, e.g., adding to the timeline.
 	 */
 	update(): void;
 
 	/**
-	 * Kills the Animation instance and the anime instance if the 'kill' method is availabe
+	 * Kills the Animation instance and the anime instance if the 'kill' method is available
 	 */
 	kill(): void;
 }
