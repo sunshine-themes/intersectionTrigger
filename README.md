@@ -77,6 +77,7 @@ const itInstance = new IntersectionTrigger(...);
 
 ## Features
 
+- **Resolution of the "Target Height is greater than the Root Height" Issue**: IntersectionTrigger offers a solution to the IntersectionObserver problem where the target height exceeds that of the root.
 - **Boosted Performance**: IntersectionTrigger developed with reaching the highest performance in mind, starting with the observation algorithm eliminating any scroll events, resize recalculations getting throttled, the ability of one IntersectionTrigger instance to observe and control unlimited number of triggers (theoretically) and ending with the package's size getting decreased by plugins interface coming as a solution.
 - **Controlled Animations**: Control any animation by assigning it to a particular element (trigger), so you can perform actions on that animation like (play,pause,resume,reverse,complete,restart,reset,kill) when entering/leaving a specific area.
 - **Linked Animations**: Link any animation to the scrollbar, so that the scrollbar acts like a timeline controller and by adding a link factor you can smooth the linked animation.
