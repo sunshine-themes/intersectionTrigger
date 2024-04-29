@@ -7,10 +7,7 @@ export default {
 				'@babel/preset-env',
 				{
 					useBuiltIns: 'entry',
-					corejs: 3.22,
-					targets: {
-						browsers: ['> 0.25%, not dead']
-					}
+					corejs: 3.37
 				}
 			],
 			'@babel/preset-typescript'
