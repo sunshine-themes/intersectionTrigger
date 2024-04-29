@@ -7,7 +7,7 @@ import { BuildOptions, Format, Plugin } from 'esbuild';
 
 interface BuildConfig {
 	data: { entryPath: string; outPath: string; name: string };
-	babel?: (unknown) => Plugin;
+	babel?: (config: object) => Plugin;
 	format?: Format;
 	target?: string;
 	bundle?: boolean;
