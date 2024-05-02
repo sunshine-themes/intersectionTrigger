@@ -423,7 +423,8 @@ describe('Core Tests', () => {
 						cy.get('@EnterBack').should('have.been.calledOnce');
 					});
 				});
-				it('when switching root enter and leave positions, Should invoke (enter - leave) then (enterBack - leaveBack) callbacks', () => {
+
+				it('when root enter position is above leave position with default trigger positions, Should invoke (enter - leave) callbacks instantly upon entering, then (enterBack - leaveBack) instantly upon entering back', () => {
 					const callbacks = {
 						enterCallback: fn,
 						leaveCallback: fn,
@@ -571,7 +572,7 @@ describe('Core Tests', () => {
 						cy.get('@EnterBack').should('have.been.calledOnce');
 					});
 				});
-				it('when switching root enter and leave positions, Should invoke enter, leave, enterBack then leaveBack callbacks', () => {
+				it('when root enter position is above leave position with default trigger positions, Should invoke enter, leave, enterBack then leaveBack callbacks', () => {
 					const callbacks = {
 						enterCallback: fn,
 						leaveCallback: fn,
