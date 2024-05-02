@@ -7,7 +7,10 @@ type Trigger = string | HTMLElement | HTMLElement[] | NodeListOf<HTMLElement>;
 type Root = HTMLElement | null;
 type EventHandler = (event?: Event) => void;
 type ItCallbackFunction = (trigger?: HTMLElement, it?: IntersectionTrigger) => void;
-type Position = string | ((it?: IntersectionTrigger) => string);
+type RootValue = `${number}${'%' | 'px'}`;
+type TriggerValue = `${number}%`;
+type RootPosition = RootValue | ((it?: IntersectionTrigger) => RootValue);
+type TriggerPosition = TriggerValue | ((it?: IntersectionTrigger) => TriggerValue);
 
 interface IntersectionTriggerOptions {
 	/**
@@ -27,14 +30,14 @@ interface IntersectionTriggerOptions {
 	 *
 	 * @default '100%' the bottom of the root
 	 */
-	rootEnter?: Position;
+	rootEnter?: RootPosition;
 
 	/**
 	 *  it Describes a place on the root that must meet with a place on the trigger ( leave property ) in order to end the IntersectionTrigger
 	 *
 	 * @default '0%' the top of the root
 	 */
-	rootLeave?: Position;
+	rootLeave?: RootPosition;
 
 	/**
 	 * Determines your setup for scrolling, which can be a vertical or horizontal scrolling.
@@ -68,14 +71,14 @@ interface TriggerOptions {
 	 *
 	 * @default '0%' the top of the trigger
 	 */
-	enter?: Position;
+	enter?: TriggerPosition;
 
 	/**
 	 * it Describes a place on the trigger that must meet with a place on the root ( rootLeave property ) in order to end the IntersectionTrigger.
 	 *
 	 * @default '100%' the bottom of the trigger
 	 */
-	leave?: Position;
+	leave?: TriggerPosition;
 
 	/**
 	 * If true, the trigger will be removed from the instance as soon as the leave (or leave back) position is reached once, this causes the observer to stop observing it, therefor, the onEnter callback will invoke for one time only.

@@ -4,7 +4,10 @@ import type {
 	DirectionProps,
 	PositionData,
 	Trigger,
-	Position,
+	RootValue,
+	TriggerValue,
+	RootPosition,
+	TriggerPosition,
 	PositionsData,
 	TriggerData,
 	TriggerStates,
@@ -32,9 +35,14 @@ export default class Utils {
 	setThreshold!: () => number[];
 	parseQuery!: (q: Trigger, errLog?: string) => HTMLElement[];
 	parseRoot!: (query: Root | string) => HTMLElement | null;
-	validatePosition!: (pos: Position) => string;
-	setPositionData!: (pos: Position) => PositionData;
-	parsePositions!: (triggerEnter: Position, triggerLeave: Position, rootEnter: Position, rootLeave: Position) => PositionsData;
+	validatePosition!: (pos: RootPosition | TriggerPosition) => RootValue | TriggerValue;
+	setPositionData!: (pos: RootPosition | TriggerPosition) => PositionData;
+	parsePositions!: (
+		triggerEnter: TriggerPosition,
+		triggerLeave: TriggerPosition,
+		rootEnter: RootPosition,
+		rootLeave: RootPosition
+	) => PositionsData;
 	deleteTriggerData!: (trigger: HTMLElement) => void;
 	hasTriggerData!: (trigger: HTMLElement, prop?: keyof TriggerData) => boolean;
 	getTriggerData!: {
@@ -142,14 +150,12 @@ export default class Utils {
 
 		// Positions parsing
 		this.validatePosition = pos => {
-			is.function<string>(pos) && (pos = pos(this._it as IntersectionTrigger));
+			is.function<RootValue | TriggerValue>(pos) && (pos = pos(this._it as IntersectionTrigger));
 			if (!is.string(pos)) return throwError(`enter, leave, rootEnter and rootLeave parameters must be a string.`);
 			return pos;
 		};
 		this.setPositionData = pos => {
-			pos = this.validatePosition(pos);
-
-			const original = pos.trim();
+			const original = this.validatePosition(pos).trim();
 			const parsed = parseValue(original);
 			const roundedValue = roundFloat(parsed.value);
 
@@ -161,9 +167,7 @@ export default class Utils {
 			};
 		};
 		this.parsePositions = (triggerEnter, triggerLeave, rootEnter, rootLeave) => {
-			const positionsData = [triggerEnter, rootEnter, triggerLeave, rootLeave].map(pos =>
-				this.setPositionData(this.validatePosition(pos).trim())
-			);
+			const positionsData = [triggerEnter, rootEnter, triggerLeave, rootLeave].map(pos => this.setPositionData(pos));
 			return {
 				tEP: positionsData[0], //trigger enter position
 				rEP: positionsData[1], //root enter position

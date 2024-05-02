@@ -14,7 +14,8 @@ import type {
 	ScrollCallbacks,
 	Trigger,
 	TriggerOptions,
-	Position,
+	RootPosition,
+	TriggerPosition,
 	Plugin
 } from './types';
 
@@ -216,7 +217,7 @@ class IntersectionTrigger {
 			{ defaults } = this._options,
 			userOpts = options || {};
 
-		const getPositionNormal = (pos?: Position, name: 'tEP' | 'tLP' = 'tEP') =>
+		const getPositionNormal = (pos?: RootPosition | TriggerPosition, name: 'tEP' | 'tLP' = 'tEP') =>
 				pos ? this._utils!.setPositionData(pos).normal : this._positionsData[name].normal,
 			getPlugin = <N extends Exclude<PluginName, 'guides'>>(name: N) => {
 				!this[name] && this._setPlugin(name);

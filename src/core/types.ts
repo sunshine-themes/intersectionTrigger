@@ -29,7 +29,10 @@ type PositionsData = {
 type DirectionProps = { ref: 'top' | 'left'; length: 'height' | 'width'; refOpposite: 'bottom' | 'right' };
 type ToggleActions = (trigger: HTMLElement) => void;
 type ItCallbackFunction = (trigger: HTMLElement, it: IntersectionTrigger) => void;
-type Position = string | ((it: IntersectionTrigger) => string);
+type RootValue = `${number}${'%' | 'px'}`;
+type TriggerValue = `${number}%`;
+type RootPosition = RootValue | ((it?: IntersectionTrigger) => RootValue);
+type TriggerPosition = TriggerValue | ((it?: IntersectionTrigger) => TriggerValue);
 interface TriggerData extends DeepRequired<Omit<TriggerOptions, 'enter' | 'leave' | 'toggleClass' | 'animation'>> {
 	enter: number;
 	leave: number;
@@ -49,8 +52,8 @@ interface PositionData {
 }
 
 interface TriggerOptions {
-	enter?: Position;
-	leave?: Position;
+	enter?: TriggerPosition;
+	leave?: TriggerPosition;
 	once?: boolean;
 	onEnter?: ItCallbackFunction;
 	onLeave?: ItCallbackFunction;
@@ -61,8 +64,8 @@ interface TriggerOptions {
 }
 interface IntersectionTriggerOptions {
 	defaults?: TriggerOptions;
-	rootEnter?: Position;
-	rootLeave?: Position;
+	rootEnter?: RootPosition;
+	rootLeave?: RootPosition;
 	axis?: string;
 	name?: string;
 	root?: Root | string;
@@ -99,7 +102,10 @@ export type {
 	ItCallbackFunction,
 	IntersectionTriggerOptions,
 	TriggerStates,
-	Position,
+	RootPosition,
+	TriggerPosition,
+	RootValue,
+	TriggerValue,
 	ScrollCallbacks,
 	EventParams
 };
