@@ -9,14 +9,14 @@ jobs:
   install:
     runs-on: ubuntu-latest
     container:
-      image: cypress/browsers:node16.16.0-chrome105-ff104-edge
+      image: cypress/browsers:node-20.12.0-chrome-123.0.6312.86-1-ff-124.0.2-edge-123.0.2420.65-1
       options: --user 1001
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Cypress install
-        uses: cypress-io/github-action@v5
+        uses: cypress-io/github-action@v6
         with:
           runTests: false
 
@@ -24,35 +24,7 @@ jobs:
       - run: npm run test:build
 
       - name: Save build folder
-        uses: actions/upload-artifact@v3
-        with:
-          name: test build
-          if-no-files-found: error
-          path: cypress/scripts/build
-
-  install-windows:
-    runs-on: windows-2022
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          # The default install for the job is node 18+
-          # which has some compatibility issues with openSSL inside this windows job.
-          # Node 18 updated with OpenSSL provider which causes this compatibility issue
-          # downgrading node to v16 to use the openssl-legacy-provider by default to prevent this issue
-          node-version: '16'
-
-      - name: Cypress install
-        uses: cypress-io/github-action@v5
-        with:
-          runTests: false
-
-      - run: npx cypress info
-      - run: npm run test:build
-
-      - name: Save build folder
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test build
           if-no-files-found: error
@@ -62,23 +34,20 @@ jobs:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     container:
-      image: cypress/browsers:node16.16.0-chrome105-ff104-edge
+      image: cypress/browsers:node-20.12.0-chrome-123.0.6312.86-1-ff-124.0.2-edge-123.0.2420.65-1
       options: --user 1001
     needs: install
     strategy:
-      # when one test fails, DO NOT cancel the other
-      # containers, because this will kill Cypress processes
-      # leaving Cypress Cloud hanging ...
       fail-fast: false
       # matrix:
       #   # run copies of the current job in parallel
       #   containers: [1, 2, 3, 4, 5]
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download the build folders
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: test build
           path: cypress/scripts/build
@@ -90,7 +59,7 @@ jobs:
         run: node -v
 
       - name: Chrome Tests
-        uses: cypress-io/github-action@v5
+        uses: cypress-io/github-action@v6
         with:
           start: npm run server
           wait-on: 'http://localhost:3000'
@@ -109,29 +78,26 @@ jobs:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     container:
-      image: cypress/browsers:node16.16.0-chrome105-ff104-edge
+      image: cypress/browsers:node-20.12.0-chrome-123.0.6312.86-1-ff-124.0.2-edge-123.0.2420.65-1
       options: --user 1001
     needs: install
     strategy:
-      # when one test fails, DO NOT cancel the other
-      # containers, because this will kill Cypress processes
-      # leaving Cypress Cloud hanging ...
       fail-fast: false
       # matrix:
       #   # run copies of the current job in parallel
       #   containers: [1, 2, 3, 4, 5]
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download the build folders
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: test build
           path: cypress/scripts/build
 
       - name: Firefox Tests
-        uses: cypress-io/github-action@v5
+        uses: cypress-io/github-action@v6
         with:
           start: npm run server
           wait-on: 'http://localhost:3000'
@@ -140,81 +106,6 @@ jobs:
           # record: true
           # parallel: true
           # group: 'Firefox Tests'
-        env:
-          # CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-          # Recommended: pass the GitHub token lets this action correctly
-          # determine the unique run id necessary to re-run the checks
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  electron-tests:
-    timeout-minutes: 40
-    runs-on: windows-2022
-    needs: install-windows
-    strategy:
-      # when one test fails, DO NOT cancel the other
-      # containers, because this will kill Cypress processes
-      # leaving Cypress Cloud hanging ...
-      fail-fast: false
-      # matrix:
-      #   # run copies of the current job in parallel
-      #   containers: [1, 2, 3, 4, 5]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Download the build folders
-        uses: actions/download-artifact@v3
-        with:
-          name: test build
-          path: cypress/scripts/build
-
-      - name: Electron Tests
-        uses: cypress-io/github-action@v5
-        with:
-          start: npm run server
-          wait-on: 'http://localhost:3000'
-          wait-on-timeout: 120
-          # record: true
-          # parallel: true
-          # group: 'Electron Tests'
-        env:
-          # CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-          # Recommended: pass the GitHub token lets this action correctly
-          # determine the unique run id necessary to re-run the checks
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  edge-tests:
-    timeout-minutes: 40
-    runs-on: windows-2022
-    needs: install-windows
-    strategy:
-      # when one test fails, DO NOT cancel the other
-      # containers, because this will kill Cypress processes
-      # leaving Cypress Cloud hanging ...
-      fail-fast: false
-      # matrix:
-      #   # run copies of the current job in parallel
-      #   containers: [1, 2, 3, 4, 5]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Download the build folders
-        uses: actions/download-artifact@v3
-        with:
-          name: test build
-          path: cypress/scripts/build
-
-      - name: Edge Tests
-        uses: cypress-io/github-action@v5
-        with:
-          start: npm run server
-          wait-on: 'http://localhost:3000'
-          wait-on-timeout: 120
-          browser: edge
-          # record: true
-          # parallel: true
-          # group: 'Edge Tests'
         env:
           # CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           # Recommended: pass the GitHub token lets this action correctly

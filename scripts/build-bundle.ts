@@ -52,7 +52,7 @@ async function buildEntry(plugins, format, target = 'esnext', isBrowser = false)
 
 	await Promise.all([fs.writeFile(`./src/temp-${entryFileName}.js`, content), fs.writeFile(`./src/temp-esbuild.ts`, buildContent)]);
 
-	await exec.promise(`ts-node src/temp-esbuild.ts`);
+	await exec.promise(`node --import ./scripts/ts-node.register.mjs src/temp-esbuild.ts`);
 }
 
 async function buildBundle() {

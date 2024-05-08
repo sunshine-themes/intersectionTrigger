@@ -16,7 +16,7 @@
 	},
 	"types": "intersectiontrigger.d.ts",
 	"engines": {
-		"node": ">=16"
+		"node": ">=20"
 	},
 	"keywords": [
 		"intersection",
@@ -42,8 +42,8 @@
 		}
 	],
 	"scripts": {
-		"build": "ts-node scripts/build",
-		"build:watch": "ts-node scripts/build -- -w",
+		"build": "node --import ./scripts/ts-node.register.mjs scripts/build.ts",
+		"build:watch": "node --import ./scripts/ts-node.register.mjs scripts/build -- -w",
 		"dev": "start-test server http://localhost:3000 'conc --kill-others-on-fail -c \"auto\" \"npm:build:watch\" \"npm:test:build:watch\" \"npm:cy:open\"'",
 		"format": "prettier --config .prettierrc.json \"{src,cypress}/**/*.{js,ts}\" --write",
 		"lint": "eslint . --ext .ts",
@@ -52,7 +52,7 @@
 		"cy:run": "npx cypress run",
 		"cy:record": "npx cypress run --record",
 		"test": "start-test server http://localhost:3000 'run-s test:build cy:run'",
-		"test:build": "ts-node cypress/scripts/esbuild.ts",
+		"test:build": "node --import ./scripts/ts-node.register.mjs cypress/scripts/esbuild.ts",
 		"test:build:watch": "npm run test:build -- -w",
 		"validate": "run-s format lint test build"
 	},
