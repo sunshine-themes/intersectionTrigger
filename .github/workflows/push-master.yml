@@ -15,12 +15,12 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 16.x
+          node-version: 20.x
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install deps
@@ -30,7 +30,7 @@ jobs:
         run: npm run validate
 
       # This action will usually create (or update) a "release" PR, containing a version bump and changelog updates
-      - uses: google-github-actions/release-please-action@v3
+      - uses: google-github-actions/release-please-action@v4
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
