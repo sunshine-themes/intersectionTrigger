@@ -1,5 +1,7 @@
 # Changelog
 
+## [1.1.6](https://github.com/sunshine-themes/intersectionTrigger/compare/v1.1.5...1.1.6) (2023-05-18)
+
 ## [1.1.5](https://github.com/sunshine-themes/intersectionTrigger/compare/v1.1.4...v1.1.5) (2023-05-18)
 
 
