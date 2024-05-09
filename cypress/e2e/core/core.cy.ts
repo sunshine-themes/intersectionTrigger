@@ -451,14 +451,14 @@ describe('Core Tests', () => {
 							rootLeave: () => '100%'
 						}).add('#target');
 
-						cy.scrollTo(0, 701, { duration: 10, easing: 'linear' }); //enter
+						cy.scrollTo(0, 710, { duration: 10, easing: 'linear' }); //enter
 
 						cy.get('@Enter').should('have.been.calledOnce');
 						cy.get('@Leave').should('have.been.calledAfter', callbacks.enterCallback);
 						cy.get('@EnterBack').should('not.have.been.called');
 						cy.get('@LeaveBack').should('not.have.been.called');
 
-						cy.scrollTo(0, 439, { duration: 10, easing: 'linear' }); //enterBack
+						cy.scrollTo(0, 410, { duration: 10, easing: 'linear' }); //enterBack
 
 						cy.get('@EnterBack').should('have.been.calledOnce');
 						cy.get('@LeaveBack').should('have.been.calledAfter', callbacks.enterBackCallback);
