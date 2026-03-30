@@ -7,3 +7,5 @@
 /cypress/scripts/build
 /instrumented
 /.nyc_output
+/.claude
+CLAUDE.md

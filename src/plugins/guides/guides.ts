@@ -194,11 +194,11 @@ class Guides {
 			? {
 					x: rDefaultBounds[secAxisRefs[0]] - guideBounds[secAxisRefs[1]],
 					y: targetBounds[verMainAxisRef] - guideBounds[verMainAxisRef]
-			  }
+				}
 			: {
 					x: targetBounds[hozMainAxisRef] - guideBounds[hozMainAxisRef],
 					y: rDefaultBounds[secAxisRefs[2]] - guideBounds[secAxisRefs[3]]
-			  };
+				};
 
 		if (triggerEl) {
 			targetBounds = triggerEl.getBoundingClientRect();
@@ -207,11 +207,11 @@ class Guides {
 				? {
 						x: targetBounds.right - guideBounds.right,
 						y: targetBounds.top + position * targetBounds.height - guideBounds.top
-				  }
+					}
 				: {
 						x: targetBounds.left + position * targetBounds.width - guideBounds.left,
 						y: targetBounds.top - guideBounds.top
-				  };
+					};
 		}
 
 		this._setGuideTransformProp(guide, diffs.x, diffs.y);
