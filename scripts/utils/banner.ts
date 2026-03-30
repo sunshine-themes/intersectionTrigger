@@ -1,5 +1,7 @@
 import fs from 'fs-extra';
-import pkg from '../../package.json' assert { type: 'json' };
+import { createRequire } from 'module';
+
+const pkg = createRequire(import.meta.url)('../../package.json') as typeof import('../../package.json');
 
 const date = {
 	day: new Date().getDate(),
