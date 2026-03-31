@@ -1,0 +1,187 @@
+---
+title: Animation Plugin
+description: Controlled and scroll-linked animations with AnimeJS
+---
+
+The Animation plugin integrates [AnimeJS](https://animejs.com/) with IntersectionTrigger, providing two animation modes: **controlled** animations that respond to intersection events, and **linked** animations that are driven by scroll position.
+
+## Registration
+
+```js
+import { IntersectionTrigger, Animation } from 'intersectiontrigger';
+
+IntersectionTrigger.registerPlugins([Animation]);
+```
+
+## AnimationOptions
+
+| Property | Type | Default | Description |
+| -------- | ---- | ------- | ----------- |
+| `instance` | `AnimeInstance` | *required* | An AnimeJS instance or timeline |
+| `toggleActions` | `string` | `'play complete reverse complete'` | Space-separated actions for enter/leave/enterBack/leaveBack |
+| `link` | `number \| boolean` | `false` | Link animation to scrollbar position; a number sets the smoothing factor |
+| `snap` | `SnapConfiguration` | `false` | Snap to points after scrolling stops |
+
+You can pass an `AnimationOptions` object or an AnimeJS instance directly to the `animation` property in `add()`.
+
+## Controlled Animations
+
+Controlled animations fire discrete actions when the trigger enters or leaves the intersection zone. The `toggleActions` property specifies four actions in order:
+
+```
+"enterAction leaveAction enterBackAction leaveBackAction"
+```
+
+### Available Actions
+
+| Action | Description |
+| ------ | ----------- |
+| `play` | Plays the animation forward (reverses direction if currently reversed) |
+| `pause` | Pauses the animation |
+| `resume` | Resumes a paused animation |
+| `reverse` | Reverses the animation direction and plays |
+| `complete` | Jumps to the end (or start if reversed) and pauses |
+| `restart` | Restarts the animation from the beginning |
+| `reset` | Resets the animation to its initial state and plays |
+| `kill` | Permanently kills the animation instance |
+| `none` | No action for this event |
+
+### Basic Controlled Animation
+
+```js
+const it = new IntersectionTrigger();
+
+// Pass an AnimeJS instance directly -- uses default toggleActions
+it.add('.box', {
+  animation: anime({
+    targets: '.box',
+    opacity: [0, 1],
+    translateY: [50, 0],
+    duration: 800,
+    autoplay: false
+  })
+});
+```
+
+### Custom Toggle Actions
+
+```js
+it.add('.box', {
+  animation: {
+    instance: anime({
+      targets: '.box',
+      scale: [0.8, 1],
+      duration: 600,
+      autoplay: false
+    }),
+    toggleActions: 'restart none reverse none'
+  }
+});
+```
+
+## Linked (Scroll-based) Animations
+
+Set the `link` property to bind the animation progress to the scroll position. As the user scrolls through the intersection zone, the animation seeks proportionally.
+
+- `link: true` -- the animation progress directly tracks the scroll position.
+- `link: <number>` -- a smoothing factor. Higher numbers make the animation catch up to the scrollbar faster.
+
+```js
+it.add('.box', {
+  animation: {
+    instance: anime({
+      targets: '.box',
+      rotate: '1turn',
+      duration: 1000,
+      autoplay: false
+    }),
+    link: true
+  }
+});
+```
+
+With a smoothing factor of 5:
+
+```js
+it.add('.box', {
+  animation: {
+    instance: anime({
+      targets: '.box',
+      translateX: 250,
+      duration: 1000,
+      autoplay: false
+    }),
+    link: 5
+  }
+});
+```
+
+## Snapping System
+
+When using linked animations, the `snap` configuration causes the scroll position to snap to specific animation points after the user stops scrolling.
+
+### SnapOptions
+
+| Property | Type | Default | Description |
+| -------- | ---- | ------- | ----------- |
+| `to` | `number \| number[] \| string` | `0` | Snap locations: a step fraction (e.g. `0.25`), an array of fractions, or `'marks'` for timeline marks |
+| `after` | `number` | `1` | Delay in seconds before snapping begins after scroll stops |
+| `speed` | `number` | `100` | Speed of the snap animation |
+| `maxDistance` | `number` | `500` | Maximum snap distance in pixels |
+| `onStart` | `(it: IntersectionTrigger) => void` | `() => {}` | Callback when snapping starts |
+| `onComplete` | `(it: IntersectionTrigger) => void` | `() => {}` | Callback when snapping completes |
+
+`SnapConfiguration` accepts a `SnapOptions` object, a boolean, a number (step fraction), or a number array.
+
+### Snapping Example
+
+```js
+it.add('.box', {
+  animation: {
+    instance: anime({
+      targets: '.box',
+      translateX: [0, 300],
+      duration: 1000,
+      autoplay: false
+    }),
+    link: true,
+    snap: {
+      to: 0.25,        // snap at 0%, 25%, 50%, 75%, 100%
+      after: 0.5,      // wait 0.5s after scrolling stops
+      speed: 150,
+      maxDistance: 600
+    }
+  }
+});
+```
+
+Snap to timeline marks:
+
+```js
+const timeline = anime.timeline({
+  autoplay: false
+});
+
+timeline
+  .add({ targets: '.box', opacity: [0, 1] }, 0)
+  .add({ targets: '.box', translateX: 250 }, 500)
+  .add({ targets: '.box', scale: [1, 1.5] }, 1000);
+
+it.add('.box', {
+  animation: {
+    instance: timeline,
+    link: true,
+    snap: 'marks'
+  }
+});
+```
+
+## Methods
+
+### `update()`
+
+Re-parses animation parameters and updates scroll handlers for all triggers on the instance. Called automatically when the instance updates.
+
+### `kill()`
+
+Cleans up the plugin, removing internal references. Called automatically when the IntersectionTrigger instance is killed.

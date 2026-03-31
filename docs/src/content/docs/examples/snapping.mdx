@@ -1,0 +1,129 @@
+---
+title: Snapping
+description: Snap scroll-linked animations to defined points
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+# Snapping
+
+Snapping adds scroll-snap behavior to linked animations. When the user stops scrolling, the animation automatically snaps to the nearest defined point. This creates polished, intentional-feeling scroll experiences.
+
+## Prerequisites
+
+Snapping requires a linked animation. You must set `link` to `true` or a number.
+
+## Basic Snapping
+
+```js
+import IntersectionTrigger, { Animation } from 'intersectiontrigger';
+import anime from 'animejs';
+
+IntersectionTrigger.registerPlugins([Animation]);
+
+const it = new IntersectionTrigger();
+
+it.add('.section', {
+	animation: {
+		instance: anime({
+			targets: '.section',
+			scale: [0.8, 1],
+			duration: 1000,
+			easing: 'linear',
+			autoplay: false,
+		}),
+		link: true,
+		snap: {
+			to: [0, 0.25, 0.5, 0.75, 1],
+			after: 0.5,
+			speed: 200,
+		},
+	},
+});
+```
+
+## Snap Options
+
+The `snap` object accepts the following properties:
+
+| Property     | Type       | Default   | Description                                                        |
+| ------------ | ---------- | --------- | ------------------------------------------------------------------ |
+| `to`         | `number[]` | Required  | Array of progress values (0-1) to snap to                         |
+| `after`      | `number`   | `0.5`     | Seconds to wait after scrolling stops before snapping begins       |
+| `speed`      | `number`   | `200`     | Snap animation speed (higher = faster)                             |
+| `maxDistance` | `number`   | undefined | Maximum distance from a snap point to trigger snapping (0-1 scale) |
+
+### `to`
+
+An array of progress values between 0 and 1. When snapping activates, the animation will snap to the nearest value in this array. For example:
+
+- `[0, 1]` -- Snap to the start or end only
+- `[0, 0.5, 1]` -- Snap to start, middle, or end
+- `[0, 0.25, 0.5, 0.75, 1]` -- Snap to quarter intervals
+
+### `after`
+
+The delay in seconds after the user stops scrolling before the snap animation kicks in. A shorter value makes snapping feel more immediate, while a longer value gives the user more freedom to stop at any point.
+
+### `speed`
+
+Controls how fast the snap animation runs. Higher values produce a faster, snappier feel. Lower values create a gentler glide to the snap point.
+
+### `maxDistance`
+
+If set, only snap when the current animation progress is within this distance of a snap point. For example, `maxDistance: 0.1` means snapping only activates if the current position is within 10% of a snap point.
+
+## Card Gallery Example
+
+```html
+<div class="card-gallery">
+	<div class="card">Card 1</div>
+	<div class="card">Card 2</div>
+	<div class="card">Card 3</div>
+	<div class="card">Card 4</div>
+</div>
+```
+
+```js
+it.add('.card-gallery', {
+	animation: {
+		instance: anime({
+			targets: '.card-gallery',
+			translateX: ['0%', '-75%'],
+			duration: 1000,
+			easing: 'linear',
+			autoplay: false,
+		}),
+		link: true,
+		snap: {
+			to: [0, 0.25, 0.5, 0.75, 1],
+			after: 0.3,
+			speed: 300,
+		},
+	},
+});
+```
+
+## How It Works
+
+<Steps>
+
+1. **Enable linking**
+   Set `link: true` (or a numeric factor) on the animation config. Snapping only works with linked animations.
+
+2. **Define snap points**
+   Pass a `snap` object with a `to` array of progress values. These are the positions the animation will snap to.
+
+3. **Scroll normally**
+   As the user scrolls, the linked animation updates in real time, just like a normal linked animation.
+
+4. **Release to snap**
+   When the user stops scrolling, a timer starts (controlled by `after`). Once the timer expires, the animation smoothly snaps to the nearest point defined in `to`. The snap speed is controlled by `speed`.
+
+</Steps>
+
+## Notes
+
+- Snapping is disabled during active scrolling. It only engages after the user stops.
+- If `maxDistance` is set and no snap point is close enough, no snapping occurs for that scroll stop.
+- You can combine snapping with `toggleActions` for additional behavior at intersection boundaries.

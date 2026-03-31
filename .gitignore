@@ -9,3 +9,7 @@
 /.nyc_output
 /.claude
 CLAUDE.md
+.serena/
+/docs/node_modules/
+/docs/dist/
+/docs/.astro/

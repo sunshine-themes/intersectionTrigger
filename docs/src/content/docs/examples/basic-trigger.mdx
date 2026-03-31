@@ -1,0 +1,86 @@
+---
+title: Basic Trigger
+description: Simple onEnter and onLeave example
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+# Basic Trigger
+
+The simplest way to use IntersectionTrigger is with `onEnter` and `onLeave` callbacks. These fire when an element enters or leaves the viewport (or a custom root area).
+
+## Setup
+
+```js
+import IntersectionTrigger from 'intersectiontrigger';
+
+const it = new IntersectionTrigger();
+
+it.add('.box', {
+	onEnter(trigger) {
+		trigger.classList.add('visible');
+		console.log('Element entered:', trigger);
+	},
+	onLeave(trigger) {
+		trigger.classList.remove('visible');
+		console.log('Element left:', trigger);
+	},
+});
+```
+
+## HTML
+
+```html
+<div class="box">Watch me!</div>
+```
+
+## CSS
+
+```css
+.box {
+	width: 200px;
+	height: 200px;
+	background: #6366f1;
+	border-radius: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	font-weight: bold;
+	opacity: 0;
+	transform: translateY(30px);
+	transition:
+		opacity 0.6s ease,
+		transform 0.6s ease;
+}
+
+.box.visible {
+	opacity: 1;
+	transform: translateY(0);
+}
+```
+
+## How It Works
+
+<Steps>
+
+1. **Create an instance**
+   Call `new IntersectionTrigger()` to create a new observer instance. By default it watches the viewport.
+
+2. **Register a trigger**
+   Use `it.add()` with a CSS selector (or element) and an options object containing `onEnter` and `onLeave` callbacks.
+
+3. **Enter the viewport**
+   When the `.box` element scrolls into the visible area, `onEnter` fires. The callback receives the DOM element as its argument. Here we add the `visible` class, which triggers the CSS transition from transparent/offset to fully visible.
+
+4. **Leave the viewport**
+   When the element scrolls out of view, `onLeave` fires. We remove the `visible` class, causing the element to fade back out and shift down.
+
+</Steps>
+
+## Notes
+
+- The `trigger` argument in both callbacks is the raw DOM element that was matched.
+- You can pass a single element, a NodeList, or a CSS selector string to `it.add()`.
+- By default the root is the viewport. Pass a `root` option to the constructor to observe within a scrollable container.
+- Use `once: true` if you only want the callbacks to fire a single time.

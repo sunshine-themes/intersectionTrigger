@@ -1,0 +1,128 @@
+---
+title: TriggerOptions
+description: Options for adding triggers
+---
+
+`TriggerOptions` defines the configuration object passed as the second argument to `add()`. These options control how each trigger behaves when it intersects with the root zone.
+
+```js
+const it = new IntersectionTrigger();
+
+it.add('.element', {
+  enter: '20%',
+  leave: '80%',
+  once: false,
+  onEnter: (trigger, it) => { /* ... */ },
+  onLeave: (trigger, it) => { /* ... */ },
+  toggleClass: 'active',
+  animation: animeInstance
+});
+```
+
+## Properties
+
+| Property | Type | Default | Description |
+| -------- | ---- | ------- | ----------- |
+| `enter` | `TriggerPosition` | `'0%'` | Position on the trigger element that marks the enter threshold. Accepts a percentage string like `'25%'` or a function returning one |
+| `leave` | `TriggerPosition` | `'100%'` | Position on the trigger element that marks the leave threshold. Accepts a percentage string like `'75%'` or a function returning one |
+| `once` | `boolean` | `false` | If `true`, callbacks and plugin actions fire only on the first enter event |
+| `onEnter` | `ItCallbackFunction` | `() => {}` | Callback fired when the trigger enters the intersection zone |
+| `onLeave` | `ItCallbackFunction` | `() => {}` | Callback fired when the trigger leaves the intersection zone |
+| `onEnterBack` | `ItCallbackFunction` | `() => {}` | Callback fired when the trigger re-enters from below |
+| `onLeaveBack` | `ItCallbackFunction` | `() => {}` | Callback fired when the trigger leaves back downward |
+| `toggleClass` | `string \| ToggleClassOptions[]` | `undefined` | CSS class toggling configuration. Requires the [ToggleClass plugin](/plugins/toggleclass) |
+| `animation` | `Anime<AnimeInstance> \| AnimationOptions` | `undefined` | Animation configuration. Requires the [Animation plugin](/plugins/animation) |
+
+## Callback Signature
+
+All callbacks follow the `ItCallbackFunction` type:
+
+```ts
+(trigger: HTMLElement, it: IntersectionTrigger) => void
+```
+
+- `trigger` -- the HTMLElement that triggered the intersection event
+- `it` -- the IntersectionTrigger instance that owns this trigger
+
+## Position Values
+
+`enter` and `leave` accept percentage strings or functions:
+
+```js
+// Static percentage
+it.add('.box', {
+  enter: '25%',
+  leave: '75%'
+});
+
+// Dynamic -- computed at add time
+it.add('.box', {
+  enter: (it) => '50%',
+  leave: (it) => '100%'
+});
+```
+
+Position is relative to the trigger element itself: `'0%'` is the top (or left edge on the x-axis) and `'100%'` is the bottom (or right edge).
+
+## Default Values
+
+Defaults can be set at the instance level using `defaults` in the constructor. Values passed to `add()` override these defaults:
+
+```js
+const it = new IntersectionTrigger({
+  defaults: {
+    enter: '10%',
+    leave: '90%',
+    once: false
+  }
+});
+
+// This trigger uses enter: '10%', leave: '90%' from defaults
+it.add('.box-a');
+
+// This trigger overrides with enter: '50%', leave: '50%'
+it.add('.box-b', {
+  enter: '50%',
+  leave: '50%'
+});
+```
+
+## Plugin Options
+
+### toggleClass
+
+See the [ToggleClass Plugin](/plugins/toggleclass) documentation for full configuration details.
+
+```js
+// String shorthand
+it.add('.box', { toggleClass: 'visible' });
+
+// Array config
+it.add('.box', {
+  toggleClass: [
+    { targets: '.box', classNames: 'in-view' },
+    { targets: '.label', classNames: 'highlight' }
+  ]
+});
+```
+
+### animation
+
+See the [Animation Plugin](/plugins/animation) documentation for full configuration details.
+
+```js
+// AnimeJS instance directly
+it.add('.box', {
+  animation: anime({ targets: '.box', opacity: [0, 1], autoplay: false })
+});
+
+// Full options object
+it.add('.box', {
+  animation: {
+    instance: animeInstance,
+    toggleActions: 'play pause reverse complete',
+    link: true,
+    snap: { to: 0.25 }
+  }
+});
+```

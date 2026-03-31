@@ -1,0 +1,222 @@
+---
+title: ToggleClass
+description: CSS class toggling examples
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+# ToggleClass
+
+The ToggleClass plugin adds and removes CSS classes when elements intersect with the viewport. It supports simple string-based toggling and advanced array configurations with multiple targets and per-state actions.
+
+## Setup
+
+```js
+import IntersectionTrigger, { ToggleClass } from 'intersectiontrigger';
+
+IntersectionTrigger.registerPlugins([ToggleClass]);
+
+const it = new IntersectionTrigger();
+```
+
+## String Shorthand
+
+The simplest form passes a class name as a string. The class is added on enter and removed on leave:
+
+```js
+it.add('.card', {
+	toggleClass: 'in-view',
+});
+```
+
+This is equivalent to:
+
+- **enter** -- add `in-view`
+- **leave** -- remove `in-view`
+- **enterBack** -- add `in-view`
+- **leaveBack** -- remove `in-view`
+
+## Array Configuration
+
+For more control, pass an array of config objects. Each object can target different elements and define custom toggle actions:
+
+```js
+it.add('.card', {
+	toggleClass: [
+		{
+			targets: '#header',
+			classNames: 'sticky active',
+			toggleActions: 'add remove none none',
+		},
+		{
+			classNames: 'in-view',
+		},
+	],
+});
+```
+
+### What This Does
+
+When `.card` enters the viewport:
+
+1. The `#header` element gets classes `sticky` and `active` added
+2. The `.card` element itself gets class `in-view` added
+
+When `.card` leaves the viewport:
+
+1. The `#header` element has classes `sticky` and `active` removed
+2. The `.card` element has class `in-view` removed
+
+When `.card` re-enters (scrolling back):
+
+1. Neither `#header` nor `.card` changes (because `none` is set for `enterBack`)
+2. Neither changes on `leaveBack` either
+
+## Toggle Actions
+
+Each config object accepts a `toggleActions` string with four space-separated keywords. The position maps to intersection events:
+
+**enter | leave | enterBack | leaveBack**
+
+| Keyword  | Action                  |
+| -------- | ----------------------- |
+| `add`    | Add the class names     |
+| `remove` | Remove the class names  |
+| `none`   | Do nothing              |
+
+### Common Patterns
+
+<Tabs>
+<TabItem label="Add once, never remove">
+
+```js
+toggleClass: {
+	classNames: 'was-visible',
+	toggleActions: 'add none none none',
+}
+```
+
+</TabItem>
+<TabItem label="Only on leave">
+
+```js
+toggleClass: {
+	classNames: 'scrolled-past',
+	toggleActions: 'none add none remove',
+}
+```
+
+</TabItem>
+<TabItem label="Asymmetric enter/leave">
+
+```js
+toggleClass: {
+	classNames: 'highlighted',
+	toggleActions: 'add remove remove add',
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Configuration Object Properties
+
+| Property       | Type     | Default              | Description                                            |
+| -------------- | -------- | -------------------- | ------------------------------------------------------ |
+| `classNames`   | `string` | Required             | Space-separated class names to toggle                  |
+| `targets`      | `string` | The trigger element  | CSS selector for the element(s) to toggle classes on   |
+| `toggleActions` | `string` | `'add remove add remove'` | Four-keyword action string for each intersection event |
+
+## Full Example
+
+### HTML
+
+```html
+<header id="header">My Header</header>
+
+<div class="card">
+	<h2>Section Title</h2>
+	<p>Some content that triggers class changes on the header.</p>
+</div>
+```
+
+### CSS
+
+```css
+#header {
+	transition:
+		background-color 0.3s,
+		box-shadow 0.3s;
+}
+
+#header.sticky {
+	position: sticky;
+	top: 0;
+}
+
+#header.active {
+	background-color: #6366f1;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.card {
+	opacity: 0;
+	transform: translateY(20px);
+	transition:
+		opacity 0.5s,
+		transform 0.5s;
+}
+
+.card.in-view {
+	opacity: 1;
+	transform: translateY(0);
+}
+```
+
+### JavaScript
+
+```js
+import IntersectionTrigger, { ToggleClass } from 'intersectiontrigger';
+
+IntersectionTrigger.registerPlugins([ToggleClass]);
+
+const it = new IntersectionTrigger();
+
+it.add('.card', {
+	toggleClass: [
+		{
+			targets: '#header',
+			classNames: 'sticky active',
+			toggleActions: 'add remove none none',
+		},
+		{
+			classNames: 'in-view',
+		},
+	],
+});
+```
+
+## How It Works
+
+<Steps>
+
+1. **Register the plugin**
+   Call `IntersectionTrigger.registerPlugins([ToggleClass])` to enable class toggling support.
+
+2. **Add a trigger with `toggleClass`**
+   Pass a string for simple toggling, or an array of objects for advanced configurations.
+
+3. **Intersection events fire**
+   As the target element enters and leaves the viewport, the plugin adds or removes classes according to the `toggleActions` you defined.
+
+4. **CSS transitions handle the rest**
+   Define transitions on the toggled classes for smooth visual changes.
+
+</Steps>
+
+## Notes
+
+- When `targets` is omitted, classes are toggled on the element passed to `it.add()`.
+- `classNames` can contain multiple space-separated classes -- all are toggled together.
+- You can combine `toggleClass` with `onEnter` / `onLeave` callbacks and the Animation plugin on the same trigger.

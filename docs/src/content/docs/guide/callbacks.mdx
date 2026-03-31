@@ -1,0 +1,116 @@
+---
+title: Callbacks
+description: onEnter, onLeave, onEnterBack, onLeaveBack callbacks
+---
+
+## Callback Signature
+
+Every callback follows the same signature:
+
+```ts
+(trigger?: HTMLElement, it?: IntersectionTrigger) => void
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `trigger` | `HTMLElement` | The DOM element that triggered the callback. |
+| `it` | `IntersectionTrigger` | The IntersectionTrigger instance that owns this trigger. |
+
+## The Four Callbacks
+
+IntersectionTrigger provides four directional callbacks that correspond to the scroll direction and the crossing of intersection boundaries:
+
+### `onEnter`
+
+Fires when the trigger element enters the intersection in the **forward** (positive) scroll direction.
+
+- **Y-axis:** scrolling downward, trigger crossing into the root from below.
+- **X-axis:** scrolling rightward, trigger crossing into the root from the right.
+
+### `onLeave`
+
+Fires when the trigger element leaves the intersection in the **forward** (positive) scroll direction.
+
+- **Y-axis:** scrolling downward, trigger crossing out of the root at the top.
+- **X-axis:** scrolling rightward, trigger crossing out of the root at the left.
+
+### `onEnterBack`
+
+Fires when the trigger element enters the intersection in the **backward** (negative) scroll direction.
+
+- **Y-axis:** scrolling upward, trigger crossing into the root from above.
+- **X-axis:** scrolling leftward, trigger crossing into the root from the left.
+
+### `onLeaveBack`
+
+Fires when the trigger element leaves the intersection in the **backward** (negative) scroll direction.
+
+- **Y-axis:** scrolling upward, trigger crossing out of the root at the bottom.
+- **X-axis:** scrolling leftward, trigger crossing out of the root at the right.
+
+## Scroll Direction Context
+
+Understanding direction is key to using callbacks correctly. Imagine scrolling down through a page:
+
+1. As a trigger element scrolls into view from below the viewport, `onEnter` fires.
+2. As you continue scrolling down and the trigger exits the top of the viewport, `onLeave` fires.
+3. Now scroll back up: the trigger re-enters from the top, and `onEnterBack` fires.
+4. Continue scrolling up until the trigger exits the bottom of the viewport, and `onLeaveBack` fires.
+
+The same logic applies on the X-axis, but with left/right instead of top/bottom.
+
+## Example
+
+```js
+import IntersectionTrigger from 'intersectiontrigger';
+
+const it = new IntersectionTrigger({
+	root: '#scroll-container',
+});
+
+it.add('.element', {
+	onEnter: (trigger, instance) => {
+		console.log('Entered while scrolling forward', trigger);
+		trigger.classList.add('visible');
+	},
+	onLeave: (trigger, instance) => {
+		console.log('Left while scrolling forward', trigger);
+		trigger.classList.remove('visible');
+	},
+	onEnterBack: (trigger, instance) => {
+		console.log('Entered while scrolling backward', trigger);
+		trigger.classList.add('visible');
+	},
+	onLeaveBack: (trigger, instance) => {
+		console.log('Left while scrolling backward', trigger);
+		trigger.classList.remove('visible');
+	},
+});
+```
+
+## Setting Callbacks
+
+Callbacks can be set in two places:
+
+**Per-trigger** via the `add()` options:
+
+```js
+it.add('.card', {
+	onEnter: (trigger) => console.log('Card entered', trigger),
+});
+```
+
+**As defaults** via the constructor, applying to all triggers added to the instance:
+
+```js
+const it = new IntersectionTrigger({
+	defaults: {
+		onEnter: (trigger) => trigger.classList.add('in-view'),
+		onLeave: (trigger) => trigger.classList.remove('in-view'),
+	},
+});
+
+it.add('.card'); // inherits the onEnter and onLeave defaults
+```
+
+Per-trigger callbacks override constructor defaults when both are provided.

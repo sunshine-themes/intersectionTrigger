@@ -1,0 +1,174 @@
+---
+title: Quick Start
+description: Get up and running with IntersectionTrigger in 5 minutes
+---
+
+Learn the basics of IntersectionTrigger by setting up triggers with callbacks, class toggling, and animations.
+
+## Minimal Setup
+
+Create an `IntersectionTrigger` instance and observe elements with `add()`:
+
+```js
+import IntersectionTrigger from 'intersectiontrigger';
+
+const it = new IntersectionTrigger({
+  defaults: {
+    enter: '20%',
+    leave: '80%'
+  }
+});
+
+it.add('.card');
+```
+
+This observes all `.card` elements. The `enter` and `leave` values define the viewport thresholds (as percentages) where intersection is detected.
+
+## Using Callbacks
+
+Attach `onEnter` / `onLeave` callbacks to individual triggers:
+
+```js
+it.add('.card', {
+  onEnter(trigger, intersectionTrigger) {
+    trigger.classList.add('visible');
+    console.log('Entered:', trigger);
+  },
+  onLeave(trigger, intersectionTrigger) {
+    trigger.classList.remove('visible');
+    console.log('Left:', trigger);
+  }
+});
+```
+
+Four lifecycle callbacks are available:
+
+- **`onEnter`** -- trigger enters the intersection zone from below.
+- **`onLeave`** -- trigger leaves the intersection zone upward.
+- **`onEnterBack`** -- trigger re-enters the intersection zone from above (scrolling back).
+- **`onLeaveBack`** -- trigger leaves the intersection zone downward (scrolling back).
+
+### Fire Once
+
+Use `once: true` to fire the enter callback only a single time:
+
+```js
+it.add('.card', {
+  once: true,
+  onEnter(trigger) {
+    trigger.classList.add('loaded');
+  }
+});
+```
+
+## Using the ToggleClass Plugin
+
+The ToggleClass plugin adds and removes CSS classes on intersection events, removing the need for manual callback logic.
+
+```js
+import IntersectionTrigger from 'intersectiontrigger';
+import ToggleClass from 'intersectiontrigger/toggleclass';
+
+IntersectionTrigger.registerPlugins([ToggleClass]);
+```
+
+Pass a `toggleClass` string to toggle a single class on the trigger element:
+
+```js
+it.add('.card', {
+  enter: '10%',
+  leave: '90%',
+  toggleClass: 'is-visible'
+});
+```
+
+For more control, use the object form with `targets`, `classNames`, and `toggleActions`:
+
+```js
+it.add('.card', {
+  toggleClass: {
+    targets: '.card .badge',
+    classNames: 'highlighted',
+    toggleActions: 'add none remove none'
+  }
+});
+```
+
+The four `toggleActions` values correspond to the four lifecycle events: `onEnter`, `onLeave`, `onEnterBack`, and `onLeaveBack`. Each action can be `add`, `remove`, or `none`.
+
+## Using the Animation Plugin
+
+The Animation plugin integrates with [anime.js](https://animejs.com/) to provide controlled and scroll-linked animations.
+
+First, register the plugin:
+
+```js
+import IntersectionTrigger from 'intersectiontrigger/bundle';
+// The bundle import pre-registers all plugins, including Animation.
+```
+
+Or register it manually:
+
+```js
+import IntersectionTrigger from 'intersectiontrigger';
+import Animation from 'intersectiontrigger/animation';
+
+IntersectionTrigger.registerPlugins([Animation]);
+```
+
+### Controlled Animation
+
+Play, pause, or reverse an anime.js instance on enter/leave:
+
+```js
+import anime from 'animejs';
+
+const animation = anime({
+  targets: '.card',
+  opacity: [0, 1],
+  translateY: [40, 0],
+  duration: 800,
+  easing: 'easeOutCubic',
+  autoplay: false
+});
+
+it.add('.card', {
+  enter: '15%',
+  leave: '85%',
+  animation: {
+    instance: animation,
+    toggleActions: 'play pause reverse pause'
+  }
+});
+```
+
+### Scroll-Linked Animation
+
+Link an animation to the scrollbar position using the `link` property:
+
+```js
+const linkedAnimation = anime({
+  targets: '.progress-bar',
+  width: ['0%', '100%'],
+  duration: 1000,
+  easing: 'linear',
+  autoplay: false
+});
+
+it.add('.section', {
+  enter: '0%',
+  leave: '100%',
+  animation: {
+    instance: linkedAnimation,
+    link: 1 // fully linked to scroll position (0 to 1)
+  }
+});
+```
+
+The `link` value controls how tightly the animation follows the scrollbar: `1` means a 1:1 mapping, `0.5` means the animation progresses at half the scroll speed.
+
+## Next Steps
+
+- [Core Concepts](/intersectionTrigger/guide/core-concepts/) -- understand enter/leave positions, root configuration, and the observer lifecycle.
+- [Plugins Overview](/intersectionTrigger/plugins/overview/) -- explore all available plugins and how they integrate.
+- [Basic Trigger Example](/intersectionTrigger/examples/basic-trigger/) -- see a complete working example with HTML, CSS, and JavaScript.

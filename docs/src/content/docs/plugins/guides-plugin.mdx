@@ -1,0 +1,113 @@
+---
+title: Guides Plugin
+description: Visual debugging overlays for intersection positions
+---
+
+The Guides plugin renders visual overlays on the page showing where intersection enter and leave positions are for both the root and each trigger element. This is invaluable for debugging intersection configurations.
+
+## Enabling Guides
+
+Guides are enabled in the `IntersectionTrigger` constructor, not in `add()`. Pass `true` for default guides or an options object to customize colors and labels.
+
+```js
+import { IntersectionTrigger, Guides } from 'intersectiontrigger';
+
+IntersectionTrigger.registerPlugins([Guides]);
+
+// Default guides
+const it = new IntersectionTrigger({
+  guides: true
+});
+```
+
+## Configuration
+
+Customize guide appearance by passing a `GuidesOptions` object:
+
+```js
+const it = new IntersectionTrigger({
+  guides: {
+    enter: {
+      trigger: {
+        backgroundColor: '#009500',
+        color: '#000',
+        text: 'Enter'
+      },
+      root: {
+        backgroundColor: '#009500',
+        color: '#000',
+        text: 'Root Enter'
+      }
+    },
+    leave: {
+      trigger: {
+        backgroundColor: '#ff0000',
+        color: '#000',
+        text: 'Leave'
+      },
+      root: {
+        backgroundColor: '#ff0000',
+        color: '#000',
+        text: 'Root Leave'
+      }
+    }
+  }
+});
+```
+
+### GuideProperties
+
+Each guide (trigger or root, for enter or leave) accepts these properties:
+
+| Property | Type | Default (Enter) | Default (Leave) | Description |
+| -------- | ---- | --------------- | --------------- | ----------- |
+| `backgroundColor` | `string` | `'rgb(0, 149, 0)'` | `'#ff0000'` | Background color of the guide line |
+| `color` | `string` | `'#000'` | `'#000'` | Text color of the guide label |
+| `text` | `string` | `'Enter'` / `'Root Enter'` | `'Leave'` / `'Root Leave'` | Label displayed on the guide |
+
+### GuidesOptions Structure
+
+| Property | Type | Description |
+| -------- | ---- | ----------- |
+| `enter` | `{ trigger?: GuideProperties; root?: GuideProperties }` | Appearance for enter-position guides |
+| `leave` | `{ trigger?: GuideProperties; root?: GuideProperties }` | Appearance for leave-position guides |
+
+## Full Example
+
+```js
+import { IntersectionTrigger, Guides } from 'intersectiontrigger';
+
+IntersectionTrigger.registerPlugins([Guides]);
+
+const it = new IntersectionTrigger({
+  enter: '20%',
+  leave: '80%',
+  rootEnter: '100%',
+  rootLeave: '0%',
+  name: 'Demo',
+  guides: {
+    enter: {
+      trigger: { backgroundColor: '#4CAF50', text: 'Trigger Enter' },
+      root: { backgroundColor: '#2196F3', text: 'Root Enter' }
+    },
+    leave: {
+      trigger: { backgroundColor: '#F44336', text: 'Trigger Leave' },
+      root: { backgroundColor: '#FF9800', text: 'Root Leave' }
+    }
+  }
+});
+
+it.add('.element');
+```
+
+Guides are rendered as thin colored lines positioned absolutely on the page. Each line has a text label. The instance `name` is prepended to each label, making it easy to identify guides when multiple instances are active.
+
+## Methods
+
+### `update()`
+
+Removes and recreates all guide overlays. Called automatically when triggers are added, removed, or when the instance updates. Also responds to window resize events.
+
+### `kill()`
+
+Removes all guide overlays and event listeners. Called automatically when the IntersectionTrigger instance is killed.

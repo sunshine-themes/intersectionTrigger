@@ -1,0 +1,87 @@
+---
+title: Static Methods
+description: Global IntersectionTrigger static methods
+---
+
+Static methods are called on the `IntersectionTrigger` class itself, not on instances.
+
+## getInstances
+
+Returns all active IntersectionTrigger instances.
+
+```typescript
+static getInstances(): IntersectionTrigger[]
+```
+
+```js
+const allInstances = IntersectionTrigger.getInstances();
+console.log(`Active instances: ${allInstances.length}`);
+```
+
+## getInstanceById
+
+Returns a specific instance by its `id` property.
+
+```typescript
+static getInstanceById(id: number): IntersectionTrigger | undefined
+```
+
+```js
+const it = new IntersectionTrigger();
+const found = IntersectionTrigger.getInstanceById(it.id);
+```
+
+## registerPlugins
+
+Registers plugins with IntersectionTrigger's core. Must be called once before using plugin features.
+
+```typescript
+static registerPlugins(plugins: IntersectionTriggerPlugin[]): number
+```
+
+```js
+import IntersectionTrigger, { Animation, ToggleClass, Guides } from 'intersectiontrigger';
+
+IntersectionTrigger.registerPlugins([Animation, ToggleClass, Guides]);
+```
+
+Returns the number of plugins registered.
+
+## getRegisteredPlugins
+
+Returns all currently registered plugins.
+
+```typescript
+static getRegisteredPlugins(): IntersectionTriggerPlugin[]
+```
+
+```js
+const plugins = IntersectionTrigger.getRegisteredPlugins();
+// [{ name: 'Animation' }, { name: 'ToggleClass' }]
+```
+
+## update
+
+Updates all active instances. Recalculates positions for every trigger in every instance.
+
+```typescript
+static update(): void
+```
+
+```js
+// After a major DOM change affecting all instances
+IntersectionTrigger.update();
+```
+
+## kill
+
+Kills all active instances. Removes all observers and cleans up.
+
+```typescript
+static kill(): void
+```
+
+```js
+// Cleanup on page unload
+IntersectionTrigger.kill();
+```

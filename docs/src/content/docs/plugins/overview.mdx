@@ -1,0 +1,51 @@
+---
+title: Plugin Architecture
+description: How plugins work in IntersectionTrigger
+---
+
+IntersectionTrigger uses a modular plugin architecture. The core library is lightweight and dependency-free, while optional plugins provide additional features like animations, class toggling, and visual debugging. You only import and register the plugins you need.
+
+## Registering Plugins
+
+Plugins must be registered **once** before creating IntersectionTrigger instances or adding triggers. Use the static `registerPlugins` method:
+
+```js
+import { IntersectionTrigger, Animation, ToggleClass, Guides } from 'intersectiontrigger';
+
+// Register the plugins your project needs
+IntersectionTrigger.registerPlugins([Animation, ToggleClass, Guides]);
+```
+
+You can register all plugins at once or individually -- just make sure registration happens before any instance uses a plugin feature.
+
+## Import Options
+
+### Individual Plugins
+
+Import only what you need from the main entry point:
+
+```js
+import { IntersectionTrigger, Animation } from 'intersectiontrigger';
+```
+
+### Bundle Import
+
+Import everything (core + all plugins) from the bundle entry point:
+
+```js
+import { IntersectionTrigger, Animation, ToggleClass, Guides } from 'intersectiontrigger/bundle';
+```
+
+## Built-in Plugins
+
+| Plugin | Description | Documentation |
+| ------ | ----------- | ------------- |
+| **Animation** | AnimeJS integration for controlled and scroll-linked animations | [Animation Plugin](/plugins/animation) |
+| **ToggleClass** | Toggle CSS classes on intersection events | [ToggleClass Plugin](/plugins/toggleclass) |
+| **Guides** | Visual debugging overlays showing trigger and root positions | [Guides Plugin](/plugins/guides-plugin) |
+
+## How Plugins Work
+
+Each plugin is a class that attaches to an IntersectionTrigger instance when a feature is first used. For example, when you pass `animation` options to `add()`, the Animation plugin is instantiated and wired up automatically.
+
+Plugins extend the trigger data stored for each element and hook into the scroll and intersection callback lifecycle. They are initialized lazily -- only when needed -- and cleaned up when the instance is killed.

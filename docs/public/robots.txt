@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://sunshine-themes.github.io/intersectionTrigger/sitemap-index.xml

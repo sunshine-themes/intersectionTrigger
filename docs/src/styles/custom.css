@@ -1,0 +1,305 @@
+/* Global font import */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* Starlight theme overrides — IntersectionTrigger brand */
+:root,
+[data-theme='light'] {
+	--sl-color-accent: #FFBF00;
+	--sl-color-accent-hover: #E6AC00;
+	--sl-color-accent-low: rgba(255, 191, 0, 0.12);
+	--sl-color-accent-high: #CC9900;
+	--sl-color-white: #ffffff;
+	--sl-color-gray-1: #f8f8f8;
+	--sl-color-gray-2: #f0f0f0;
+	--sl-color-gray-3: #e5e5e5;
+	--sl-color-gray-4: #cccccc;
+	--sl-color-gray-5: #999999;
+	--sl-color-gray-6: #666666;
+	--sl-color-gray-7: #333333;
+	--sl-color-black: #1a1a1a;
+
+	--sl-color-bg: #fafafa;
+	--sl-color-bg-sidebar: #f0f0f0;
+	--sl-color-bg-nav: #ffffff;
+	--sl-color-text: #1a1a1a;
+	--sl-color-text-muted: #666666;
+	--sl-color-text-highlight: #1a1a1a;
+
+	--sl-color-code-bg: #f5f5f5;
+	--sl-color-code-text: #1a1a1a;
+
+	--sl-color-border: #e5e5e5;
+	--sl-color-border-accent: #FFBF00;
+
+	--sl-font: 'Inter', system-ui, -apple-system, sans-serif;
+	--sl-font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+}
+
+[data-theme='dark'] {
+	--sl-color-accent: #FFBF00;
+	--sl-color-accent-hover: #FFD04A;
+	--sl-color-accent-low: rgba(255, 191, 0, 0.15);
+	--sl-color-accent-high: #FFD04A;
+	--sl-color-white: #0d0d0d;
+	--sl-color-gray-1: #1a1a1a;
+	--sl-color-gray-2: #222222;
+	--sl-color-gray-3: #2a2a2a;
+	--sl-color-gray-4: #444444;
+	--sl-color-gray-5: #666666;
+	--sl-color-gray-6: #999999;
+	--sl-color-gray-7: #cccccc;
+	--sl-color-black: #f0f0f0;
+
+	--sl-color-bg: #0d0d0d;
+	--sl-color-bg-sidebar: #111111;
+	--sl-color-bg-nav: #1a1a1a;
+	--sl-color-text: #e0e0e0;
+	--sl-color-text-muted: #999999;
+	--sl-color-text-highlight: #f0f0f0;
+
+	--sl-color-code-bg: #1e1e1e;
+	--sl-color-code-text: #e0e0e0;
+
+	--sl-color-border: #2a2a2a;
+	--sl-color-border-accent: #FFBF00;
+}
+
+/* Base overrides */
+body {
+	font-family: var(--sl-font);
+}
+
+code,
+pre {
+	font-family: var(--sl-font-mono);
+}
+
+/* Accent link color */
+.sl-markdown-content a {
+	color: var(--sl-color-accent);
+	text-decoration-color: var(--sl-color-accent-low);
+}
+
+.sl-markdown-content a:hover {
+	color: var(--sl-color-accent-hover);
+}
+
+/* Hero custom styling for splash page */
+.hero-bg {
+	background: linear-gradient(
+		135deg,
+		var(--sl-color-bg) 0%,
+		rgba(255, 191, 0, 0.05) 50%,
+		var(--sl-color-bg) 100%
+	);
+}
+
+/* Badge styles */
+.badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.25rem 0.75rem;
+	border-radius: 9999px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	border: 1px solid var(--sl-color-border);
+	color: var(--sl-color-text);
+	background: var(--sl-color-bg);
+}
+
+/* Feature grid */
+.feature-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 1.5rem;
+}
+
+.feature-card {
+	background: var(--sl-color-gray-1);
+	border: 1px solid var(--sl-color-border);
+	border-radius: 0.75rem;
+	padding: 1.5rem;
+	transition:
+		border-color 0.2s ease,
+		box-shadow 0.2s ease;
+}
+
+.feature-card:hover {
+	border-color: var(--sl-color-accent);
+	box-shadow: 0 4px 12px rgba(255, 191, 0, 0.08);
+}
+
+.feature-card h3 {
+	margin-top: 0;
+	color: var(--sl-color-text);
+}
+
+.feature-card p {
+	color: var(--sl-color-text-muted);
+	font-size: 0.9rem;
+}
+
+.feature-icon {
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	background: var(--sl-color-accent-low);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-bottom: 1rem;
+	font-size: 1.25rem;
+}
+
+/* Install terminal card */
+.install-card {
+	background: var(--sl-color-gray-1);
+	border: 1px solid var(--sl-color-border);
+	border-radius: 0.75rem;
+	padding: 1.25rem;
+	font-family: var(--sl-font-mono);
+	font-size: 0.9rem;
+}
+
+.install-card .prompt {
+	color: var(--sl-color-accent);
+}
+
+.install-card .command {
+	color: var(--sl-color-text);
+}
+
+/* Plugin card */
+.plugin-card {
+	background: var(--sl-color-gray-1);
+	border: 1px solid var(--sl-color-border);
+	border-radius: 0.75rem;
+	padding: 1.5rem;
+	text-align: center;
+	transition: border-color 0.2s ease;
+}
+
+.plugin-card:hover {
+	border-color: var(--sl-color-accent);
+}
+
+/* CTA buttons */
+.btn-primary {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.75rem 1.5rem;
+	background: var(--sl-color-accent);
+	color: #0d0d0d;
+	border-radius: 0.5rem;
+	font-weight: 700;
+	text-decoration: none;
+	transition: background 0.2s ease;
+}
+
+.btn-primary:hover {
+	background: var(--sl-color-accent-hover);
+}
+
+.btn-outline {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.75rem 1.5rem;
+	background: transparent;
+	color: var(--sl-color-text);
+	border: 2px solid var(--sl-color-border);
+	border-radius: 0.5rem;
+	font-weight: 600;
+	text-decoration: none;
+	transition:
+		border-color 0.2s ease,
+		color 0.2s ease;
+}
+
+.btn-outline:hover {
+	border-color: var(--sl-color-accent);
+	color: var(--sl-color-accent);
+}
+
+/* Live demo container */
+.live-demo {
+	border: 1px solid var(--sl-color-border);
+	border-radius: 0.75rem;
+	overflow: hidden;
+}
+
+.live-demo-header {
+	background: var(--sl-color-gray-2);
+	padding: 0.5rem 1rem;
+	font-size: 0.8rem;
+	font-weight: 600;
+	border-bottom: 1px solid var(--sl-color-border);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.live-demo-frame {
+	width: 100%;
+	border: none;
+	min-height: 300px;
+}
+
+/* Event log */
+.event-log {
+	background: var(--sl-color-gray-1);
+	border: 1px solid var(--sl-color-border);
+	border-radius: 0.5rem;
+	padding: 0.75rem;
+	font-family: var(--sl-font-mono);
+	font-size: 0.75rem;
+	max-height: 150px;
+	overflow-y: auto;
+}
+
+.event-log-entry {
+	padding: 0.25rem 0;
+	border-bottom: 1px solid var(--sl-color-border);
+}
+
+.event-log-entry:last-child {
+	border-bottom: none;
+}
+
+.event-log-entry .event-name {
+	color: var(--sl-color-accent);
+	font-weight: 600;
+}
+
+/* API table styles */
+.api-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.api-table th {
+	background: var(--sl-color-gray-2);
+	text-align: left;
+	padding: 0.75rem;
+	border: 1px solid var(--sl-color-border);
+	font-weight: 600;
+}
+
+.api-table td {
+	padding: 0.75rem;
+	border: 1px solid var(--sl-color-border);
+	vertical-align: top;
+}
+
+.api-table td:first-child {
+	font-family: var(--sl-font-mono);
+	color: var(--sl-color-accent);
+	font-size: 0.875rem;
+}
+
+.api-table td:nth-child(2) {
+	font-family: var(--sl-font-mono);
+	color: var(--sl-color-text-muted);
+	font-size: 0.85rem;
+}
