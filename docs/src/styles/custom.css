@@ -22,7 +22,7 @@
 	--sl-color-bg-sidebar: #f0f0f0;
 	--sl-color-bg-nav: #ffffff;
 	--sl-color-text: #1a1a1a;
-	--sl-color-text-muted: #666666;
+	--sl-color-text-soft: #4a4a4a;
 	--sl-color-text-highlight: #1a1a1a;
 
 	--sl-color-code-bg: #f5f5f5;
@@ -53,12 +53,12 @@
 	--sl-color-bg: #0d0d0d;
 	--sl-color-bg-sidebar: #111111;
 	--sl-color-bg-nav: #1a1a1a;
-	--sl-color-text: #e0e0e0;
-	--sl-color-text-muted: #999999;
+	--sl-color-text: #e8e8e8;
+	--sl-color-text-soft: #b8b8b8;
 	--sl-color-text-highlight: #f0f0f0;
 
 	--sl-color-code-bg: #1e1e1e;
-	--sl-color-code-text: #e0e0e0;
+	--sl-color-code-text: #e8e8e8;
 
 	--sl-color-border: #2a2a2a;
 	--sl-color-border-accent: #FFBF00;
@@ -135,7 +135,7 @@ pre {
 }
 
 .feature-card p {
-	color: var(--sl-color-text-muted);
+	color: var(--sl-color-text-soft);
 	font-size: 0.9rem;
 }
 
@@ -300,6 +300,39 @@ pre {
 
 .api-table td:nth-child(2) {
 	font-family: var(--sl-font-mono);
-	color: var(--sl-color-text-muted);
+	color: var(--sl-color-text-soft);
 	font-size: 0.85rem;
+}
+
+/* Improved contrast for code blocks */
+.sl-markdown-content pre {
+	background: var(--sl-color-code-bg);
+	color: var(--sl-color-code-text);
+}
+
+.sl-markdown-content code {
+	color: var(--sl-color-code-text);
+}
+
+/* Better inline code contrast */
+.sl-markdown-content :not(pre) > code {
+	background: var(--sl-color-gray-2);
+	color: var(--sl-color-text);
+	padding: 0.2em 0.4em;
+	border-radius: 4px;
+	font-weight: 500;
+}
+
+/* Better table contrast */
+.sl-markdown-content table {
+	color: var(--sl-color-text);
+}
+
+.sl-markdown-content th {
+	color: var(--sl-color-text);
+}
+
+.sl-markdown-content td {
+	color: var(--sl-color-text);
+	border-color: var(--sl-color-border);
 }

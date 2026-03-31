@@ -38,7 +38,7 @@ export default defineConfig({
 				},
 				{
 					label: 'API Reference',
-					collapsed: true,
+					collapsed: false,
 					items: [
 						{ slug: 'api/intersectiontrigger-class' },
 						{ slug: 'api/trigger-options' },
@@ -58,7 +58,7 @@ export default defineConfig({
 				},
 				{
 					label: 'Examples',
-					collapsed: true,
+					collapsed: false,
 					items: [
 						{ slug: 'examples/basic-trigger' },
 						{ slug: 'examples/controlled-animation' },
