@@ -9,14 +9,14 @@ jobs:
   install:
     runs-on: ubuntu-latest
     container:
-      image: cypress/browsers:node-20.12.0-chrome-123.0.6312.86-1-ff-124.0.2-edge-123.0.2420.65-1
+      image: cypress/browsers:node-22.14.0-chrome-134.0.6998.35-1-ff-136.0-edge-134.0.3078.92-1
       options: --user 1001
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Cypress install
-        uses: cypress-io/github-action@v6
+        uses: cypress-io/github-action@v7
         with:
           runTests: false
 
@@ -24,7 +24,7 @@ jobs:
       - run: npm run test:build
 
       - name: Save build folder
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test build
           if-no-files-found: error
@@ -34,7 +34,7 @@ jobs:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     container:
-      image: cypress/browsers:node-20.12.0-chrome-123.0.6312.86-1-ff-124.0.2-edge-123.0.2420.65-1
+      image: cypress/browsers:node-22.14.0-chrome-134.0.6998.35-1-ff-136.0-edge-134.0.3078.92-1
       options: --user 1001
     needs: install
     strategy:
@@ -44,10 +44,10 @@ jobs:
       #   containers: [1, 2, 3, 4, 5]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download the build folders
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: test build
           path: cypress/scripts/build
@@ -59,7 +59,7 @@ jobs:
         run: node -v
 
       - name: Chrome Tests
-        uses: cypress-io/github-action@v6
+        uses: cypress-io/github-action@v7
         with:
           start: npm run server
           wait-on: 'http://localhost:3000'
@@ -78,7 +78,7 @@ jobs:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     container:
-      image: cypress/browsers:node-20.12.0-chrome-123.0.6312.86-1-ff-124.0.2-edge-123.0.2420.65-1
+      image: cypress/browsers:node-22.14.0-chrome-134.0.6998.35-1-ff-136.0-edge-134.0.3078.92-1
       options: --user 1001
     needs: install
     strategy:
@@ -88,16 +88,16 @@ jobs:
       #   containers: [1, 2, 3, 4, 5]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download the build folders
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: test build
           path: cypress/scripts/build
 
       - name: Firefox Tests
-        uses: cypress-io/github-action@v6
+        uses: cypress-io/github-action@v7
         with:
           start: npm run server
           wait-on: 'http://localhost:3000'
