@@ -8,7 +8,7 @@ import globals from 'globals';
 
 export default [
 	{
-		ignores: ['node_modules/**', 'dist/**', 'build/**', '*.js', 'types/**', 'coverage/**', 'cypress/scripts/build/**', 'tests/**']
+		ignores: ['node_modules/**', 'dist/**', 'build/**', '*.js', 'types/**', 'coverage/**', 'cypress/scripts/build/**', 'tests/**', 'docs/**']
 	},
 	eslint.configs.recommended,
 	{
