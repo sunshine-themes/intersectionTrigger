@@ -1,0 +1,1531 @@
+---
+title: "IntersectionTrigger - Complete Documentation"
+description: "Unified documentation for IntersectionTrigger library - Zero-dependency TypeScript library for scroll-based animations and intersection detection"
+---
+
+import FeatureCard from '../../components/FeatureCard';
+import PluginCard from '../../components/PluginCard';
+import { Steps } from '@astrojs/starlight/components';
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+# IntersectionTrigger Complete Documentation
+
+A zero-dependency TypeScript library that enhances the IntersectionObserver API — resolving the "target height > root height" limitation and unlocking scroll-based animations with a plugin architecture.
+
+---
+
+## Table of Contents
+
+1. [Introduction](#introduction)
+2. [Getting Started](#getting-started)
+   - [Installation](#installation)
+   - [Quick Start](#quick-start)
+3. [Core Concepts](#core-concepts)
+4. [Constructor](#constructor)
+5. [Callbacks](#callbacks)
+6. [Methods](#methods)
+7. [Custom Roots](#custom-roots)
+8. [API Reference](#api-reference)
+   - [TriggerOptions](#triggeroptions)
+   - [IntersectionTrigger Class](#intersectiontrigger-class)
+   - [Static Methods](#static-methods)
+   - [Type Definitions](#type-definitions)
+9. [Plugins](#plugins)
+   - [Plugin Architecture](#plugin-architecture)
+   - [Animation Plugin](#animation-plugin)
+   - [ToggleClass Plugin](#toggleclass-plugin)
+   - [Guides Plugin](#guides-plugin)
+10. [Examples](#examples)
+    - [Basic Trigger](#basic-trigger)
+    - [Lazy Loading](#lazy-loading)
+    - [Infinite Scroll](#infinite-scroll)
+    - [ToggleClass Examples](#toggleclass-examples)
+    - [Controlled Animation](#controlled-animation)
+    - [Linked Animation](#linked-animation)
+    - [Snapping](#snapping)
+11. [Changelog](#changelog)
+
+---
+
+## Introduction
+
+### Why IntersectionTrigger?
+
+<div className="feature-grid" style={{ margin: '2rem 0' }}>
+  <FeatureCard icon="⚡" title="Zero Dependencies" description="No external libraries required. Tiny footprint, blazing fast." />
+  <FeatureCard icon="🚀" title="Performance Optimized" description="Built on IntersectionObserver — zero scroll events on the main thread." />
+  <FeatureCard icon="🎬" title="Controlled Animations" description="Play, pause, resume, reverse, restart animations on enter/leave." />
+  <FeatureCard icon="🔗" title="Linked Animations" description="Link any animation to the scrollbar with configurable smoothing." />
+  <FeatureCard icon="🎯" title="Snapping System" description="Snap scroll-linked animations to defined points." />
+  <FeatureCard icon="🧩" title="Plugin Architecture" description="Extend core with Animation, ToggleClass, and Guides plugins." />
+  <FeatureCard icon="👁" title="Custom Roots" description="Use any element as the intersection root, not just the viewport." />
+  <FeatureCard icon="📐" title="Visual Guides" description="Debug with visual overlays showing trigger/root positions." />
+  <FeatureCard icon="↔" title="Axis Support" description="Vertical and horizontal intersection detection." />
+  <FeatureCard icon="🎨" title="ToggleClass System" description="Rich CSS class toggling with granular control over actions." />
+  <FeatureCard icon="📏" title="Resize Observation" description="Automatic recalculation when the root resizes." />
+  <FeatureCard icon="♾" title="Unlimited Triggers" description="One instance observes and controls unlimited triggers." />
+</div>
+
+### Quick Install
+
+```bash
+npm install intersectiontrigger
+```
+
+### Plugins
+
+Extend IntersectionTrigger with powerful plugins for animations, class toggling, and visual debugging.
+
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', margin: '2rem 0' }}>
+  <PluginCard name="Animation" description="Controlled & scroll-linked animations with AnimeJS integration." href="/plugins/animation/" icon="🎬" />
+  <PluginCard name="ToggleClass" description="Add or remove CSS classes on intersection events." href="/plugins/toggleclass/" icon="🎨" />
+  <PluginCard name="Guides" description="Visual debugging overlays for trigger and root positions." href="/plugins/guides-plugin/" icon="📐" />
+</div>
+
+---
+
+## Getting Started
+
+### Installation
+
+Install IntersectionTrigger using your preferred package manager, load it from a CDN, or download the files directly.
+
+#### Package Manager
+
+Install from the npm registry:
+
+```bash [npm]
+npm install intersectiontrigger
+```
+
+```bash [Yarn]
+yarn add intersectiontrigger
+```
+
+#### Import Methods
+
+IntersectionTrigger ships multiple import targets depending on which features you need.
+
+**Core Only**
+
+Import the core library with no plugins:
+
+```js
+import IntersectionTrigger from 'intersectiontrigger';
+```
+
+**With Plugins**
+
+Import the core and register individual plugins:
+
+```js
+import IntersectionTrigger from 'intersectiontrigger';
+import Animation from 'intersectiontrigger/animation';
+import ToggleClass from 'intersectiontrigger/toggleclass';
+import Guides from 'intersectiontrigger/guides';
+
+IntersectionTrigger.registerPlugins([Animation, ToggleClass, Guides]);
+```
+
+**Bundle Import**
+
+Import everything (core + all plugins) in a single statement:
+
+```js
+import IntersectionTrigger from 'intersectiontrigger/bundle';
+```
+
+#### CDN
+
+Use IntersectionTrigger directly in the browser without a build step.
+
+**Core (IIFE / Browser Global)**
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/intersectiontrigger@latest/core/core.browser.min.js"></script>
+<script>
+  var it = new it_core({
+    default: { enter: '20%', leave: '80%' }
+  });
+  it.add('.box');
+</script>
+```
+
+**Bundle (ES Module)**
+
+```html
+<script type="module">
+  import IntersectionTrigger from 'https://cdn.jsdelivr.net/npm/intersectiontrigger@latest/intersectiontrigger-bundle.browser.mjs';
+
+  const it = new IntersectionTrigger({
+    defaults: { enter: '20%', leave: '80%' }
+  });
+  it.add('.box');
+</script>
+```
+
+### Quick Start
+
+Learn the basics of IntersectionTrigger by setting up triggers with callbacks, class toggling, and animations.
+
+#### Minimal Setup
+
+Create an `IntersectionTrigger` instance and observe elements with `add()`:
+
+```js
+import IntersectionTrigger from 'intersectiontrigger';
+
+const it = new IntersectionTrigger({
+  defaults: {
+    enter: '20%',
+    leave: '80%'
+  }
+});
+
+it.add('.card');
+```
+
+#### Using Callbacks
+
+Attach `onEnter` / `onLeave` callbacks to individual triggers:
+
+```js
+it.add('.card', {
+  onEnter(trigger, intersectionTrigger) {
+    trigger.classList.add('visible');
+    console.log('Entered:', trigger);
+  },
+  onLeave(trigger, intersectionTrigger) {
+    trigger.classList.remove('visible');
+    console.log('Left:', trigger);
+  }
+});
+```
+
+Four lifecycle callbacks are available:
+
+- **`onEnter`** -- trigger enters the intersection zone from below.
+- **`onLeave`** -- trigger leaves the intersection zone upward.
+- **`onEnterBack`** -- trigger re-enters the intersection zone from above (scrolling back).
+- **`onLeaveBack`** -- trigger leaves the intersection zone downward (scrolling back).
+
+#### Fire Once
+
+Use `once: true` to fire the enter callback only a single time:
+
+```js
+it.add('.card', {
+  once: true,
+  onEnter(trigger) {
+    trigger.classList.add('loaded');
+  }
+});
+```
+
+#### Using the ToggleClass Plugin
+
+```js
+import IntersectionTrigger from 'intersectiontrigger';
+import ToggleClass from 'intersectiontrigger/toggleclass';
+
+IntersectionTrigger.registerPlugins([ToggleClass]);
+```
+
+Pass a `toggleClass` string to toggle a single class:
+
+```js
+it.add('.card', {
+  enter: '10%',
+  leave: '90%',
+  toggleClass: 'is-visible'
+});
+```
+
+#### Using the Animation Plugin
+
+First, register the plugin:
+
+```js
+import IntersectionTrigger from 'intersectiontrigger';
+import Animation from 'intersectiontrigger/animation';
+
+IntersectionTrigger.registerPlugins([Animation]);
+```
+
+**Controlled Animation**
+
+```js
+import anime from 'animejs';
+
+const animation = anime({
+  targets: '.card',
+  opacity: [0, 1],
+  translateY: [40, 0],
+  duration: 800,
+  easing: 'easeOutCubic',
+  autoplay: false
+});
+
+it.add('.card', {
+  enter: '15%',
+  leave: '85%',
+  animation: {
+    instance: animation,
+    toggleActions: 'play pause reverse pause'
+  }
+});
+```
+
+**Scroll-Linked Animation**
+
+```js
+const linkedAnimation = anime({
+  targets: '.progress-bar',
+  width: ['0%', '100%'],
+  duration: 1000,
+  easing: 'linear',
+  autoplay: false
+});
+
+it.add('.section', {
+  enter: '0%',
+  leave: '100%',
+  animation: {
+    instance: linkedAnimation,
+    link: 1 // fully linked to scroll position (0 to 1)
+  }
+});
+```
+
+---
+
+## Core Concepts
+
+### The IntersectionObserver API
+
+The [IntersectionObserver API](https://developer.mozilla.org/en-US/docs/Web/API/IntersectionObserver) provides an asynchronous way to observe changes in the intersection of a target element with an ancestor element or the viewport.
+
+### How IntersectionTrigger Enhances It
+
+The native `IntersectionObserver` has a significant limitation: when a **target element is taller than the root element**, the observer fires its callback only once. IntersectionTrigger resolves this by layering its own position-tracking logic on top of the native observer, providing precise **enter** and **leave** positions with directional callbacks.
+
+### Intersection vs Scroll Events
+
+A common approach to visibility detection is listening for `scroll` events and computing element positions manually. This has drawbacks:
+
+- **Scroll events run on the main thread** -- Every scroll handler blocks rendering
+- **Frequent layout thrashing** -- Reading `getBoundingClientRect()` forces layout recalculation
+
+IntersectionTrigger avoids these problems by relying on `IntersectionObserver`, which handles observation **off the main thread**.
+
+### Architecture: Core + Plugins
+
+- **Core** (`IntersectionTrigger` class) handles intersection detection, trigger management, position calculations, and lifecycle control.
+- **Plugins** extend the core:
+  - **Animation** -- controlled and scroll-linked animations via AnimeJS.
+  - **Toggle Class** -- CSS class toggling on intersection events.
+  - **Guides** -- visual debugging overlays.
+
+### Instance Lifecycle
+
+1. **Create** -- Instantiate with `new IntersectionTrigger(options)`
+2. **Add triggers** -- Call `add(trigger, options?)` to register elements
+3. **Observe** -- The observer watches triggers automatically
+4. **Callbacks** -- Your handlers fire in response to intersection changes
+5. **Update / Kill** -- Call `update()` to recalculate or `kill()` to destroy
+
+```js
+import IntersectionTrigger from 'intersectiontrigger';
+
+// 1. Create
+const it = new IntersectionTrigger({ root: '#scroll-container' });
+
+// 2. Add triggers
+it.add('.element', {
+  onEnter: (trigger) => console.log('Entered:', trigger),
+  onLeave: (trigger) => console.log('Left:', trigger),
+});
+
+// 3-4. Observation and callbacks happen automatically
+
+// 5. Clean up when done
+it.kill();
+```
+
+---
+
+## Constructor
+
+### Signature
+
+```ts
+new IntersectionTrigger(options?: IntersectionTriggerOptions)
+```
+
+Creates a new IntersectionTrigger instance. The `options` argument is optional; all properties have sensible defaults.
+
+### Options
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `defaults` | [`TriggerOptions`](#trigger-options) | `{}` | Default properties inherited by every trigger added via `add()`. |
+| `root` | `HTMLElement \| string \| null` | `null` | The scrollable ancestor element to use as the intersection root. Pass a CSS selector string, an element reference, or `null` for the viewport. |
+| `rootEnter` | `RootPosition` | `'100%'` | The position on the root boundary that constitutes an "enter" intersection. Accepts a percentage or pixel string (e.g., `'75%'`, `'200px'`), or a function returning one. |
+| `rootLeave` | `RootPosition` | `'0%'` | The position on the root boundary that constitutes a "leave" intersection. Same value format as `rootEnter`. |
+| `axis` | `'y' \| 'x'` | `'y'` | The scroll axis to observe. Use `'x'` for horizontal scrolling containers. |
+| `name` | `string` | `''` | An optional name for the instance. Displayed in Guides overlays for debugging. |
+| `guides` | `boolean \| GuidesOptions` | `false` | Enable visual debugging overlays. Pass `true` for defaults, or an object to customize colors and labels. |
+| `onScroll` | `EventHandler` | `undefined` | A callback fired on every scroll event within the root element. |
+
+### Examples
+
+**Basic Constructor**
+
+```js
+import IntersectionTrigger from 'intersectiontrigger';
+
+const it = new IntersectionTrigger();
+```
+
+**Custom Root Element**
+
+```js
+const it = new IntersectionTrigger({
+  root: '#scroll-container',
+});
+```
+
+**With Guides Enabled**
+
+```js
+const it = new IntersectionTrigger({
+  root: '#scroll-container',
+  name: 'My Instance',
+  guides: true,
+});
+```
+
+**With Default Trigger Options**
+
+```js
+const it = new IntersectionTrigger({
+  root: '#scroll-container',
+  defaults: {
+    enter: '25%',
+    leave: '75%',
+    once: true,
+    onEnter: (trigger) => trigger.classList.add('visible'),
+  },
+});
+
+it.add('.card');
+```
+
+---
+
+## Callbacks
+
+### Callback Signature
+
+Every callback follows the same signature:
+
+```ts
+(trigger?: HTMLElement, it?: IntersectionTrigger) => void
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `trigger` | `HTMLElement` | The DOM element that triggered the callback. |
+| `it` | `IntersectionTrigger` | The IntersectionTrigger instance that owns this trigger. |
+
+### The Four Callbacks
+
+**`onEnter`**
+
+Fires when the trigger element enters the intersection in the **forward** (positive) scroll direction.
+
+- **Y-axis:** scrolling downward, trigger crossing into the root from below.
+- **X-axis:** scrolling rightward, trigger crossing into the root from the right.
+
+**`onLeave`**
+
+Fires when the trigger element leaves the intersection in the **forward** (positive) scroll direction.
+
+- **Y-axis:** scrolling downward, trigger crossing out of the root at the top.
+- **X-axis:** scrolling rightward, trigger crossing out of the root at the left.
+
+**`onEnterBack`**
+
+Fires when the trigger element enters the intersection in the **backward** (negative) scroll direction.
+
+- **Y-axis:** scrolling upward, trigger crossing into the root from above.
+- **X-axis:** scrolling leftward, trigger crossing into the root from the left.
+
+**`onLeaveBack`**
+
+Fires when the trigger element leaves the intersection in the **backward** (negative) scroll direction.
+
+- **Y-axis:** scrolling upward, trigger crossing out of the root at the bottom.
+- **X-axis:** scrolling leftward, trigger crossing out of the root at the right.
+
+### Example
+
+```js
+import IntersectionTrigger from 'intersectiontrigger';
+
+const it = new IntersectionTrigger({
+  root: '#scroll-container',
+});
+
+it.add('.element', {
+  onEnter: (trigger, instance) => {
+    console.log('Entered while scrolling forward', trigger);
+    trigger.classList.add('visible');
+  },
+  onLeave: (trigger, instance) => {
+    console.log('Left while scrolling forward', trigger);
+    trigger.classList.remove('visible');
+  },
+  onEnterBack: (trigger, instance) => {
+    console.log('Entered while scrolling backward', trigger);
+    trigger.classList.add('visible');
+  },
+  onLeaveBack: (trigger, instance) => {
+    console.log('Left while scrolling backward', trigger);
+    trigger.classList.remove('visible');
+  },
+});
+```
+
+### Setting Callbacks
+
+**Per-trigger** via the `add()` options:
+
+```js
+it.add('.card', {
+  onEnter: (trigger) => console.log('Card entered', trigger),
+});
+```
+
+**As defaults** via the constructor, applying to all triggers:
+
+```js
+const it = new IntersectionTrigger({
+  defaults: {
+    onEnter: (trigger) => trigger.classList.add('in-view'),
+    onLeave: (trigger) => trigger.classList.remove('in-view'),
+  },
+});
+
+it.add('.card'); // inherits the onEnter and onLeave defaults
+```
+
+---
+
+## Methods
+
+### Instance Methods
+
+#### `add(trigger, options?)`
+
+Adds one or more elements as triggers to observe. Returns the IntersectionTrigger instance for chaining.
+
+```ts
+add(trigger: string | HTMLElement | HTMLElement[] | NodeListOf<HTMLElement>, options?: TriggerOptions): this
+```
+
+**Trigger Options**
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `enter` | `TriggerPosition` | `'0%'` | The position on the trigger element that must meet `rootEnter` to fire the enter callback. |
+| `leave` | `TriggerPosition` | `'100%'` | The position on the trigger element that must meet `rootLeave` to fire the leave callback. |
+| `once` | `boolean` | `false` | If `true`, the trigger is automatically removed after its first leave event. |
+| `onEnter` | `ItCallbackFunction` | `undefined` | Callback fired when the trigger enters in the forward direction. |
+| `onLeave` | `ItCallbackFunction` | `undefined` | Callback fired when the trigger leaves in the forward direction. |
+| `onEnterBack` | `ItCallbackFunction` | `undefined` | Callback fired when the trigger enters in the backward direction. |
+| `onLeaveBack` | `ItCallbackFunction` | `undefined` | Callback fired when the trigger leaves in the backward direction. |
+| `toggleClass` | `string \| ToggleClassOptions[]` | `undefined` | CSS class toggling configuration. |
+| `animation` | `AnimeInstance \| AnimationOptions` | `undefined` | Animation configuration. |
+
+#### `remove(trigger)`
+
+Stops observing the specified element(s) and removes them from the instance.
+
+```ts
+remove(trigger: string | HTMLElement | HTMLElement[] | NodeListOf<HTMLElement>): this
+```
+
+#### `update()`
+
+Disconnects and recreates the internal `IntersectionObserver`, recalculates all positions, and re-observes all triggers.
+
+```ts
+update(): void
+```
+
+#### `kill()`
+
+Destroys the instance completely.
+
+```ts
+kill(): void
+```
+
+### Static Methods
+
+#### `IntersectionTrigger.getInstances()`
+
+Returns an array of all active IntersectionTrigger instances.
+
+```ts
+static getInstances(): IntersectionTrigger[]
+```
+
+#### `IntersectionTrigger.getInstanceById(id)`
+
+Returns the instance with the given numeric ID.
+
+```ts
+static getInstanceById(id: number): IntersectionTrigger | undefined
+```
+
+#### `IntersectionTrigger.registerPlugins(plugins)`
+
+Registers plugins to be available to all instances.
+
+```ts
+static registerPlugins(plugins: Plugin[]): number
+```
+
+#### `IntersectionTrigger.getRegisteredPlugins()`
+
+Returns the array of currently registered plugin constructors.
+
+```ts
+static getRegisteredPlugins(): Plugin[]
+```
+
+#### `IntersectionTrigger.update()`
+
+Calls `update()` on every active instance.
+
+```ts
+static update(): void
+```
+
+#### `IntersectionTrigger.kill()`
+
+Kills every active instance.
+
+```ts
+static kill(): void
+```
+
+---
+
+## Custom Roots
+
+### What Is a Root Element?
+
+The **root** is the scrollable container that defines the intersection boundary. By default, the root is `null`, which means the **viewport** is used.
+
+### Setting a Custom Root
+
+Pass the `root` option to the constructor. You can provide either a **CSS selector string** or an **HTMLElement reference**.
+
+**Using a CSS Selector String**
+
+```js
+import IntersectionTrigger from 'intersectiontrigger';
+
+const it = new IntersectionTrigger({
+  root: '#scroll-container',
+});
+
+it.add('.card', {
+  onEnter: (trigger) => trigger.classList.add('visible'),
+  onLeave: (trigger) => trigger.classList.remove('visible'),
+});
+```
+
+**Using an Element Reference**
+
+```js
+const container = document.querySelector('#scroll-container');
+
+const it = new IntersectionTrigger({
+  root: container,
+});
+```
+
+### rootEnter and rootLeave Positioning
+
+`rootEnter` and `rootLeave` define **where on the root boundary** the intersection is evaluated.
+
+**Value Format**
+
+- **Percentage strings**: `'0%'`, `'50%'`, `'100%'`
+- **Pixel strings**: `'200px'`, `'50px'`
+- **Functions**: returning a value string
+
+```ts
+rootEnter: (it) => `${it.rootBounds.height * 0.75}px`
+```
+
+**Default Values**
+
+| Option | Default | Meaning |
+|--------|---------|---------|
+| `rootEnter` | `'100%'` | The bottom edge of the root (Y-axis) or right edge (X-axis). |
+| `rootLeave` | `'0%'` | The top edge of the root (Y-axis) or left edge (X-axis). |
+
+### Adjusting Detection Points
+
+```js
+const it = new IntersectionTrigger({
+  root: '#scroll-container',
+  // Detect enter when trigger reaches 75% down the root
+  rootEnter: '75%',
+  // Detect leave when trigger passes 25% from the top of the root
+  rootLeave: '25%',
+});
+```
+
+Or use pixel values:
+
+```js
+const it = new IntersectionTrigger({
+  root: '#scroll-container',
+  rootEnter: '200px',
+  rootLeave: '100px',
+});
+```
+
+---
+
+## API Reference
+
+### TriggerOptions
+
+`TriggerOptions` defines the configuration object passed as the second argument to `add()`.
+
+```js
+const it = new IntersectionTrigger();
+
+it.add('.element', {
+  enter: '20%',
+  leave: '80%',
+  once: false,
+  onEnter: (trigger, it) => { /* ... */ },
+  onLeave: (trigger, it) => { /* ... */ },
+  toggleClass: 'active',
+  animation: animeInstance
+});
+```
+
+**Properties**
+
+| Property | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enter` | `TriggerPosition` | `'0%'` | Position on the trigger element that marks the enter threshold. |
+| `leave` | `TriggerPosition` | `'100%'` | Position on the trigger element that marks the leave threshold. |
+| `once` | `boolean` | `false` | If `true`, callbacks fire only on the first enter event. |
+| `onEnter` | `ItCallbackFunction` | `() => {}` | Callback fired when the trigger enters the intersection zone. |
+| `onLeave` | `ItCallbackFunction` | `() => {}` | Callback fired when the trigger leaves the intersection zone. |
+| `onEnterBack` | `ItCallbackFunction` | `() => {}` | Callback fired when the trigger re-enters from below. |
+| `onLeaveBack` | `ItCallbackFunction` | `() => {}` | Callback fired when the trigger leaves back downward. |
+| `toggleClass` | `string \| ToggleClassOptions[]` | `undefined` | CSS class toggling configuration. |
+| `animation` | `Anime<AnimeInstance> \| AnimationOptions` | `undefined` | Animation configuration. |
+
+### IntersectionTrigger Class
+
+The `IntersectionTrigger` class is the main entry point for the library.
+
+**Constructor**
+
+```ts
+new IntersectionTrigger(options?: IntersectionTriggerOptions)
+```
+
+```js
+const it = new IntersectionTrigger({
+  rootEnter: '100%',
+  rootLeave: '0%',
+  axis: 'y',
+  root: null,
+  guides: false,
+  defaults: {
+    enter: '0%',
+    leave: '100%',
+    once: false
+  }
+});
+```
+
+**Instance Properties**
+
+| Property | Type | Description |
+| -------- | ---- | ----------- |
+| `id` | `number` | Unique integer assigned to each instance |
+| `triggers` | `HTMLElement[]` | Array of all trigger elements |
+| `observer` | `IntersectionObserver \| undefined` | The internal IntersectionObserver |
+| `rootBounds` | `DOMRectReadOnly` | The current root size and position |
+| `killed` | `boolean` | Whether the instance has been killed |
+| `axis` | `string` | Scroll axis (`'y'` or `'x'`) |
+| `name` | `string \| undefined` | Optional name for the instance |
+
+### Static Methods
+
+**getInstances**
+
+```typescript
+static getInstances(): IntersectionTrigger[]
+```
+
+```js
+const allInstances = IntersectionTrigger.getInstances();
+console.log(`Active instances: ${allInstances.length}`);
+```
+
+**getInstanceById**
+
+```typescript
+static getInstanceById(id: number): IntersectionTrigger | undefined
+```
+
+```js
+const it = new IntersectionTrigger();
+const found = IntersectionTrigger.getInstanceById(it.id);
+```
+
+**registerPlugins**
+
+```typescript
+static registerPlugins(plugins: IntersectionTriggerPlugin[]): number
+```
+
+```js
+import IntersectionTrigger, { Animation, ToggleClass, Guides } from 'intersectiontrigger';
+
+IntersectionTrigger.registerPlugins([Animation, ToggleClass, Guides]);
+```
+
+**getRegisteredPlugins**
+
+```typescript
+static getRegisteredPlugins(): IntersectionTriggerPlugin[]
+```
+
+```js
+const plugins = IntersectionTrigger.getRegisteredPlugins();
+// [{ name: 'Animation' }, { name: 'ToggleClass' }]
+```
+
+**update**
+
+```typescript
+static update(): void
+```
+
+```js
+// After a major DOM change affecting all instances
+IntersectionTrigger.update();
+```
+
+**kill**
+
+```typescript
+static kill(): void
+```
+
+```js
+// Cleanup on page unload
+IntersectionTrigger.kill();
+```
+
+### Type Definitions
+
+IntersectionTrigger is written in TypeScript and ships with full type definitions.
+
+**Core Types**
+
+```ts
+type Trigger = string | HTMLElement | HTMLElement[] | NodeListOf<HTMLElement>;
+type Root = HTMLElement | null;
+type EventHandler = (event: Event) => void;
+type ItCallbackFunction = (trigger: HTMLElement, it: IntersectionTrigger) => void;
+type RootValue = `${number}${'%' | 'px'}`;
+type TriggerValue = `${number}%`;
+type RootPosition = RootValue | ((it?: IntersectionTrigger) => RootValue);
+type TriggerPosition = TriggerValue | ((it?: IntersectionTrigger) => TriggerValue);
+```
+
+**Interface Types**
+
+```ts
+interface IntersectionTriggerOptions {
+  defaults?: TriggerOptions;
+  rootEnter?: RootPosition;
+  rootLeave?: RootPosition;
+  axis?: string;
+  name?: string;
+  root?: Root | string;
+  guides?: boolean | GuidesOptions;
+  onScroll?: EventHandler;
+}
+
+interface TriggerOptions {
+  enter?: TriggerPosition;
+  leave?: TriggerPosition;
+  once?: boolean;
+  onEnter?: ItCallbackFunction;
+  onLeave?: ItCallbackFunction;
+  onEnterBack?: ItCallbackFunction;
+  onLeaveBack?: ItCallbackFunction;
+  toggleClass?: string | ToggleClassOptions[];
+  animation?: Anime<AnimeInstance> | AnimationOptions;
+}
+```
+
+---
+
+## Plugins
+
+### Plugin Architecture
+
+IntersectionTrigger uses a modular plugin architecture. The core library is lightweight and dependency-free, while optional plugins provide additional features.
+
+**Registering Plugins**
+
+```js
+import { IntersectionTrigger, Animation, ToggleClass, Guides } from 'intersectiontrigger';
+
+// Register the plugins your project needs
+IntersectionTrigger.registerPlugins([Animation, ToggleClass, Guides]);
+```
+
+**Built-in Plugins**
+
+| Plugin | Description |
+| ------ | ----------- |
+| **Animation** | AnimeJS integration for controlled and scroll-linked animations |
+| **ToggleClass** | Toggle CSS classes on intersection events |
+| **Guides** | Visual debugging overlays showing trigger and root positions |
+
+### Animation Plugin
+
+The Animation plugin integrates [AnimeJS](https://animejs.com/) with IntersectionTrigger, providing two animation modes: **controlled** animations that respond to intersection events, and **linked** animations that are driven by scroll position.
+
+**Registration**
+
+```js
+import { IntersectionTrigger, Animation } from 'intersectiontrigger';
+
+IntersectionTrigger.registerPlugins([Animation]);
+```
+
+**AnimationOptions**
+
+| Property | Type | Default | Description |
+| -------- | ---- | ------- | ----------- |
+| `instance` | `AnimeInstance` | *required* | An AnimeJS instance or timeline |
+| `toggleActions` | `string` | `'play complete reverse complete'` | Space-separated actions for enter/leave/enterBack/leaveBack |
+| `link` | `number \| boolean` | `false` | Link animation to scrollbar position |
+| `snap` | `SnapConfiguration` | `false` | Snap to points after scrolling stops |
+
+**Controlled Animations**
+
+```js
+const it = new IntersectionTrigger();
+
+it.add('.box', {
+  animation: anime({
+    targets: '.box',
+    opacity: [0, 1],
+    translateY: [50, 0],
+    duration: 800,
+    autoplay: false
+  })
+});
+```
+
+**Available Actions**
+
+| Action | Description |
+| ------ | ----------- |
+| `play` | Plays the animation forward |
+| `pause` | Pauses the animation |
+| `resume` | Resumes a paused animation |
+| `reverse` | Reverses the animation direction |
+| `complete` | Jumps to the end and pauses |
+| `restart` | Restarts from the beginning |
+| `reset` | Resets to initial state and plays |
+| `kill` | Permanently kills the animation |
+| `none` | No action for this event |
+
+**Linked (Scroll-based) Animations**
+
+```js
+it.add('.box', {
+  animation: {
+    instance: anime({
+      targets: '.box',
+      rotate: '1turn',
+      duration: 1000,
+      autoplay: false
+    }),
+    link: true
+  }
+});
+```
+
+**Snapping System**
+
+```js
+it.add('.box', {
+  animation: {
+    instance: anime({
+      targets: '.box',
+      translateX: [0, 300],
+      duration: 1000,
+      autoplay: false
+    }),
+    link: true,
+    snap: {
+      to: 0.25,        // snap at 0%, 25%, 50%, 75%, 100%
+      after: 0.5,      // wait 0.5s after scrolling stops
+      speed: 150,
+      maxDistance: 600
+    }
+  }
+});
+```
+
+### ToggleClass Plugin
+
+The ToggleClass plugin adds or removes CSS classes on elements when intersection events occur.
+
+**Registration**
+
+```js
+import { IntersectionTrigger, ToggleClass } from 'intersectiontrigger';
+
+IntersectionTrigger.registerPlugins([ToggleClass]);
+```
+
+**String Shorthand**
+
+```js
+const it = new IntersectionTrigger();
+
+it.add('.box', {
+  toggleClass: 'active visible'
+});
+```
+
+**Array Configuration**
+
+| Property | Type | Default | Description |
+| -------- | ---- | ------- | ----------- |
+| `targets` | `Trigger` | trigger element | Element(s) to toggle classes on |
+| `classNames` | `string` | *required* | Space-separated class names to toggle |
+| `toggleActions` | `string` | `'add remove add remove'` | Space-separated actions for enter/leave/enterBack/leaveBack |
+
+**Multiple Targets Example**
+
+```js
+it.add('.card', {
+  toggleClass: [
+    {
+      targets: '.card',
+      classNames: 'in-view'
+    },
+    {
+      targets: '.card-title',
+      classNames: 'highlight',
+      toggleActions: 'add none remove none'
+    },
+    {
+      targets: '.card-body',
+      classNames: 'fade-in',
+      toggleActions: 'add remove none none'
+    }
+  ]
+});
+```
+
+### Guides Plugin
+
+The Guides plugin renders visual overlays showing where intersection enter and leave positions are.
+
+**Enabling Guides**
+
+```js
+import { IntersectionTrigger, Guides } from 'intersectiontrigger';
+
+IntersectionTrigger.registerPlugins([Guides]);
+
+// Default guides
+const it = new IntersectionTrigger({
+  guides: true
+});
+```
+
+**Configuration**
+
+```js
+const it = new IntersectionTrigger({
+  guides: {
+    enter: {
+      trigger: {
+        backgroundColor: '#009500',
+        color: '#000',
+        text: 'Enter'
+      },
+      root: {
+        backgroundColor: '#009500',
+        color: '#000',
+        text: 'Root Enter'
+      }
+    },
+    leave: {
+      trigger: {
+        backgroundColor: '#ff0000',
+        color: '#000',
+        text: 'Leave'
+      },
+      root: {
+        backgroundColor: '#ff0000',
+        color: '#000',
+        text: 'Root Leave'
+      }
+    }
+  }
+});
+```
+
+**GuideProperties**
+
+| Property | Type | Default (Enter) | Default (Leave) | Description |
+| -------- | ---- | --------------- | --------------- | ----------- |
+| `backgroundColor` | `string` | `'rgb(0, 149, 0)'` | `'#ff0000'` | Background color of the guide line |
+| `color` | `string` | `'#000'` | `'#000'` | Text color of the guide label |
+| `text` | `string` | `'Enter'` / `'Root Enter'` | `'Leave'` / `'Root Leave'` | Label displayed on the guide |
+
+---
+
+## Examples
+
+### Basic Trigger
+
+The simplest way to use IntersectionTrigger is with `onEnter` and `onLeave` callbacks.
+
+**Setup**
+
+```js
+import IntersectionTrigger from 'intersectiontrigger';
+
+const it = new IntersectionTrigger();
+
+it.add('.box', {
+  onEnter(trigger) {
+    trigger.classList.add('visible');
+    console.log('Element entered:', trigger);
+  },
+  onLeave(trigger) {
+    trigger.classList.remove('visible');
+    console.log('Element left:', trigger);
+  },
+});
+```
+
+**HTML**
+
+```html
+<div class="box">Watch me!</div>
+```
+
+**CSS**
+
+```css
+.box {
+  width: 200px;
+  height: 200px;
+  background: #6366f1;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  opacity: 0;
+  transform: translateY(30px);
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
+}
+
+.box.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+```
+
+### Lazy Loading
+
+IntersectionTrigger is ideal for lazy loading images using the `once: true` option.
+
+**Basic Lazy Loading**
+
+```js
+import IntersectionTrigger from 'intersectiontrigger';
+
+const it = new IntersectionTrigger();
+
+it.add('img[data-src]', {
+  once: true,
+  onEnter(trigger) {
+    trigger.src = trigger.dataset.src;
+    trigger.classList.add('loaded');
+  },
+});
+```
+
+**HTML**
+
+```html
+<img data-src="/images/photo-large.jpg" alt="A scenic view" class="lazy-image" />
+```
+
+**CSS**
+
+```css
+.lazy-image {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  background: #e2e8f0;
+  min-height: 200px;
+}
+
+.lazy-image.loaded {
+  opacity: 1;
+}
+```
+
+### Infinite Scroll
+
+IntersectionTrigger can power infinite scroll patterns using a **sentinel element**.
+
+**Basic Infinite Scroll**
+
+```js
+import IntersectionTrigger from 'intersectiontrigger';
+
+const it = new IntersectionTrigger({
+  rootEnter: '100%',
+});
+
+it.add('#sentinel', {
+  onEnter() {
+    loadMoreContent();
+  },
+});
+
+function loadMoreContent() {
+  const newItems = fetchNextPage();
+
+  const container = document.getElementById('content-list');
+  newItems.forEach((item) => {
+    const el = document.createElement('div');
+    el.className = 'item';
+    el.textContent = item.title;
+    container.appendChild(el);
+  });
+}
+```
+
+**HTML**
+
+```html
+<div id="content-list">
+  <div class="item">Item 1</div>
+  <div class="item">Item 2</div>
+  <div class="item">Item 3</div>
+</div>
+
+<div id="sentinel"></div>
+```
+
+**Handling Pagination**
+
+```js
+let currentPage = 1;
+let hasMore = true;
+
+const it = new IntersectionTrigger({
+  rootEnter: '100%',
+});
+
+it.add('#sentinel', {
+  onEnter() {
+    if (!hasMore) return;
+    loadMoreContent();
+  },
+});
+
+async function loadMoreContent() {
+  const response = await fetch(`/api/items?page=${currentPage}`);
+  const data = await response.json();
+
+  const container = document.getElementById('content-list');
+
+  data.items.forEach((item) => {
+    const el = document.createElement('div');
+    el.className = 'item';
+    el.textContent = item.title;
+    container.appendChild(el);
+  });
+
+  currentPage++;
+  hasMore = data.hasMore;
+
+  if (!hasMore) {
+    it.remove('#sentinel');
+    document.getElementById('sentinel').remove();
+  }
+}
+```
+
+### ToggleClass Examples
+
+The ToggleClass plugin adds and removes CSS classes when elements intersect.
+
+**Setup**
+
+```js
+import IntersectionTrigger, { ToggleClass } from 'intersectiontrigger';
+
+IntersectionTrigger.registerPlugins([ToggleClass]);
+
+const it = new IntersectionTrigger();
+```
+
+**String Shorthand**
+
+```js
+it.add('.card', {
+  toggleClass: 'in-view',
+});
+```
+
+**Array Configuration**
+
+```js
+it.add('.card', {
+  toggleClass: [
+    {
+      targets: '#header',
+      classNames: 'sticky active',
+      toggleActions: 'add remove none none',
+    },
+    {
+      classNames: 'in-view',
+    },
+  ],
+});
+```
+
+**Toggle Actions**
+
+| Keyword  | Action                  |
+| -------- | ----------------------- |
+| `add`    | Add the class names     |
+| `remove` | Remove the class names  |
+| `none`   | Do nothing              |
+
+### Controlled Animation
+
+The Animation plugin lets you tie anime.js animations to intersection events.
+
+**Basic Usage**
+
+```js
+import IntersectionTrigger, { Animation } from 'intersectiontrigger';
+import anime from 'animejs';
+
+IntersectionTrigger.registerPlugins([Animation]);
+
+const it = new IntersectionTrigger();
+
+it.add('.element', {
+  animation: anime({
+    targets: '.element',
+    translateY: [50, 0],
+    opacity: [0, 1],
+    duration: 800,
+    easing: 'easeOutCubic',
+    autoplay: false,
+  }),
+});
+```
+
+**Toggle Actions**
+
+| Value      | Behavior                                    |
+| ---------- | ------------------------------------------- |
+| `play`     | Plays the animation from its current state  |
+| `pause`    | Pauses the animation                        |
+| `restart`  | Restarts the animation from the beginning   |
+| `reverse`  | Reverses the animation                      |
+| `complete` | Jumps the animation to its end state        |
+| `none`     | Does nothing                                |
+
+**Custom Toggle Actions**
+
+<Tabs>
+<TabItem label="Fade in only">
+
+```js
+it.add('.fade-in', {
+  animation: anime({
+    targets: '.fade-in',
+    opacity: [0, 1],
+    duration: 600,
+    easing: 'easeOutQuad',
+    autoplay: false,
+  }),
+  toggleActions: 'play none reverse none',
+});
+```
+
+</TabItem>
+<TabItem label="One-shot animation">
+
+```js
+it.add('.once', {
+  animation: anime({
+    targets: '.once',
+    scale: [0.5, 1],
+    opacity: [0, 1],
+    duration: 500,
+    easing: 'easeOutBack',
+    autoplay: false,
+  }),
+  toggleActions: 'play none none none',
+});
+```
+
+</TabItem>
+</Tabs>
+
+### Linked Animation
+
+Linked animations tie animation progress directly to scroll position.
+
+**Basic Linked Animation**
+
+```js
+import IntersectionTrigger, { Animation } from 'intersectiontrigger';
+import anime from 'animejs';
+
+IntersectionTrigger.registerPlugins([Animation]);
+
+const it = new IntersectionTrigger();
+
+it.add('.progress-bar', {
+  animation: {
+    instance: anime({
+      targets: '.progress-fill',
+      width: '100%',
+      duration: 1000,
+      easing: 'linear',
+      autoplay: false,
+    }),
+    link: 3,
+  },
+});
+```
+
+**Link Factor**
+
+| Value           | Behavior                                               |
+| --------------- | ------------------------------------------------------ |
+| `true` or `1`   | Animation progress matches scroll progress 1:1         |
+| A number > 1    | Animation catches up faster (smoothing is reduced)     |
+| `false`         | Disables linking (falls back to controlled animation)  |
+
+- **`link: true` or `link: 1`** -- Parallax effects, fade-ins with precise scroll sync.
+- **`link: 3` to `link: 6`** -- Progress bars, counters with natural smoothing.
+- **`link: 10+`** -- Near-instant tracking with minimal smoothing.
+
+### Snapping
+
+Snapping adds scroll-snap behavior to linked animations.
+
+**Basic Snapping**
+
+```js
+import IntersectionTrigger, { Animation } from 'intersectiontrigger';
+import anime from 'animejs';
+
+IntersectionTrigger.registerPlugins([Animation]);
+
+const it = new IntersectionTrigger();
+
+it.add('.section', {
+  animation: {
+    instance: anime({
+      targets: '.section',
+      scale: [0.8, 1],
+      duration: 1000,
+      easing: 'linear',
+      autoplay: false,
+    }),
+    link: true,
+    snap: {
+      to: [0, 0.25, 0.5, 0.75, 1],
+      after: 0.5,
+      speed: 200,
+    },
+  },
+});
+```
+
+**Snap Options**
+
+| Property     | Type       | Default   | Description                                                        |
+| ------------ | ---------- | --------- | ------------------------------------------------------------------ |
+| `to`         | `number[]` | Required  | Array of progress values (0-1) to snap to                         |
+| `after`      | `number`   | `0.5`     | Seconds to wait after scrolling stops before snapping begins       |
+| `speed`      | `number`   | `200`     | Snap animation speed (higher = faster)                             |
+| `maxDistance` | `number`   | undefined | Maximum distance from a snap point to trigger snapping (0-1 scale) |
+
+---
+
+## Changelog
+
+### v1.1.6
+
+- Fix: use createRequire for package.json import in banner.ts
+
+### v1.1.5
+
+- Chore: dependency upgrades
+- Test: Cypress updates
+
+### v1.1.4
+
+- Test: updated Cypress tests
+
+---
+
+*For the full release history, see the [GitHub Releases](https://github.com/sunshine-themes/intersectionTrigger/releases) page.*
+
+---
+
+**Ready to get started?**
+
+Jump into the [Quick Start](#quick-start) guide or browse the full API reference above.
+
+Join the community on [GitHub Discussions](https://github.com/sunshine-themes/intersectionTrigger/discussions).
