@@ -1,13 +1,12 @@
 <p align="center">
-  <a href="https://sunshine-themes.com/?appID=ss_app_1" target="__blank">
+  <a href="https://sunshine-themes.github.io/intersectionTrigger/" target="__blank">
     <img src="https://raw.githubusercontent.com/sherif-magdy/sunshine-assets/main/intersectiontrigger-logo-no-bg.png"/>
   </a>
 </p>
 
 <p align="center">
-  <a href="https://sunshine-themes.com/?appID=ss_app_1">Overview</a> |
-  <a href="https://sunshine-themes.com/?appID=ss_app_1&tab=docs">Documentation</a> |
-  <a href="https://sunshine-themes.com/?appID=ss_app_1&tab=pricing">Pricing</a> |
+  <a href="https://sunshine-themes.github.io/intersectionTrigger/">Overview</a> |
+  <a href="https://sunshine-themes.github.io/intersectionTrigger/">Documentation</a> |
   <a href="https://codepen.io/collection/qOpKmv">Examples</a>
 </p>
 
@@ -21,14 +20,17 @@
   <a href="https://github.com/sunshine-themes/intersectionTrigger/actions/workflows/push-master.yml">
     <img alt="CI" src="https://github.com/sunshine-themes/intersectionTrigger/actions/workflows/push-master.yml/badge.svg?branch=master&amp;event=push">
   </a>
-  <a href="https://codecov.io/gh/sunshine-themes/intersectionTrigger" > 
-    <img src="https://codecov.io/gh/sunshine-themes/intersectionTrigger/branch/master/graph/badge.svg?token=IBPVH4BTBY"/> 
+  <a href="https://codecov.io/gh/sunshine-themes/intersectionTrigger" >
+    <img src="https://codecov.io/gh/sunshine-themes/intersectionTrigger/branch/master/graph/badge.svg?token=IBPVH4BTBY"/>
+  </a>
+  <a href="https://github.com/sunshine-themes/intersectionTrigger/blob/master/LICENSE">
+    <img alt="License: MIT" src="https://badgen.net/github/license/sunshine-themes/intersectionTrigger" />
   </a>
 </p>
 
 # IntersectionTrigger
 
-IntersectionTrigger utilizes the most modern web technology to trigger anything by intersection. Including scroll-based animations.
+A lightweight TypeScript library that extends the IntersectionObserver API with intersection-based triggers, scroll-linked animations, and a plugin architecture. Zero dependencies.
 
 ## Installation
 
@@ -73,7 +75,7 @@ import IntersectionTrigger from 'intersectiontrigger/bundle';
 const itInstance = new IntersectionTrigger(...);
 ```
 
-[For more installation options.](https://sunshine-themes.com/?appID=ss_app_1&tab=docs)
+[For more installation options.](https://sunshine-themes.github.io/intersectionTrigger/)
 
 ## Features
 
@@ -85,7 +87,7 @@ const itInstance = new IntersectionTrigger(...);
 - **Library Agnostic**: IntersectionTrigger requires Zero JavaScript libraries, which makes it much smaller and faster.
 - **Unlimited Triggers With Unlimited Animations**: Add as many triggers ( with controlled/linked animations ) as you want to one IntersectionTrigger instance, so you can use only one instance to power up your whole application.
 - **Visual Guides**: IntersectionTrigger comes with Guides Plugin to visualize the enter/leave positions of both the trigger and the root, makes the development process much easier for debugging.
-- **Want to discover more, [visit us](https://sunshine-themes.com/?appID=ss_app_1) ...**
+- **Want to discover more, [visit the docs](https://sunshine-themes.github.io/intersectionTrigger/) ...**
 
 ## Community
 
@@ -95,3 +97,7 @@ The IntersectionTrigger community can be found on [GitHub Discussions](https://g
 
 - [Top Feature Requests](https://github.com/sunshine-themes/intersectionTrigger/issues?q=is%3Aissue+is%3Aopen+label%3A%22feature+request%22+sort%3Areactions-%2B1-desc+) (Add your own votes using the 👍 reaction)
 - [Top Bugs 😱](https://github.com/sunshine-themes/intersectionTrigger/issues?q=is%3Aissue+is%3Aopen+-label%3A%22feature+request%22++sort%3Areactions-%2B1-desc+) (Add your own votes using the 👍 reaction)
+
+## License
+
+[MIT](./LICENSE)

@@ -1,8 +1,8 @@
 {
 	"name": "intersectiontrigger",
 	"version": "1.1.6",
-	"description": "IntersectionTrigger utilizes the most modern web technology to trigger anything by intersection. Including scroll-based animations.",
-	"homepage": "https://sunshine-themes.com/?appID=ss_app_1",
+	"description": "A lightweight TypeScript library that extends the IntersectionObserver API with intersection-based triggers, scroll-linked animations, and a plugin architecture. Zero dependencies.",
+	"homepage": "https://sunshine-themes.github.io/intersectionTrigger/",
 	"type": "module",
 	"module": "./intersectiontrigger.esm.js",
 	"main": "./intersectiontrigger.esm.js",
@@ -55,7 +55,7 @@
 		"test:build:watch": "npm run test:build -- -w",
 		"validate": "run-s format lint test build"
 	},
-	"license": "personal 'no charge' license, Licensees of commercial or business license are granted additional rights. See http://sunshine-themes.com/?appID=ss_app_1&tab=license for details.",
+	"license": "MIT",
 	"bugs": {
 		"url": "https://github.com/sunshine-themes/intersectionTrigger/issues"
 	},
