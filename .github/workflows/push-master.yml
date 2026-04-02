@@ -30,7 +30,7 @@ jobs:
         run: npm run validate
 
       # This action will usually create (or update) a "release" PR, containing a version bump and changelog updates
-      - uses: google-github-actions/release-please-action@v4
+      - uses: googleapis/release-please-action@v4
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -41,5 +41,3 @@ jobs:
       - name: Publish to npm
         if: ${{ steps.release.outputs.release_created }}
         run: cd dist && npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
