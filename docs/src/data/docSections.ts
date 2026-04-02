@@ -968,20 +968,6 @@ it.add('.section', {
       },
     ],
   },
-  {
-    id: "changelog",
-    title: "Changelog",
-    content: [
-      { type: "heading", text: "Changelog", level: 2 },
-      { type: "heading", text: "v1.1.6", level: 3 },
-      { type: "list", items: ["Fix: use createRequire for package.json import in banner.ts"] },
-      { type: "heading", text: "v1.1.5", level: 3 },
-      { type: "list", items: ["Chore: dependency upgrades", "Test: Cypress updates"] },
-      { type: "heading", text: "v1.1.4", level: 3 },
-      { type: "list", items: ["Test: updated Cypress tests"] },
-      { type: "paragraph", text: "For the full release history, see the GitHub Releases page." },
-    ],
-  },
 ];
 
 // Navigation structure for sidebar
@@ -1022,5 +1008,4 @@ export const navStructure: NavItem[] = [
       { id: "example-snapping", title: "Snapping" },
     ],
   },
-  { id: "changelog", title: "Changelog" },
 ];
