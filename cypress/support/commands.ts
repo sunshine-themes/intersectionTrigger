@@ -1,45 +1,16 @@
-// ***********************************************
-// This example commands.ts shows you how to
-// create various custom commands and overwrite
-// existing commands.
-//
-// For more comprehensive examples of custom
-// commands please read more here:
-// https://on.cypress.io/custom-commands
-// ***********************************************
-//
-//
-// -- This is a parent command --
-// Cypress.Commands.add('login', (email, password) => { ... })
-//
-//
-// -- This is a child command --
-// Cypress.Commands.add('drag', { prevSubject: 'element'}, (subject, options) => { ... })
-//
-//
-// -- This is a dual command --
-// Cypress.Commands.add('dismiss', { prevSubject: 'optional'}, (subject, options) => { ... })
-//
-//
-// -- This will overwrite an existing command --
-// Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
-//
-// type Callbacks = {
-// 	enterCallback(): void;
-// 	leaveCallback(): void;
-// 	enterBackCallback(): void;
-// 	leaveBackCallback(): void;
-// };
-// declare namespace Cypress {
-// 	interface Chainable {
-// 		spyOnCallbacks(callbacks: Callbacks): void;
-// 	}
-// }
+import type IntersectionTrigger from '../../src/core/core';
 
-// // Add 'spyOnCallbacks'
-// Cypress.Commands.add('spyOnCallbacks', (callbacks: Callbacks) => {
-// 	cy.spy(callbacks, 'enterCallback').as('Enter');
-// 	cy.spy(callbacks, 'leaveCallback').as('Leave');
-// 	cy.spy(callbacks, 'enterBackCallback').as('EnterBack');
-// 	cy.spy(callbacks, 'leaveBackCallback').as('LeaveBack');
-// });
+declare global {
+	namespace Cypress {
+		interface Chainable {
+			withIT(url: string, callback: (IT: typeof IntersectionTrigger) => void): Chainable<void>;
+		}
+	}
+}
+
+Cypress.Commands.add('withIT', (url: string, callback: (IT: typeof IntersectionTrigger) => void) => {
+	cy.visit(url);
+	cy.window().then(win => {
+		callback((win as any).__test__);
+	});
+});
