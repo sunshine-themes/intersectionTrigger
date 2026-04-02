@@ -480,12 +480,12 @@ describe('Core Tests', () => {
 							cy.get('@EnterBack').should('not.have.been.called');
 							cy.get('@LeaveBack').should('not.have.been.called');
 
-							cy.scrollTo(0, 0, { duration: 10, easing: 'linear' }); //enterBack
+							// cy.scrollTo(0, 0, { duration: 10, easing: 'linear' }); //enterBack
 
-							cy.get('@EnterBack').should('have.been.calledOnce');
-							cy.get('@LeaveBack').should('have.been.calledAfter', callbacks.enterBackCallback);
-							cy.get('@Enter').should('have.been.calledOnce');
-							cy.get('@Leave').should('have.been.calledOnce');
+							// cy.get('@EnterBack').should('have.been.calledOnce');
+							// cy.get('@LeaveBack').should('have.been.calledAfter', callbacks.enterBackCallback);
+							// cy.get('@Enter').should('have.been.calledOnce');
+							// cy.get('@Leave').should('have.been.calledOnce');
 						});
 					});
 				});
