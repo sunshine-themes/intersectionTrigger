@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.7](https://github.com/sunshine-themes/intersectionTrigger/compare/v1.1.6...v1.1.7) (2026-04-02)
+
+
+### Features
+
+* add documentation website (Astro + Starlight + React + Tailwind) ([68860e2](https://github.com/sunshine-themes/intersectionTrigger/commit/68860e2fd3bf24ed4c6d4ec468c49173354e6317))
+
+
+### Bug Fixes
+
+* improve color contrast and expand navigation sections ([56dac9a](https://github.com/sunshine-themes/intersectionTrigger/commit/56dac9a8f26befe32c0832eebb4aa0e6573c066a))
+* use createRequire for package.json import in banner.ts ([88d06c4](https://github.com/sunshine-themes/intersectionTrigger/commit/88d06c4d1bb05cca523c2de7e17384f510ed36fc))
+
 ## [1.1.6](https://github.com/sunshine-themes/intersectionTrigger/compare/v1.1.5...1.1.6) (2023-05-18)
 
 ## [1.1.5](https://github.com/sunshine-themes/intersectionTrigger/compare/v1.1.4...v1.1.5) (2023-05-18)

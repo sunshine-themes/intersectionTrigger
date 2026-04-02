@@ -1,6 +1,6 @@
 {
 	"name": "intersectiontrigger",
-	"version": "1.1.6",
+	"version": "1.1.7",
 	"description": "A lightweight TypeScript library that extends the IntersectionObserver API with intersection-based triggers, scroll-linked animations, and a plugin architecture. Zero dependencies.",
 	"homepage": "https://sunshine-themes.github.io/intersectionTrigger/",
 	"type": "module",
