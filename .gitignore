@@ -9,6 +9,7 @@
 /.nyc_output
 /.claude
 CLAUDE.md
+AGENTS.md
 .serena/
 /docs/node_modules/
 /docs/dist/
