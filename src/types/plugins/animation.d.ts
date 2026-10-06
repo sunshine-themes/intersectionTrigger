@@ -1,12 +1,13 @@
+import type { JSAnimation, Timeline } from 'animejs';
 import IntersectionTrigger from '../intersectiontrigger-class';
 
-type AnimeInstance = anime.AnimeInstance | anime.AnimeTimelineInstance;
+type AnimeInstance = JSAnimation | Timeline;
 type AnimationToggleActions = 'none' | 'play' | 'resume' | 'restart' | 'reset' | 'pause' | 'complete' | 'reverse' | 'kill';
 type SnapConfiguration = SnapOptions | boolean | number | number[];
 
 interface SnapOptions {
 	/**
-	 *  the locations on the animation duration to snap
+	 *  the locations on the animation duration to snap. Use the string "labels" to snap to all the timeline labels times (animejs timeline labels created with `.label(name)`).
 	 */
 	to: number | number[] | string;
 
@@ -79,7 +80,7 @@ interface AnimationMethods {
 	update(): void;
 
 	/**
-	 * Kills the Animation instance and the anime instance if the 'kill' method is available
+	 * Kills the Animation instance, reverts the anime instance to its original values and removes the animation from the trigger
 	 */
 	kill(): void;
 }

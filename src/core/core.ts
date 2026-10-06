@@ -35,7 +35,7 @@ class IntersectionTrigger {
 	customScrollHandler!: EventHandler;
 	animation: Animation | undefined;
 	guides: Guides | undefined;
-	axis: string | undefined;
+	axis: 'x' | 'y' | undefined;
 	name: string | undefined;
 	triggers: HTMLElement[];
 	rootBounds!: DOMRectReadOnly | ModifiedDOMRect;
@@ -45,13 +45,15 @@ class IntersectionTrigger {
 	_triggersData: WeakMap<HTMLElement, TriggerData>;
 	_defaultOptions!: IntersectionTriggerOptions;
 	_userOptions: IntersectionTriggerOptions;
-	_onResizeHandler!: EventHandler;
+	_onResizeHandler!: () => void;
 	_positionsData!: PositionsData;
 	_utils: Utils | undefined;
 	_isREPGreater!: boolean;
 	_threshold!: number[];
 	_rootMargin!: string;
 	_rAFID!: number;
+	_resizeRAFID!: number;
+	_rootResizeObserver: ResizeObserver | undefined;
 	_root!: Root;
 	static getInstanceById: (id: number) => IntersectionTrigger | undefined;
 	static registerPlugins: (plugins: Plugin[]) => number;
@@ -86,31 +88,65 @@ class IntersectionTrigger {
 	_setPlugin(pluginName: PluginName) {
 		const plugins = IntersectionTrigger.getRegisteredPlugins();
 		const Plugin = plugins.find(plg => pluginName === plg.pluginName);
-		//@ts-ignore
-		Plugin && (this[pluginName] = new Plugin(this));
+		//The plugin classes share the constructor shape, the index access is safe for registered names
+		if (Plugin) (this as unknown as Record<PluginName, unknown>)[pluginName] = new Plugin(this);
 	}
 
 	_addResizeListener() {
 		this._removeResizeListener();
 
-		this._onResizeHandler = () => this.update();
+		this._onResizeHandler = () => {
+			if (this._resizeRAFID) return; //coalesce the resize bursts into a single update
+			this._resizeRAFID = requestAnimationFrame(() => {
+				this._resizeRAFID = 0;
+				this.update();
+			});
+		};
 		this._utils!.getRoot('resize').addEventListener('resize', this._onResizeHandler, false);
+
+		//Watch a root element for size changes that are not caused by a window resize
+		if (this._root && typeof ResizeObserver !== 'undefined') {
+			let roInitialized = false; //ResizeObserver fires once on observe, skip that initial call
+			this._rootResizeObserver = new ResizeObserver(() => {
+				if (!roInitialized) {
+					roInitialized = true;
+					return;
+				}
+				this._onResizeHandler();
+			});
+			this._rootResizeObserver.observe(this._root);
+		}
 	}
 	_removeResizeListener() {
 		this._utils!.getRoot('resize').removeEventListener('resize', this._onResizeHandler, false);
+		this._rootResizeObserver?.disconnect();
+		this._rootResizeObserver = undefined;
+		if (this._resizeRAFID) {
+			cancelAnimationFrame(this._resizeRAFID);
+			this._resizeRAFID = 0;
+		}
 	}
 
 	_rAFCallback: FrameRequestCallback = () => {
+		this._rAFID = 0;
+		if (this.killed) return;
+
+		//One root bounds computation per frame, shared by all triggers
+		this.rootBounds = this._utils!.getRootRect(this.observer!.rootMargin);
+
 		//Call all onScroll triggers Functions
 		this.triggers.forEach(trigger => {
 			const onScrollFuns = this._utils!.getTriggerData(trigger, 'states').onScroll;
 			for (const k in onScrollFuns) {
 				const fnName = k as keyof ScrollCallbacks;
-				onScrollFuns[fnName] && onScrollFuns[fnName]!(trigger);
+				onScrollFuns[fnName] && onScrollFuns[fnName]!(trigger, undefined, this.rootBounds);
 			}
 		});
 	};
-	_onScrollHandler = () => (this._rAFID = requestAnimationFrame(this._rAFCallback));
+	_onScrollHandler = () => {
+		if (this._rAFID) return; //a frame is already scheduled, coalesce the scroll events
+		this._rAFID = requestAnimationFrame(this._rAFCallback);
+	};
 
 	addScrollListener(handler: EventHandler) {
 		this._utils!.getRoot('scroll').addEventListener('scroll', handler, false);
@@ -122,15 +158,25 @@ class IntersectionTrigger {
 	_observerCallback: IntersectionObserverCallback = (entries, observer) => {
 		const { length } = this._utils!.dirProps();
 
+		//One root bounds computation per batch. IO's entry.rootBounds is NOT used because it can
+		//disagree with the manual measurement (e.g. inside iframes) and every position must come
+		//from the same coordinate source as setRootMargin and the scroll-linked handlers.
+		this.rootBounds = this._utils!.getRootRect(observer.rootMargin);
+
 		for (const entry of entries) {
+			if (this.killed) return; //The instance may have been killed while processing a previous entry
+
 			//Trigger data
 			const trigger = entry.target as HTMLElement,
-				tB = entry.boundingClientRect, //trigger Bounds
+				tB = entry.boundingClientRect, //trigger Bounds at observation time, same frame as this callback
 				isIntersecting = entry.isIntersecting;
 			// intersectionRatio = entry.intersectionRatio;
 
+			//Skip entries of triggers removed while processing a previous entry (e.g. "once" triggers)
+			if (!this._utils!.getTriggerData(trigger, 'states')) continue;
+
 			//Root Data
-			const rB = (this.rootBounds = entry.rootBounds || this._utils!.getRootRect(observer.rootMargin)), //root Bounds
+			const rB = this.rootBounds,
 				rL = rB[length];
 			//Getting needed data
 			const {
@@ -139,20 +185,28 @@ class IntersectionTrigger {
 				initBackupFun = tB[length] >= rL,
 				isBackupFunRunning = !!backup;
 
-			const toggleActions = this._utils!.toggleActions;
-			const setStates = this._utils!.setTriggerScrollStates;
+			//The trigger bounds are re-read: the entry rect was captured at the crossing frame,
+			//but an animated scroll may have moved the trigger further by the time this callback runs.
+			//The root bounds are stable during a scroll, so the hoisted batch bounds stay valid.
+			this._utils!.toggleActions(trigger, undefined, rB);
 
-			toggleActions(trigger);
+			//The trigger callback may have killed the instance or removed the trigger
+			if (this.killed) return;
+			if (!this._utils!.getTriggerData(trigger, 'states')) continue;
 
 			if (this._states.oCbFirstInvoke) {
-				isIntersecting && initBackupFun && setStates(trigger, 'backup', toggleActions);
+				isIntersecting &&
+					initBackupFun &&
+					this._utils!.setTriggerScrollStates(trigger, 'backup', this._utils!.toggleActions.bind(this._utils!));
 				continue;
 			}
 
 			if (isIntersecting) {
-				!isBackupFunRunning && initBackupFun && setStates(trigger, 'backup', toggleActions);
+				!isBackupFunRunning &&
+					initBackupFun &&
+					this._utils!.setTriggerScrollStates(trigger, 'backup', this._utils!.toggleActions.bind(this._utils!));
 			} else {
-				isBackupFunRunning && setStates(trigger, 'backup');
+				isBackupFunRunning && this._utils!.setTriggerScrollStates(trigger, 'backup');
 			}
 		}
 		//Reset oCbFirstInvoke state
@@ -268,6 +322,13 @@ class IntersectionTrigger {
 		const toRemoveTriggers = this._utils!.parseQuery(trigger);
 
 		toRemoveTriggers.forEach(trigger => {
+			//Release the scroll listener bookkeeping before the trigger data is deleted
+			const { onScroll } = this._utils!.getTriggerData(trigger, 'states') || {};
+			onScroll &&
+				(Object.keys(onScroll) as (keyof ScrollCallbacks)[]).forEach(
+					key => onScroll[key] && this._utils!.setTriggerScrollStates(trigger, key)
+				);
+
 			this._utils!.deleteTriggerData(trigger);
 			this.observer!.unobserve(trigger);
 		});
@@ -298,6 +359,8 @@ class IntersectionTrigger {
 		this._createInstance();
 		//re-observe the triggers
 		this.triggers.forEach(trigger => this.observer && this.observer.observe(trigger));
+		//Update the animation data (the scroll-linked handlers hold stale trigger measurements)
+		this.animation && this.animation.update();
 		//Update guides
 		this.guides && this.guides.update();
 	}

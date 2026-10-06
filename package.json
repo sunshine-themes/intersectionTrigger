@@ -56,6 +56,9 @@
 		"validate": "run-s format lint test build"
 	},
 	"license": "MIT",
+	"peerDependencies": {
+		"animejs": "^4.0.0"
+	},
 	"bugs": {
 		"url": "https://github.com/sunshine-themes/intersectionTrigger/issues"
 	},
@@ -70,12 +73,11 @@
 		"@cypress/code-coverage": "^4.0.3",
 		"@eslint/js": "^10.0.1",
 		"@istanbuljs/nyc-config-typescript": "^1.0.2",
-		"@types/animejs": "^3.1.13",
 		"@types/fs-extra": "^11.0.4",
 		"@typescript-eslint/eslint-plugin": "^8.57.2",
 		"@typescript-eslint/parser": "^8.57.2",
 		"ajv": "^8.18.0",
-		"animejs": "^3.2.2",
+		"animejs": "^4.5.0",
 		"babel-loader": "^10.1.1",
 		"babel-plugin-istanbul": "^8.0.0",
 		"concurrently": "^10.0.5",
