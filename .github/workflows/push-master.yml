@@ -41,3 +41,5 @@ jobs:
       - name: Publish to npm
         if: ${{ steps.release.outputs.release_created }}
         run: cd dist && npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
