@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.0.0](https://github.com/sunshine-themes/intersectionTrigger/compare/v1.1.7...v2.0.0) (2026-10-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* **core,animation:** the library now targets animejs v4. The peer dependency moved from `animejs ^3.2.2` to `^4.0.0` and `@types/animejs` is no longer used (v4 ships its own types). The public `AnimeInstance` type is now the v4 `JSAnimation | Timeline` union instead of the v3 `anime.AnimeInstance | anime.AnimeTimelineInstance`. The snap option's `to: 'marks'` value is renamed to `to: 'labels'` (v4 timeline labels), and the `kill` toggle action now calls v4's `revert()`. Consumers on animejs v3 should stay on 1.x.
+
+### Features
+
+* **core,animation:** correctness fixes, performance and scroll-linked smoothing ([bce382b](https://github.com/sunshine-themes/intersectionTrigger/commit/bce382bc08f92002a5e031e80d1ae02908cc513e))
+* **math:** expose the pure math helpers through a public ./math subpath ([ce4c7d8](https://github.com/sunshine-themes/intersectionTrigger/commit/ce4c7d85db2173e696aa2839103ae6e5f7b78e22))
+* **types:** export the IntersectionTrigger class as a named export ([91f1470](https://github.com/sunshine-themes/intersectionTrigger/commit/91f147075d2a4bf5aab87a4e098070db35e07bd0))
+
+
+### Bug Fixes
+
+* **types:** point the root and core exports entries at declarations ([4866888](https://github.com/sunshine-themes/intersectionTrigger/commit/4866888f7d3afb1358fcec210132937679ca2a3d))
+
 ## [1.1.7](https://github.com/sunshine-themes/intersectionTrigger/compare/v1.1.6...v1.1.7) (2026-04-02)
 
 
