@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/sunshine-themes/intersectionTrigger/compare/v2.0.0...v2.0.1) (2026-10-08)
+
+
+### Bug Fixes
+
+* **ci:** restore NODE_AUTH_TOKEN on the npm publish step ([5540974](https://github.com/sunshine-themes/intersectionTrigger/commit/5540974ff4bd9ae8ef6f3c1ca3a4ec88f8310018))
+
 ## [2.0.0](https://github.com/sunshine-themes/intersectionTrigger/compare/v1.1.7...v2.0.0) (2026-10-08)
 
 
