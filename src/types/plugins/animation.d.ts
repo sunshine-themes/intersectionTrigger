@@ -72,6 +72,15 @@ interface AnimationOptions {
 	 * @default false
 	 */
 	snap?: SnapConfiguration;
+
+	/**
+	 *  an exponential-follow time constant (in ms) for linked animations: the animation covers
+	 *  ~63% of the remaining distance each `smooth` ms instead of tracking the scrollbar rigidly.
+	 *  `true` uses the default time constant. Combine with a numeric `link` to cap the catch-up speed.
+	 *
+	 *  @default false
+	 */
+	smooth?: number | boolean;
 }
 interface AnimationMethods {
 	/**
