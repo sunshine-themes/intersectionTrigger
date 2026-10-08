@@ -4,6 +4,7 @@ import buildCore from './build-core';
 import buildPlugins from './build-plugins';
 import buildMain from './build-main';
 import buildBundle from './build-bundle';
+import buildMath from './build-math';
 
 //make distribution dir
 createOutputDir();
@@ -26,3 +27,4 @@ buildCore(); //Core build
 buildPlugins(); //Plugin build
 buildMain(); //build the main file
 buildBundle(); //bundle build
+buildMath(); //public math subpath

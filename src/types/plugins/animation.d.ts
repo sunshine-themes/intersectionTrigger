@@ -1,12 +1,13 @@
+import type { JSAnimation, Timeline } from 'animejs';
 import IntersectionTrigger from '../intersectiontrigger-class';
 
-type AnimeInstance = anime.AnimeInstance | anime.AnimeTimelineInstance;
+type AnimeInstance = JSAnimation | Timeline;
 type AnimationToggleActions = 'none' | 'play' | 'resume' | 'restart' | 'reset' | 'pause' | 'complete' | 'reverse' | 'kill';
 type SnapConfiguration = SnapOptions | boolean | number | number[];
 
 interface SnapOptions {
 	/**
-	 *  the locations on the animation duration to snap
+	 *  the locations on the animation duration to snap. Use the string "labels" to snap to all the timeline labels times (animejs timeline labels created with `.label(name)`).
 	 */
 	to: number | number[] | string;
 
@@ -71,6 +72,15 @@ interface AnimationOptions {
 	 * @default false
 	 */
 	snap?: SnapConfiguration;
+
+	/**
+	 *  an exponential-follow time constant (in ms) for linked animations: the animation covers
+	 *  ~63% of the remaining distance each `smooth` ms instead of tracking the scrollbar rigidly.
+	 *  `true` uses the default time constant. Combine with a numeric `link` to cap the catch-up speed.
+	 *
+	 *  @default false
+	 */
+	smooth?: number | boolean;
 }
 interface AnimationMethods {
 	/**
@@ -79,7 +89,7 @@ interface AnimationMethods {
 	update(): void;
 
 	/**
-	 * Kills the Animation instance and the anime instance if the 'kill' method is available
+	 * Kills the Animation instance, reverts the anime instance to its original values and removes the animation from the trigger
 	 */
 	kill(): void;
 }

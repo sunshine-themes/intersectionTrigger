@@ -1,4 +1,4 @@
-import anime from 'animejs';
+import { animate, createTimeline } from 'animejs';
 import {
 	is,
 	splitStr,
@@ -66,30 +66,26 @@ describe('is object helper', () => {
 		expect(is.doc(window)).to.be.false;
 	});
 
+	it('checks if a variable is a NodeList', () => {
+		expect(is.nodeList(document.querySelectorAll('div'))).to.be.true;
+		expect(is.nodeList([document.createElement('div')])).to.be.false;
+		expect(is.nodeList(document.createElement('div'))).to.be.false;
+	});
+
 	it('checks if a variable is an Anime', () => {
-		expect(is.anime(anime({}))).to.be.true;
-		expect(is.anime(anime.timeline({}))).to.be.false;
+		expect(is.anime(animate('body', { opacity: 0, autoplay: false }))).to.be.true;
+		expect(is.anime(createTimeline({ autoplay: false }))).to.be.false;
 	});
 
 	it('checks if a variable is an Anime timeline', () => {
-		expect(is.tl(anime.timeline({}))).to.be.true;
-		expect(is.tl(anime({}))).to.be.false;
+		expect(is.tl(createTimeline({ autoplay: false }))).to.be.true;
+		expect(is.tl(animate('body', { opacity: 0, autoplay: false }))).to.be.false;
 	});
 
 	it('checks if a variable is an Anime instance', () => {
-		expect(is.animeInstance(anime({}))).to.be.true;
-		expect(is.animeInstance(anime.timeline({}))).to.be.true;
+		expect(is.animeInstance(animate('body', { opacity: 0, autoplay: false }))).to.be.true;
+		expect(is.animeInstance(createTimeline({ autoplay: false }))).to.be.true;
 		expect(is.animeInstance({})).to.be.false;
-	});
-
-	it('checks if a string contains the sign "px"', () => {
-		expect(is.pixel('100px')).to.be.true;
-		expect(is.pixel('100%')).to.be.false;
-	});
-
-	it('checks if a string contains the sign "%"', () => {
-		expect(is.percent('100%')).to.be.true;
-		expect(is.percent('100px')).to.be.false;
 	});
 
 	describe('inObject function', () => {
@@ -258,7 +254,7 @@ describe('deepClone', () => {
 	});
 
 	it('should not clone an Anime.js instance', () => {
-		const animeInstance = anime({});
+		const animeInstance = animate('body', { opacity: 0, autoplay: false });
 		const clone = deepClone(animeInstance);
 		expect(clone).to.equal(animeInstance);
 	});

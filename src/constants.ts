@@ -1,9 +1,11 @@
 import type { IntersectionTriggerOptions, TriggerStates } from './core/types';
-import type { SnapOptions, AnimationOptions, Anime, AnimeInstance } from './plugins/animation/types';
+import type { SnapOptions, AnimationOptions, AnimeInstance } from './plugins/animation/types';
 import type { GuidesOptions } from './plugins/guides/types';
 import type { ToggleClassOptions } from './plugins/toggleclass/types';
 
 const fn = () => {};
+
+const defaultSmoothTimeConstant = 100;
 
 const snapDefaultConfig: SnapOptions = { to: 0, after: 1, speed: 100, maxDistance: 500, onStart: fn, onComplete: fn };
 
@@ -36,10 +38,11 @@ const defaultToggleClassConfig: ToggleClassOptions = {
 };
 
 const defaultAnimationConfig: AnimationOptions = {
-	instance: {} as Anime<AnimeInstance>,
+	instance: {} as AnimeInstance,
 	toggleActions: 'play complete reverse complete',
 	link: false,
-	snap: false
+	snap: false,
+	smooth: false
 };
 
 const triggerStates: TriggerStates = {
@@ -79,4 +82,12 @@ const guideDefaultConfig: GuidesOptions = {
 	}
 };
 
-export { defaultInsOptions, triggerStates, guideDefaultConfig, defaultAnimationConfig, defaultToggleClassConfig, snapDefaultConfig };
+export {
+	defaultInsOptions,
+	triggerStates,
+	guideDefaultConfig,
+	defaultAnimationConfig,
+	defaultToggleClassConfig,
+	snapDefaultConfig,
+	defaultSmoothTimeConstant
+};

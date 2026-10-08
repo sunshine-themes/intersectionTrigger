@@ -5,7 +5,7 @@ import type Animation from '../plugins/animation/animation';
 import type { DeepRequired } from '../utils/types';
 import type { GuidesOptions } from '../plugins/guides/types';
 import type { ToggleClassParams, ToggleClassOptions } from '../plugins/toggleclass/types';
-import type { AnimationParams, Anime, AnimeInstance, AnimationOptions } from '../plugins/animation/types';
+import type { AnimationParams, AnimeInstance, AnimationOptions } from '../plugins/animation/types';
 
 type Trigger = string | HTMLElement | HTMLElement[] | NodeListOf<HTMLElement>;
 type Root = HTMLElement | null;
@@ -27,7 +27,7 @@ type PositionsData = {
 	rLP: PositionData;
 };
 type DirectionProps = { ref: 'top' | 'left'; length: 'height' | 'width'; refOpposite: 'bottom' | 'right' };
-type ToggleActions = (trigger: HTMLElement) => void;
+type ToggleActions = (trigger: HTMLElement, tB?: DOMRect | ModifiedDOMRect, rB?: DOMRect | ModifiedDOMRect) => void;
 type ItCallbackFunction = (trigger: HTMLElement, it: IntersectionTrigger) => void;
 type RootValue = `${number}${'%' | 'px'}`;
 type TriggerValue = `${number}%`;
@@ -60,13 +60,13 @@ interface TriggerOptions {
 	onEnterBack?: ItCallbackFunction;
 	onLeaveBack?: ItCallbackFunction;
 	toggleClass?: string | ToggleClassOptions[];
-	animation?: Anime<AnimeInstance> | AnimationOptions;
+	animation?: AnimeInstance | AnimationOptions;
 }
 interface IntersectionTriggerOptions {
 	defaults?: TriggerOptions;
 	rootEnter?: RootPosition;
 	rootLeave?: RootPosition;
-	axis?: string;
+	axis?: 'x' | 'y';
 	name?: string;
 	root?: Root | string;
 	guides?: boolean | GuidesOptions;
@@ -74,7 +74,7 @@ interface IntersectionTriggerOptions {
 }
 interface ScrollCallbacks {
 	backup?: ToggleActions;
-	animate?: (trigger?: HTMLElement) => void;
+	animate?: (trigger?: HTMLElement, tB?: DOMRect | ModifiedDOMRect, rB?: DOMRect | ModifiedDOMRect) => void;
 }
 interface TriggerStates {
 	hasEntered: boolean;

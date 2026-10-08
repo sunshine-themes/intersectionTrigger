@@ -1,6 +1,11 @@
+import type { animate } from 'animejs';
+import type IntersectionTrigger from '../../../src/core/core';
+import Animation from '../../../src/plugins/animation/animation';
 import Guides from '../../../src/plugins/guides/guides';
 
 const fn = () => {};
+type Animate = typeof animate;
+const getAnimate = (win: Cypress.AUTWindow) => (win as unknown as { __animate__?: Animate }).__animate__ as Animate;
 
 describe('Core Tests', () => {
 	it('should register Guides plugin', () => {
@@ -781,6 +786,202 @@ describe('Core Tests', () => {
 								cy.get('@EnterBack').should('have.been.calledOnce');
 							});
 						});
+					});
+				});
+			});
+		});
+	});
+
+	describe('Regression fixes', () => {
+		it('should accept a NodeList as triggers', () => {
+			cy.withIT('/core.html', IT => {
+				const itInstance = new IT();
+
+				cy.document().then(doc => {
+					const nodeList = doc.querySelectorAll('#target, #child');
+
+					itInstance.add(nodeList);
+
+					expect(itInstance.triggers).to.have.lengthOf(2);
+				});
+			});
+		});
+
+		it('should update the animation plugin data when the instance updates', () => {
+			cy.withIT('/core.html', (IT, win) => {
+				const animate = getAnimate(win);
+
+				IT.registerPlugins([Animation]);
+
+				const instance = animate('#target', { opacity: 0, autoplay: false, duration: 1000 });
+				const itInstance = new IT().add('#target', { animation: { instance, link: true } });
+				const animationPlugin = itInstance.animation as Animation;
+
+				cy.spy(animationPlugin, 'update').as('animationUpdate');
+
+				itInstance.update();
+
+				cy.get('@animationUpdate').should('have.been.calledOnce');
+			});
+		});
+
+		it('should release the scroll listener bookkeeping when a trigger with linked animation is removed', () => {
+			cy.withIT('/core.html', (IT, win) => {
+				const animate = getAnimate(win);
+
+				IT.registerPlugins([Animation]);
+
+				const callbacks = { enterCallback: fn };
+				cy.spy(callbacks, 'enterCallback').as('Enter');
+
+				const instance = animate('#target', { opacity: 0, autoplay: false, duration: 1000 });
+				const itInstance = new IT({ defaults: { onEnter: callbacks.enterCallback } }).add('#target', {
+					animation: { instance, link: true }
+				});
+
+				cy.get('@Enter').should('have.been.calledOnce');
+
+				cy.get('#target').then(() => {
+					expect(itInstance._states.runningScrollCbs, 'animate scroll state registered').to.equal(1);
+
+					itInstance.remove('#target');
+
+					expect(itInstance._states.runningScrollCbs, 'scroll bookkeeping released').to.equal(0);
+				});
+			});
+		});
+
+		it('should kill the instance from inside a callback without throwing', () => {
+			cy.withIT('/core.html', IT => {
+				cy.get('#target').then($trigger => {
+					$trigger.addClass('mt-700');
+
+					let itInstance: IntersectionTrigger;
+					const onEnter = () => itInstance.kill();
+
+					itInstance = new IT({ defaults: { onEnter } }).add('#target');
+
+					cy.scrollTo(0, 41, { duration: 10, easing: 'linear' }); //enter -> kill
+
+					cy.should(() => {
+						expect(itInstance.killed, 'instance killed from callback').to.be.true;
+						expect(IT.getInstances(), 'instance removed from registry').to.have.lengthOf(0);
+					});
+
+					cy.scrollTo(0, 400, { duration: 10, easing: 'linear' }); //must not throw
+				});
+			});
+		});
+
+		it('should snap to a "to: 0" target without throwing', () => {
+			cy.withIT('/core.html', (IT, win) => {
+				const animate = getAnimate(win);
+
+				IT.registerPlugins([Animation]);
+
+				const callbacks = { enterCallback: fn, snapStart: fn, snapComplete: fn };
+				cy.spy(callbacks, 'enterCallback').as('Enter');
+				cy.spy(callbacks, 'snapStart').as('snapStart');
+				cy.spy(callbacks, 'snapComplete').as('snapComplete');
+
+				cy.get('#target').then($trigger => {
+					$trigger.addClass('mt-700');
+
+					const instance = animate('#target', { opacity: 0, autoplay: false, duration: 1000 });
+
+					new IT({
+						defaults: {
+							onEnter: callbacks.enterCallback,
+							animation: {
+								instance,
+								link: true,
+								snap: {
+									to: 0,
+									after: 0.05,
+									speed: 1000,
+									maxDistance: 1000,
+									onStart: callbacks.snapStart,
+									onComplete: callbacks.snapComplete
+								}
+							}
+						}
+					}).add('#target');
+
+					cy.scrollTo(0, 300, { duration: 10, easing: 'linear' }); //enter
+
+					cy.get('@Enter').should('have.been.calledOnce');
+
+					cy.wait(2500);
+
+					cy.get('@snapStart').should('have.been.calledOnce');
+					cy.get('@snapComplete').should('have.been.calledOnce');
+				});
+			});
+		});
+	});
+
+	describe('Performance behaviors', () => {
+		it('should coalesce resize events into a single update', () => {
+			cy.withIT('/core.html', IT => {
+				const itInstance = new IT().add('#target');
+
+				cy.spy(itInstance, 'update').as('updateSpy');
+
+				cy.window().then(win => {
+					for (let i = 0; i < 5; i++) win.dispatchEvent(new Event('resize'));
+				});
+
+				cy.get('@updateSpy').should('have.been.calledOnce');
+			});
+		});
+
+		it('should update when a root element resizes without a window resize', () => {
+			cy.withIT('/core.html', IT => {
+				const itInstance = new IT({ root: '#target' }).add('#child');
+
+				cy.spy(itInstance, 'update').as('updateSpy');
+
+				//let the ResizeObserver deliver its initial observation before mutating
+				cy.wait(100);
+
+				cy.get('#target').then($el => {
+					$el[0].style.height = '600px';
+				});
+
+				cy.get('@updateSpy').should('have.been.calledOnce');
+			});
+		});
+
+		it('should drive linked animation from a nested scroller', () => {
+			cy.withIT('/core.html', (IT, win) => {
+				const animate = getAnimate(win);
+
+				IT.registerPlugins([Animation]);
+
+				const callbacks = { enterCallback: fn };
+				cy.spy(callbacks, 'enterCallback').as('Enter');
+
+				cy.get('#child').then($child => {
+					$child.addClass('mb-1000'); //make #target scrollable
+
+					//#child is inside the scrollable #target while the root is the viewport
+					const instance = animate('#child', { opacity: 0, autoplay: false, duration: 1000 });
+
+					new IT({
+						defaults: { onEnter: callbacks.enterCallback, animation: { instance, link: true } }
+					}).add('#child');
+
+					cy.get('@Enter').should('have.been.calledOnce');
+
+					cy.wrap(null).should(() => {
+						expect(instance.currentTime, 'initial linked progress').to.be.greaterThan(700);
+					});
+
+					cy.get('#target').scrollTo(0, 80, { duration: 10 });
+
+					//scrolling #target by 80px moves #child by seekTo ~= 1000 * 80 / 710 = ~113ms
+					cy.wrap(null).should(() => {
+						expect(instance.currentTime, 'progress follows the nested scroller').to.be.greaterThan(850);
 					});
 				});
 			});

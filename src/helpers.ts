@@ -1,24 +1,24 @@
-import type anime from 'animejs';
-import type { Anime, AnimeInstance } from './plugins/animation/types';
+import type { JSAnimation, Timeline } from 'animejs';
+import type { AnimeInstance } from './plugins/animation/types';
 import type { SplitResult, DeepRequired } from './utils/types';
 
 const is = {
 	function: <T>(a: unknown): a is (...args: unknown[]) => T => typeof a === 'function',
 	string: (a: unknown): a is string => 'string' === typeof a,
 	boolean: (a: unknown): a is boolean => 'boolean' === typeof a,
-	object: (a: unknown): a is object => !!a && 'object' === typeof a && a !== null && !(a instanceof Array),
+	object: (a: unknown): a is object => !!a && 'object' === typeof a && a !== null && !Array.isArray(a),
 	inObject: <O extends object>(obj: O, prop: PropertyKey): prop is keyof O => Object.prototype.hasOwnProperty.call(obj, prop),
 	num: (a: unknown): a is number => typeof a === 'number',
-	array: (a: unknown): a is [] => a instanceof Array,
+	//Array.isArray instead of instanceof to support arrays created in other realms (e.g. iframes)
+	array: (a: unknown): a is [] => Array.isArray(a),
 	element: (a: unknown): a is HTMLElement => a instanceof HTMLElement,
 	empty: (a: object) => Object.keys(a).length === 0,
 	doc: (a: unknown): a is Document => a instanceof Document,
-	anime: (a: unknown): a is Anime<anime.AnimeInstance> => is.object(a) && is.inObject(a, 'animatables') && !is.inObject(a, 'add'),
-	tl: (a: unknown): a is Anime<anime.AnimeTimelineInstance> =>
-		is.object(a) && is.inObject(a, 'add') && is.function((a as Anime<anime.AnimeTimelineInstance>).add),
-	animeInstance: (a: unknown): a is Anime<AnimeInstance> => is.anime(a) || is.tl(a),
-	pixel: (a: string) => a.includes('px'),
-	percent: (a: string) => a.includes('%'),
+	nodeList: (a: unknown): a is NodeList => a instanceof NodeList,
+	anime: (a: unknown): a is JSAnimation =>
+		is.object(a) && is.inObject(a, 'targets') && is.function((a as JSAnimation).seek) && !('add' in a),
+	tl: (a: unknown): a is Timeline => is.object(a) && is.function((a as Timeline).add),
+	animeInstance: (a: unknown): a is AnimeInstance => is.anime(a) || is.tl(a),
 	scrollable: (element: HTMLElement, dir?: 'x' | 'y') =>
 		dir
 			? 'y' === dir

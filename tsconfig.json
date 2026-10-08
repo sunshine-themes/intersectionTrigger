@@ -11,6 +11,7 @@
 	"compilerOptions": {
 		"target": "ESNext",
 		"module": "ESNext",
+		"moduleResolution": "bundler",
 		"rootDirs": ["./src"],
 		"removeComments": false,
 		"noEmit": true,

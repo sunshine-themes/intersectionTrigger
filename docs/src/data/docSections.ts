@@ -162,14 +162,13 @@ import Animation from 'intersectiontrigger/animation';
 
 IntersectionTrigger.registerPlugins([Animation]);` },
       { type: "paragraph", text: "Controlled Animation:" },
-      { type: "code", language: "js", code: `import anime from 'animejs';
+      { type: "code", language: "js", code: `import { animate } from 'animejs';
 
-const animation = anime({
-  targets: '.card',
+const animation = animate('.card', {
   opacity: [0, 1],
   translateY: [40, 0],
   duration: 800,
-  easing: 'easeOutCubic',
+  ease: 'outCubic',
   autoplay: false
 });
 
@@ -182,11 +181,10 @@ it.add('.card', {
   }
 });` },
       { type: "paragraph", text: "Scroll-Linked Animation:" },
-      { type: "code", language: "js", code: `const linkedAnimation = anime({
-  targets: '.progress-bar',
+      { type: "code", language: "js", code: `const linkedAnimation = animate('.progress-bar', {
   width: ['0%', '100%'],
   duration: 1000,
-  easing: 'linear',
+  ease: 'linear',
   autoplay: false
 });
 
@@ -556,7 +554,7 @@ IntersectionTrigger.registerPlugins([Animation, ToggleClass, Guides]);` },
     title: "Animation Plugin",
     content: [
       { type: "heading", text: "Animation Plugin", level: 2 },
-      { type: "paragraph", text: "The Animation plugin integrates AnimeJS with IntersectionTrigger, providing two animation modes: controlled animations that respond to intersection events, and linked animations that are driven by scroll position." },
+      { type: "paragraph", text: "The Animation plugin integrates AnimeJS with IntersectionTrigger, providing two animation modes: controlled animations that respond to intersection events, and linked animations that are driven by scroll position. The plugin requires animejs v4 (declared as a peer dependency)." },
       { type: "code", language: "js", code: `import { IntersectionTrigger, Animation } from 'intersectiontrigger';
 
 IntersectionTrigger.registerPlugins([Animation]);`, title: "Registration" },
@@ -574,8 +572,7 @@ IntersectionTrigger.registerPlugins([Animation]);`, title: "Registration" },
       { type: "code", language: "js", code: `const it = new IntersectionTrigger();
 
 it.add('.box', {
-  animation: anime({
-    targets: '.box',
+  animation: animate('.box', {
     opacity: [0, 1],
     translateY: [50, 0],
     duration: 800,
@@ -593,16 +590,15 @@ it.add('.box', {
           ["reverse", "Reverses the animation direction"],
           ["complete", "Jumps to the end and pauses"],
           ["restart", "Restarts from the beginning"],
-          ["reset", "Resets to initial state and plays"],
-          ["kill", "Permanently kills the animation"],
+          ["reset", "Resets to the initial state"],
+          ["kill", "Reverts the animation to its original values and removes it from the trigger"],
           ["none", "No action for this event"],
         ],
       },
       { type: "heading", text: "Linked (Scroll-based) Animations", level: 3 },
       { type: "code", language: "js", code: `it.add('.box', {
   animation: {
-    instance: anime({
-      targets: '.box',
+    instance: animate('.box', {
       rotate: '1turn',
       duration: 1000,
       autoplay: false
@@ -613,8 +609,7 @@ it.add('.box', {
       { type: "heading", text: "Snapping System", level: 3 },
       { type: "code", language: "js", code: `it.add('.box', {
   animation: {
-    instance: anime({
-      targets: '.box',
+    instance: animate('.box', {
       translateX: [0, 300],
       duration: 1000,
       autoplay: false
@@ -859,19 +854,18 @@ function loadMoreContent() {
       { type: "heading", text: "Controlled Animation", level: 3 },
       { type: "paragraph", text: "The Animation plugin lets you tie anime.js animations to intersection events." },
       { type: "code", language: "js", code: `import IntersectionTrigger, { Animation } from 'intersectiontrigger';
-import anime from 'animejs';
+import { animate } from 'animejs';
 
 IntersectionTrigger.registerPlugins([Animation]);
 
 const it = new IntersectionTrigger();
 
 it.add('.element', {
-  animation: anime({
-    targets: '.element',
+  animation: animate('.element', {
     translateY: [50, 0],
     opacity: [0, 1],
     duration: 800,
-    easing: 'easeOutCubic',
+    ease: 'outCubic',
     autoplay: false,
   }),
 });` },
@@ -896,7 +890,7 @@ it.add('.element', {
       { type: "heading", text: "Linked Animation", level: 3 },
       { type: "paragraph", text: "Linked animations tie animation progress directly to scroll position." },
       { type: "code", language: "js", code: `import IntersectionTrigger, { Animation } from 'intersectiontrigger';
-import anime from 'animejs';
+import { animate } from 'animejs';
 
 IntersectionTrigger.registerPlugins([Animation]);
 
@@ -904,11 +898,10 @@ const it = new IntersectionTrigger();
 
 it.add('.progress-bar', {
   animation: {
-    instance: anime({
-      targets: '.progress-fill',
+    instance: animate('.progress-fill', {
       width: '100%',
       duration: 1000,
-      easing: 'linear',
+      ease: 'linear',
       autoplay: false,
     }),
     link: 3,
@@ -933,7 +926,7 @@ it.add('.progress-bar', {
       { type: "heading", text: "Snapping", level: 3 },
       { type: "paragraph", text: "Snapping adds scroll-snap behavior to linked animations." },
       { type: "code", language: "js", code: `import IntersectionTrigger, { Animation } from 'intersectiontrigger';
-import anime from 'animejs';
+import { animate } from 'animejs';
 
 IntersectionTrigger.registerPlugins([Animation]);
 
@@ -941,11 +934,10 @@ const it = new IntersectionTrigger();
 
 it.add('.section', {
   animation: {
-    instance: anime({
-      targets: '.section',
+    instance: animate('.section', {
       scale: [0.8, 1],
       duration: 1000,
-      easing: 'linear',
+      ease: 'linear',
       autoplay: false,
     }),
     link: true,

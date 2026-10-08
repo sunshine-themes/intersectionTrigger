@@ -254,14 +254,13 @@ IntersectionTrigger.registerPlugins([Animation]);
 **Controlled Animation**
 
 ```js
-import anime from 'animejs';
+import { animate } from 'animejs';
 
-const animation = anime({
-  targets: '.card',
+const animation = animate('.card', {
   opacity: [0, 1],
   translateY: [40, 0],
   duration: 800,
-  easing: 'easeOutCubic',
+  ease: 'outCubic',
   autoplay: false
 });
 
@@ -278,11 +277,10 @@ it.add('.card', {
 **Scroll-Linked Animation**
 
 ```js
-const linkedAnimation = anime({
-  targets: '.progress-bar',
+const linkedAnimation = animate('.progress-bar', {
   width: ['0%', '100%'],
   duration: 1000,
-  easing: 'linear',
+  ease: 'linear',
   autoplay: false
 });
 
@@ -914,7 +912,7 @@ IntersectionTrigger.registerPlugins([Animation, ToggleClass, Guides]);
 
 ### Animation Plugin
 
-The Animation plugin integrates [AnimeJS](https://animejs.com/) with IntersectionTrigger, providing two animation modes: **controlled** animations that respond to intersection events, and **linked** animations that are driven by scroll position.
+The Animation plugin integrates [AnimeJS](https://animejs.com/) with IntersectionTrigger, providing two animation modes: **controlled** animations that respond to intersection events, and **linked** animations that are driven by scroll position. The plugin requires **animejs v4** (it is declared as a peer dependency, so install it alongside IntersectionTrigger).
 
 **Registration**
 
@@ -931,6 +929,7 @@ IntersectionTrigger.registerPlugins([Animation]);
 | `instance` | `AnimeInstance` | *required* | An AnimeJS instance or timeline |
 | `toggleActions` | `string` | `'play complete reverse complete'` | Space-separated actions for enter/leave/enterBack/leaveBack |
 | `link` | `number \| boolean` | `false` | Link animation to scrollbar position |
+| `smooth` | `number \| boolean` | `false` | Exponential-follow time constant (in ms) for linked animations: the animation covers ~63% of the remaining distance each `smooth` ms instead of tracking the scrollbar rigidly. `true` uses 100ms. Combine with a numeric `link` to cap the catch-up speed |
 | `snap` | `SnapConfiguration` | `false` | Snap to points after scrolling stops |
 
 **Controlled Animations**
@@ -939,8 +938,7 @@ IntersectionTrigger.registerPlugins([Animation]);
 const it = new IntersectionTrigger();
 
 it.add('.box', {
-  animation: anime({
-    targets: '.box',
+  animation: animate('.box', {
     opacity: [0, 1],
     translateY: [50, 0],
     duration: 800,
@@ -959,8 +957,8 @@ it.add('.box', {
 | `reverse` | Reverses the animation direction |
 | `complete` | Jumps to the end and pauses |
 | `restart` | Restarts from the beginning |
-| `reset` | Resets to initial state and plays |
-| `kill` | Permanently kills the animation |
+| `reset` | Resets to the initial state |
+| `kill` | Reverts the animation to its original values and removes it from the trigger |
 | `none` | No action for this event |
 
 **Linked (Scroll-based) Animations**
@@ -968,8 +966,7 @@ it.add('.box', {
 ```js
 it.add('.box', {
   animation: {
-    instance: anime({
-      targets: '.box',
+    instance: animate('.box', {
       rotate: '1turn',
       duration: 1000,
       autoplay: false
@@ -984,8 +981,7 @@ it.add('.box', {
 ```js
 it.add('.box', {
   animation: {
-    instance: anime({
-      targets: '.box',
+    instance: animate('.box', {
       translateX: [0, 300],
       duration: 1000,
       autoplay: false
@@ -1351,19 +1347,18 @@ The Animation plugin lets you tie anime.js animations to intersection events.
 
 ```js
 import IntersectionTrigger, { Animation } from 'intersectiontrigger';
-import anime from 'animejs';
+import { animate } from 'animejs';
 
 IntersectionTrigger.registerPlugins([Animation]);
 
 const it = new IntersectionTrigger();
 
 it.add('.element', {
-  animation: anime({
-    targets: '.element',
+  animation: animate('.element', {
     translateY: [50, 0],
     opacity: [0, 1],
     duration: 800,
-    easing: 'easeOutCubic',
+    ease: 'outCubic',
     autoplay: false,
   }),
 });
@@ -1387,11 +1382,10 @@ it.add('.element', {
 
 ```js
 it.add('.fade-in', {
-  animation: anime({
-    targets: '.fade-in',
+  animation: animate('.fade-in', {
     opacity: [0, 1],
     duration: 600,
-    easing: 'easeOutQuad',
+    ease: 'outQuad',
     autoplay: false,
   }),
   toggleActions: 'play none reverse none',
@@ -1403,12 +1397,11 @@ it.add('.fade-in', {
 
 ```js
 it.add('.once', {
-  animation: anime({
-    targets: '.once',
+  animation: animate('.once', {
     scale: [0.5, 1],
     opacity: [0, 1],
     duration: 500,
-    easing: 'easeOutBack',
+    ease: 'outBack',
     autoplay: false,
   }),
   toggleActions: 'play none none none',
@@ -1426,7 +1419,7 @@ Linked animations tie animation progress directly to scroll position.
 
 ```js
 import IntersectionTrigger, { Animation } from 'intersectiontrigger';
-import anime from 'animejs';
+import { animate } from 'animejs';
 
 IntersectionTrigger.registerPlugins([Animation]);
 
@@ -1434,11 +1427,10 @@ const it = new IntersectionTrigger();
 
 it.add('.progress-bar', {
   animation: {
-    instance: anime({
-      targets: '.progress-fill',
+    instance: animate('.progress-fill', {
       width: '100%',
       duration: 1000,
-      easing: 'linear',
+      ease: 'linear',
       autoplay: false,
     }),
     link: 3,
@@ -1466,7 +1458,7 @@ Snapping adds scroll-snap behavior to linked animations.
 
 ```js
 import IntersectionTrigger, { Animation } from 'intersectiontrigger';
-import anime from 'animejs';
+import { animate } from 'animejs';
 
 IntersectionTrigger.registerPlugins([Animation]);
 
@@ -1474,11 +1466,10 @@ const it = new IntersectionTrigger();
 
 it.add('.section', {
   animation: {
-    instance: anime({
-      targets: '.section',
+    instance: animate('.section', {
       scale: [0.8, 1],
       duration: 1000,
-      easing: 'linear',
+      ease: 'linear',
       autoplay: false,
     }),
     link: true,
@@ -1495,7 +1486,7 @@ it.add('.section', {
 
 | Property     | Type       | Default   | Description                                                        |
 | ------------ | ---------- | --------- | ------------------------------------------------------------------ |
-| `to`         | `number[]` | Required  | Array of progress values (0-1) to snap to                         |
+| `to`         | `number \| number[] \| 'labels'` | Required | Progress values (0-1) to snap to, or `'labels'` to snap to the animejs timeline label times |
 | `after`      | `number`   | `0.5`     | Seconds to wait after scrolling stops before snapping begins       |
 | `speed`      | `number`   | `200`     | Snap animation speed (higher = faster)                             |
 | `maxDistance` | `number`   | undefined | Maximum distance from a snap point to trigger snapping (0-1 scale) |

@@ -75,6 +75,12 @@ import IntersectionTrigger from 'intersectiontrigger/bundle';
 const itInstance = new IntersectionTrigger(...);
 ```
 
+The pure math helpers used by the engine (margin parsing, rect expansion, rootMargin/threshold building, scroll-to-time mapping, snap targets, exponential follow) are also exported from the `intersectiontrigger/math` subpath, so external scroll-linked tooling can reuse them:
+
+```javascript
+import { parseMarginString, expandRectByMargins, expFollowFactor } from 'intersectiontrigger/math';
+```
+
 [For more installation options.](https://sunshine-themes.github.io/intersectionTrigger/)
 
 ## Features
