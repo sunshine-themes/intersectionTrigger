@@ -12,6 +12,10 @@
 		"./intersectiontrigger.esm.js": "./intersectiontrigger.esm.js",
 		"./bundle": "./intersectiontrigger-bundle.esm.js",
 		"./intersectiontrigger-bundle.esm.js": "./intersectiontrigger-bundle.esm.js",
+		"./math": {
+			"types": "./math.d.ts",
+			"default": "./math.esm.js"
+		},
 		"./types": "./types/index.d.ts"
 	},
 	"types": "intersectiontrigger.d.ts",
