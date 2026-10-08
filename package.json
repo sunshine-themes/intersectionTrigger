@@ -7,8 +7,14 @@
 	"module": "./intersectiontrigger.esm.js",
 	"main": "./intersectiontrigger.esm.js",
 	"exports": {
-		".": "./intersectiontrigger.esm.js",
-		"./core": "./intersectiontrigger.esm.js",
+		".": {
+			"types": "./intersectiontrigger.d.ts",
+			"default": "./intersectiontrigger.esm.js"
+		},
+		"./core": {
+			"types": "./intersectiontrigger.d.ts",
+			"default": "./intersectiontrigger.esm.js"
+		},
 		"./intersectiontrigger.esm.js": "./intersectiontrigger.esm.js",
 		"./bundle": "./intersectiontrigger-bundle.esm.js",
 		"./intersectiontrigger-bundle.esm.js": "./intersectiontrigger-bundle.esm.js",
