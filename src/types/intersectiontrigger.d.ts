@@ -6,4 +6,5 @@ declare const Animation: IntersectionTriggerPlugin;
 declare const Guides: IntersectionTriggerPlugin;
 
 export default IntersectionTrigger;
+export { IntersectionTrigger };
 export { ToggleClass, Animation, Guides };
