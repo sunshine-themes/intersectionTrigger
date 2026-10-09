@@ -4,10 +4,12 @@ on:
   push:
     branches:
       - master
+  workflow_dispatch:
 
 permissions:
   contents: write
   pull-requests: write
+  id-token: write
 
 jobs:
   main:
@@ -40,4 +42,11 @@ jobs:
       # This must be attached to this workflow, as one workflow cannot trigger another (e.g. on release create)
       - name: Publish to npm
         if: ${{ steps.release.outputs.release_created }}
+        run: cd dist && npm publish --access public
+
+      # Manual recovery publish for releases whose GitHub release object already exists:
+      # release-please only outputs release_created on the run that creates it, so the
+      # step above can never re-fire for them. Dispatch: gh workflow run push-master.yml --ref master
+      - name: Publish to npm (manual dispatch)
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         run: cd dist && npm publish --access public
