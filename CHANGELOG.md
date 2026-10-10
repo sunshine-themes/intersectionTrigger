@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.0.1](https://github.com/sunshine-themes/intersectionTrigger/compare/v2.0.0...v2.0.1) (2026-10-10)
+
+
+### Bug Fixes
+
+* **animation:** schedule timers on the instance's window, not the module realm ([b8743cf](https://github.com/sunshine-themes/intersectionTrigger/commit/b8743cf8e9729061d5458713c5d5ec0522033349))
+* **build:** inject "sideEffects": false into the published dist manifest ([cb4e88e](https://github.com/sunshine-themes/intersectionTrigger/commit/cb4e88ebdc695d4d69e57db2c7572407bb800d21))
+* **types:** accept structural AnimationPlayer instances in the animation option ([9706e71](https://github.com/sunshine-themes/intersectionTrigger/commit/9706e71f0acfd07e7b2cb3ea47f6b9e5a155d304))
+
 ## [2.0.0](https://github.com/sunshine-themes/intersectionTrigger/compare/v1.1.7...v2.0.0) (2026-10-08)
 
 
