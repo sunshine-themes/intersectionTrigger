@@ -2,6 +2,27 @@ import type { JSAnimation, Timeline } from 'animejs';
 import IntersectionTrigger from '../intersectiontrigger-class';
 
 type AnimeInstance = JSAnimation | Timeline;
+
+/**
+ * Structural contract of anything the Animation plugin can drive — exactly the members the plugin
+ * reads and writes on an instance. Accepts real animejs instances and compatible shims (e.g. scroll
+ * drivers wrapping timelines). Hand-synced with the internal type in src/plugins/animation/types.ts.
+ */
+type AnimationPlayer = {
+	currentTime: number;
+	duration: number;
+	paused: boolean;
+	completed: boolean;
+	reversed: boolean;
+	labels?: Record<string, number>;
+	seek(time: number, muteCallbacks?: boolean | number, internalRender?: boolean | number): unknown;
+	play(): unknown;
+	pause(): unknown;
+	reverse(): unknown;
+	restart(): unknown;
+	reset(softReset?: boolean): unknown;
+	revert(): unknown;
+};
 type AnimationToggleActions = 'none' | 'play' | 'resume' | 'restart' | 'reset' | 'pause' | 'complete' | 'reverse' | 'kill';
 type SnapConfiguration = SnapOptions | boolean | number | number[];
 
@@ -48,9 +69,9 @@ interface SnapOptions {
 }
 interface AnimationOptions {
 	/**
-	 * an anime instance or timeline.
+	 * an anime instance/timeline, or any object implementing AnimationPlayer.
 	 */
-	instance: AnimeInstance;
+	instance: AnimeInstance | AnimationPlayer;
 
 	/**
 	 * Determines how to control the animation at the toggle events onEnter, onLeave, onEnterBack and onLeaveBack.
@@ -94,4 +115,4 @@ interface AnimationMethods {
 	kill(): void;
 }
 
-export { AnimeInstance, AnimationToggleActions, SnapConfiguration, SnapOptions, AnimationOptions, AnimationMethods };
+export { AnimeInstance, AnimationPlayer, AnimationToggleActions, SnapConfiguration, SnapOptions, AnimationOptions, AnimationMethods };

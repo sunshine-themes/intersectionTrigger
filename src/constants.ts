@@ -1,5 +1,5 @@
 import type { IntersectionTriggerOptions, TriggerStates } from './core/types';
-import type { SnapOptions, AnimationOptions, AnimeInstance } from './plugins/animation/types';
+import type { SnapOptions, AnimationOptions, AnimationPlayer } from './plugins/animation/types';
 import type { GuidesOptions } from './plugins/guides/types';
 import type { ToggleClassOptions } from './plugins/toggleclass/types';
 
@@ -38,7 +38,7 @@ const defaultToggleClassConfig: ToggleClassOptions = {
 };
 
 const defaultAnimationConfig: AnimationOptions = {
-	instance: {} as AnimeInstance,
+	instance: {} as AnimationPlayer,
 	toggleActions: 'play complete reverse complete',
 	link: false,
 	snap: false,

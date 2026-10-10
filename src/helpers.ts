@@ -1,5 +1,5 @@
 import type { JSAnimation, Timeline } from 'animejs';
-import type { AnimeInstance } from './plugins/animation/types';
+import type { AnimationPlayer } from './plugins/animation/types';
 import type { SplitResult, DeepRequired } from './utils/types';
 
 const is = {
@@ -18,7 +18,7 @@ const is = {
 	anime: (a: unknown): a is JSAnimation =>
 		is.object(a) && is.inObject(a, 'targets') && is.function((a as JSAnimation).seek) && !('add' in a),
 	tl: (a: unknown): a is Timeline => is.object(a) && is.function((a as Timeline).add),
-	animeInstance: (a: unknown): a is AnimeInstance => is.anime(a) || is.tl(a),
+	animeInstance: (a: unknown): a is AnimationPlayer => is.anime(a) || is.tl(a),
 	scrollable: (element: HTMLElement, dir?: 'x' | 'y') =>
 		dir
 			? 'y' === dir

@@ -2,7 +2,7 @@ import type IntersectionTrigger from '../../core/core';
 import type Utils from '../../utils/utils';
 import type { PluginName } from '../../core/types';
 import type { DeepRequired } from '../../utils/types';
-import type { AnimeInstance, SnapParams, SnapConfiguration, SnapOptions, AnimationParams, AnimationOptions } from './types';
+import type { AnimationPlayer, SnapParams, SnapConfiguration, SnapOptions, AnimationParams, AnimationOptions } from './types';
 
 import { clamp, is, mergeOptions, splitStr, throwError } from '../../helpers';
 import { defaultAnimationConfig, defaultSmoothTimeConstant, snapDefaultConfig } from '../../constants';
@@ -16,7 +16,7 @@ class Animation {
 	//scheduling stays on the observed page even when this module is evaluated in another realm
 	//(e.g. Cypress spec iframe, which Firefox throttles).
 	private _win: Window | undefined;
-	private readonly _rAFIDs = new WeakMap<AnimeInstance, number>();
+	private readonly _rAFIDs = new WeakMap<AnimationPlayer, number>();
 	static pluginName: PluginName;
 
 	constructor(it: IntersectionTrigger) {
@@ -31,7 +31,7 @@ class Animation {
 		this._win = root.ownerDocument ? root.ownerDocument.defaultView! : root.defaultView!;
 	}
 
-	seekSmoothly(ins: AnimeInstance, seekTo: number, link: number | boolean, smooth: number | boolean, prevNow = 0) {
+	seekSmoothly(ins: AnimationPlayer, seekTo: number, link: number | boolean, smooth: number | boolean, prevNow = 0) {
 		if (this.killed) return;
 
 		const cT = ins.currentTime;
@@ -67,7 +67,7 @@ class Animation {
 		this._rAFIDs.set(ins, rAFID);
 	}
 
-	seek(ins: AnimeInstance, seekTo: number, link: boolean | number, smooth: number | boolean = false) {
+	seek(ins: AnimationPlayer, seekTo: number, link: boolean | number, smooth: number | boolean = false) {
 		if (is.num(link) || smooth) {
 			const rAFID = this._rAFIDs.get(ins) || 0;
 
@@ -136,10 +136,10 @@ class Animation {
 		snapFrame(0);
 	}
 
-	parseSnap({ instance, snap }: { instance: AnimeInstance; snap: SnapConfiguration | SnapParams }, update?: boolean): SnapParams {
+	parseSnap({ instance, snap }: { instance: AnimationPlayer; snap: SnapConfiguration | SnapParams }, update?: boolean): SnapParams {
 		const parseLabels = (): number[] => {
 			if (!is.inObject(instance, 'labels')) return throwError('"labels" feature is not available in the provided anime instance');
-			return Object.values((instance as AnimeInstance & { labels: Record<string, number> }).labels);
+			return Object.values((instance as AnimationPlayer & { labels: Record<string, number> }).labels);
 		};
 		const mergeOpts = (customOpts: SnapOptions) => mergeOptions(snapDefaultConfig, customOpts);
 		const parseOriginalToParam = (to: number | string | number[]) =>
@@ -192,7 +192,7 @@ class Animation {
 			enter: number;
 			leave: number;
 			tIL: number;
-			instance: AnimeInstance;
+			instance: AnimationPlayer;
 			snap: boolean | SnapParams;
 			step: number;
 			link: number | boolean;
@@ -335,9 +335,9 @@ class Animation {
 		}
 	}
 
-	parse(params: AnimeInstance | AnimationOptions): AnimationParams;
+	parse(params: AnimationPlayer | AnimationOptions): AnimationParams;
 	parse(params: AnimationParams, update: boolean): AnimationParams;
-	parse(params: AnimeInstance | AnimationOptions | AnimationParams, update?: boolean) {
+	parse(params: AnimationPlayer | AnimationOptions | AnimationParams, update?: boolean) {
 		let mergedParams = {} as DeepRequired<AnimationOptions>,
 			animationParams = {} as AnimationParams;
 

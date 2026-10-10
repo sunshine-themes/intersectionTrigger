@@ -11,7 +11,7 @@ import path from 'path';
 const consumerFixture = `
 import IntersectionTrigger, { Animation, Guides, ToggleClass } from 'intersectiontrigger';
 import { expFollowFactor, parseMarginString } from 'intersectiontrigger/math';
-import type { AnimeInstance, AnimationOptions, MathRect } from 'intersectiontrigger/types';
+import type { AnimeInstance, AnimationOptions, AnimationPlayer, MathRect } from 'intersectiontrigger/types';
 import type { JSAnimation } from 'animejs';
 
 declare const animeInstance: AnimeInstance;
@@ -20,12 +20,30 @@ declare const animeInstance: AnimeInstance;
 const progress = animeInstance.progress;
 const resolved = animeInstance.then;
 
+//AnimationOptions.instance accepts the animejs union OR a structural AnimationPlayer — each union
+//member gets its own tripwire so a regression on either side fails here
 const options: AnimationOptions = { instance: {} as JSAnimation, smooth: 100 };
+const facadePlayer: AnimationPlayer = {
+	currentTime: 0,
+	duration: 0,
+	paused: true,
+	completed: false,
+	reversed: false,
+	seek: () => {},
+	play: () => {},
+	pause: () => {},
+	reverse: () => {},
+	restart: () => {},
+	reset: () => {},
+	revert: () => {}
+};
+const playerOptions: AnimationOptions = { instance: facadePlayer, smooth: 100 };
+const realPlayer: AnimationPlayer = {} as JSAnimation;
 const rect: MathRect = { top: 0, right: 0, bottom: 0, left: 0, width: 0, height: 0 };
 const margin = parseMarginString('10% 20px');
 const follow = expFollowFactor(16.7, 100);
 
-export { IntersectionTrigger, Animation, Guides, ToggleClass, progress, resolved, options, rect, margin, follow };
+export { IntersectionTrigger, Animation, Guides, ToggleClass, progress, resolved, options, playerOptions, realPlayer, rect, margin, follow };
 `;
 
 async function checkTypes() {

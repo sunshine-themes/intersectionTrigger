@@ -1,5 +1,5 @@
 import IntersectionTrigger from '../intersectiontrigger-class';
-import { AnimeInstance, AnimationOptions } from '../plugins/animation';
+import { AnimeInstance, AnimationOptions, AnimationPlayer } from '../plugins/animation';
 import { GuidesOptions } from '../plugins/guides';
 import { ToggleClassOptions } from '../plugins/toggleclass';
 
@@ -127,7 +127,7 @@ interface TriggerOptions {
 	/**
 	 * The animation instance that should by controlled by the IntersectionTrigger instance
 	 */
-	animation?: AnimeInstance | AnimationOptions;
+	animation?: AnimeInstance | AnimationPlayer | AnimationOptions;
 }
 
 export { Trigger, EventHandler, TriggerOptions, Root, ItCallbackFunction, IntersectionTriggerOptions };

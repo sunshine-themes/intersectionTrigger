@@ -543,7 +543,7 @@ add(trigger: string | HTMLElement | HTMLElement[] | NodeListOf<HTMLElement>, opt
 | `onEnterBack` | `ItCallbackFunction` | `undefined` | Callback fired when the trigger enters in the backward direction. |
 | `onLeaveBack` | `ItCallbackFunction` | `undefined` | Callback fired when the trigger leaves in the backward direction. |
 | `toggleClass` | `string \| ToggleClassOptions[]` | `undefined` | CSS class toggling configuration. |
-| `animation` | `AnimeInstance \| AnimationOptions` | `undefined` | Animation configuration. |
+| `animation` | `AnimeInstance \| AnimationPlayer \| AnimationOptions` | `undefined` | Animation configuration. |
 
 #### `remove(trigger)`
 
@@ -733,7 +733,7 @@ it.add('.element', {
 | `onEnterBack` | `ItCallbackFunction` | `() => {}` | Callback fired when the trigger re-enters from below. |
 | `onLeaveBack` | `ItCallbackFunction` | `() => {}` | Callback fired when the trigger leaves back downward. |
 | `toggleClass` | `string \| ToggleClassOptions[]` | `undefined` | CSS class toggling configuration. |
-| `animation` | `Anime<AnimeInstance> \| AnimationOptions` | `undefined` | Animation configuration. |
+| `animation` | `AnimeInstance \| AnimationPlayer \| AnimationOptions` | `undefined` | Animation configuration. |
 
 ### IntersectionTrigger Class
 
@@ -769,7 +769,7 @@ const it = new IntersectionTrigger({
 | `observer` | `IntersectionObserver \| undefined` | The internal IntersectionObserver |
 | `rootBounds` | `DOMRectReadOnly` | The current root size and position |
 | `killed` | `boolean` | Whether the instance has been killed |
-| `axis` | `string` | Scroll axis (`'y'` or `'x'`) |
+| `axis` | `'x' \| 'y'` | Scroll axis (`'y'` or `'x'`) |
 | `name` | `string \| undefined` | Optional name for the instance |
 
 ### Static Methods
@@ -865,7 +865,7 @@ interface IntersectionTriggerOptions {
   defaults?: TriggerOptions;
   rootEnter?: RootPosition;
   rootLeave?: RootPosition;
-  axis?: string;
+  axis?: 'x' | 'y';
   name?: string;
   root?: Root | string;
   guides?: boolean | GuidesOptions;
@@ -881,7 +881,7 @@ interface TriggerOptions {
   onEnterBack?: ItCallbackFunction;
   onLeaveBack?: ItCallbackFunction;
   toggleClass?: string | ToggleClassOptions[];
-  animation?: Anime<AnimeInstance> | AnimationOptions;
+  animation?: AnimeInstance | AnimationPlayer | AnimationOptions;
 }
 ```
 
@@ -926,7 +926,7 @@ IntersectionTrigger.registerPlugins([Animation]);
 
 | Property | Type | Default | Description |
 | -------- | ---- | ------- | ----------- |
-| `instance` | `AnimeInstance` | *required* | An AnimeJS instance or timeline |
+| `instance` | `AnimeInstance \| AnimationPlayer` | *required* | An AnimeJS instance/timeline, or any object implementing AnimationPlayer |
 | `toggleActions` | `string` | `'play complete reverse complete'` | Space-separated actions for enter/leave/enterBack/leaveBack |
 | `link` | `number \| boolean` | `false` | Link animation to scrollbar position |
 | `smooth` | `number \| boolean` | `false` | Exponential-follow time constant (in ms) for linked animations: the animation covers ~63% of the remaining distance each `smooth` ms instead of tracking the scrollbar rigidly. `true` uses 100ms. Combine with a numeric `link` to cap the catch-up speed |

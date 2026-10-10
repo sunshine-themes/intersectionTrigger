@@ -376,7 +376,7 @@ it.add('.card'); // inherits the onEnter and onLeave defaults` },
           ["onEnterBack", "ItCallbackFunction", "undefined", "Callback fired when the trigger enters in the backward direction."],
           ["onLeaveBack", "ItCallbackFunction", "undefined", "Callback fired when the trigger leaves in the backward direction."],
           ["toggleClass", "string | ToggleClassOptions[]", "undefined", "CSS class toggling configuration."],
-          ["animation", "AnimeInstance | AnimationOptions", "undefined", "Animation configuration."],
+          ["animation", "AnimeInstance | AnimationPlayer | AnimationOptions", "undefined", "Animation configuration."],
         ],
       },
       { type: "heading", text: "remove(trigger)", level: 4 },
@@ -473,7 +473,7 @@ it.add('.element', {
           ["onEnterBack", "ItCallbackFunction", "() => {}", "Callback fired when the trigger re-enters from below."],
           ["onLeaveBack", "ItCallbackFunction", "() => {}", "Callback fired when the trigger leaves back downward."],
           ["toggleClass", "string | ToggleClassOptions[]", "undefined", "CSS class toggling configuration."],
-          ["animation", "Anime | AnimationOptions", "undefined", "Animation configuration."],
+          ["animation", "AnimeInstance | AnimationPlayer | AnimationOptions", "undefined", "Animation configuration."],
         ],
       },
       { type: "heading", text: "Instance Properties", level: 3 },
@@ -486,7 +486,7 @@ it.add('.element', {
           ["observer", "IntersectionObserver | undefined", "The internal IntersectionObserver"],
           ["rootBounds", "DOMRectReadOnly", "The current root size and position"],
           ["killed", "boolean", "Whether the instance has been killed"],
-          ["axis", "string", "Scroll axis ('y' or 'x')"],
+          ["axis", "'x' | 'y'", "Scroll axis ('y' or 'x')"],
           ["name", "string | undefined", "Optional name for the instance"],
         ],
       },
@@ -503,7 +503,7 @@ type TriggerPosition = TriggerValue | ((it?: IntersectionTrigger) => TriggerValu
   defaults?: TriggerOptions;
   rootEnter?: RootPosition;
   rootLeave?: RootPosition;
-  axis?: string;
+  axis?: 'x' | 'y';
   name?: string;
   root?: Root | string;
   guides?: boolean | GuidesOptions;
@@ -519,7 +519,7 @@ interface TriggerOptions {
   onEnterBack?: ItCallbackFunction;
   onLeaveBack?: ItCallbackFunction;
   toggleClass?: string | ToggleClassOptions[];
-  animation?: Anime<AnimeInstance> | AnimationOptions;
+  animation?: AnimeInstance | AnimationPlayer | AnimationOptions;
 }` },
     ],
   },
@@ -562,7 +562,7 @@ IntersectionTrigger.registerPlugins([Animation]);`, title: "Registration" },
         type: "table",
         headers: ["Property", "Type", "Default", "Description"],
         rows: [
-          ["instance", "AnimeInstance", "required", "An AnimeJS instance or timeline"],
+          ["instance", "AnimeInstance | AnimationPlayer", "required", "An AnimeJS instance/timeline, or any object implementing AnimationPlayer"],
           ["toggleActions", "string", "'play complete reverse complete'", "Space-separated actions for enter/leave/enterBack/leaveBack"],
           ["link", "number | boolean", "false", "Link animation to scrollbar position"],
           ["snap", "SnapConfiguration", "false", "Snap to points after scrolling stops"],

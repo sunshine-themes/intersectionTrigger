@@ -5,7 +5,7 @@ import type Animation from '../plugins/animation/animation';
 import type { DeepRequired } from '../utils/types';
 import type { GuidesOptions } from '../plugins/guides/types';
 import type { ToggleClassParams, ToggleClassOptions } from '../plugins/toggleclass/types';
-import type { AnimationParams, AnimeInstance, AnimationOptions } from '../plugins/animation/types';
+import type { AnimationParams, AnimationPlayer, AnimationOptions } from '../plugins/animation/types';
 
 type Trigger = string | HTMLElement | HTMLElement[] | NodeListOf<HTMLElement>;
 type Root = HTMLElement | null;
@@ -60,7 +60,7 @@ interface TriggerOptions {
 	onEnterBack?: ItCallbackFunction;
 	onLeaveBack?: ItCallbackFunction;
 	toggleClass?: string | ToggleClassOptions[];
-	animation?: AnimeInstance | AnimationOptions;
+	animation?: AnimationPlayer | AnimationOptions;
 }
 interface IntersectionTriggerOptions {
 	defaults?: TriggerOptions;

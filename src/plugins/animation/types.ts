@@ -2,9 +2,10 @@ import type IntersectionTrigger from '../../core/core';
 
 /**
  * Structural subset of an animejs v4 instance (JSAnimation or Timeline) that the plugin relies on,
- * kept lightweight to avoid pulling animejs heavy class types into the public option types.
+ * kept lightweight to avoid pulling animejs heavy class types into the compiled option types.
+ * Hand-synced with the public AnimationPlayer in src/types/plugins/animation.d.ts.
  */
-type AnimeInstance = {
+type AnimationPlayer = {
 	currentTime: number;
 	duration: number;
 	paused: boolean;
@@ -69,7 +70,7 @@ interface SnapOptions {
 	onComplete?(it: IntersectionTrigger): void;
 }
 interface AnimationOptions {
-	instance: AnimeInstance;
+	instance: AnimationPlayer;
 	toggleActions?: `${AnimationToggleActions} ${AnimationToggleActions} ${AnimationToggleActions} ${AnimationToggleActions}`;
 	link?: number | boolean;
 	snap?: SnapConfiguration;
@@ -83,4 +84,4 @@ interface AnimationOptions {
 	smooth?: number | boolean;
 }
 
-export type { AnimeInstance, AnimationToggleActions, SnapConfiguration, SnapParams, AnimationParams, SnapOptions, AnimationOptions };
+export type { AnimationPlayer, AnimationToggleActions, SnapConfiguration, SnapParams, AnimationParams, SnapOptions, AnimationOptions };
