@@ -12,6 +12,10 @@ class Animation {
 	_it: IntersectionTrigger | undefined;
 	_utils: Utils | undefined;
 	killed!: boolean;
+	//The window whose timeline the animation follows. Resolved from the IT instance's document so
+	//scheduling stays on the observed page even when this module is evaluated in another realm
+	//(e.g. Cypress spec iframe, which Firefox throttles).
+	private _win: Window | undefined;
 	private readonly _rAFIDs = new WeakMap<AnimeInstance, number>();
 	static pluginName: PluginName;
 
@@ -22,6 +26,9 @@ class Animation {
 	_registerIntersectionTrigger(intersectionTrigger: IntersectionTrigger) {
 		this._it = intersectionTrigger;
 		this._utils = this._it!._utils;
+
+		const root = this._utils!.getRoot() as Element & { defaultView?: Window | null };
+		this._win = root.ownerDocument ? root.ownerDocument.defaultView! : root.defaultView!;
 	}
 
 	seekSmoothly(ins: AnimeInstance, seekTo: number, link: number | boolean, smooth: number | boolean, prevNow = 0) {
@@ -30,7 +37,7 @@ class Animation {
 		const cT = ins.currentTime;
 		//Normalize the step rate to the elapsed frame time (link is defined per 60fps frame),
 		//capped so background-tab time jumps do not spike the seek
-		const now = performance.now();
+		const now = this._win!.performance.now();
 		const dt = prevNow ? Math.min(now - prevNow, 100) : 16.7;
 		const isSeekToGreater = seekTo > cT;
 		let sT: number;
@@ -56,7 +63,7 @@ class Animation {
 			return;
 		}
 
-		const rAFID = requestAnimationFrame(() => this.seekSmoothly(ins, seekTo, link, smooth, now));
+		const rAFID = this._win!.requestAnimationFrame(() => this.seekSmoothly(ins, seekTo, link, smooth, now));
 		this._rAFIDs.set(ins, rAFID);
 	}
 
@@ -93,6 +100,7 @@ class Animation {
 		//Stop the snapping as soon as the user scrolls by themselves
 		let cancelled = false;
 		const cancel = () => (cancelled = true);
+		const win = this._win!;
 		root.addEventListener('wheel', cancel, { passive: true, once: true });
 		root.addEventListener('touchstart', cancel, { passive: true, once: true });
 		root.addEventListener('keydown', cancel, { once: true });
@@ -100,7 +108,7 @@ class Animation {
 		const snapFrame = (prevNow: number) => {
 			if (this.killed || cancelled) return;
 
-			const now = performance.now();
+			const now = win.performance.now();
 			const dt = prevNow ? Math.min(now - prevNow, 100) : 16.7;
 			const remaining = snapDistance - currentDis;
 			//Ease-out: start at the configured speed and decay as the snap target approaches
@@ -123,7 +131,7 @@ class Animation {
 				return;
 			}
 			currentDis += move;
-			requestAnimationFrame(() => snapFrame(now));
+			win.requestAnimationFrame(() => snapFrame(now));
 		};
 		snapFrame(0);
 	}
@@ -211,9 +219,9 @@ class Animation {
 		if (!is.boolean(snap)) {
 			const dis = 0;
 			// Clear timeout
-			clearTimeout(ids.snapTimeOutId);
+			this._win!.clearTimeout(ids.snapTimeOutId);
 			// Set a timeout to run after scrolling stops
-			const snapTimeOutId = setTimeout(() => {
+			const snapTimeOutId = this._win!.setTimeout(() => {
 				if (this.killed || !this._it) return;
 
 				const directionalDiff = snap.to.map(n => seekTo - n),
@@ -278,7 +286,7 @@ class Animation {
 				case 1:
 				case 3:
 					// Clear snapping
-					clearTimeout(ids.snapTimeOutId);
+					this._win!.clearTimeout(ids.snapTimeOutId);
 					this._utils!.setTriggerScrollStates(trigger, 'animate');
 
 					//Reset the animation
@@ -395,7 +403,7 @@ class Animation {
 		//Clear the pending snap timeouts
 		this._it!.triggers.forEach(trigger => {
 			const ids = this._it!._utils!.getTriggerData(trigger, 'states')?.ids;
-			ids?.snapTimeOutId && clearTimeout(ids.snapTimeOutId);
+			ids?.snapTimeOutId && this._win!.clearTimeout(ids.snapTimeOutId);
 		});
 
 		this._it = this._utils = undefined;

@@ -152,7 +152,8 @@ describe('Animation plugin', () => {
 
 					cy.wait(300); //snapping is underway
 
-					cy.document().then(doc => doc.dispatchEvent(new WheelEvent('wheel'))); //user input
+					//user input — must bubble to the root element (documentElement) where the cancel listeners live
+					cy.document().then(doc => doc.body.dispatchEvent(new WheelEvent('wheel', { bubbles: true })));
 
 					cy.wait(3000); //the snap would have completed (~2.2s) without the interruption
 
